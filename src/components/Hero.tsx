@@ -30,7 +30,7 @@ export default function Hero() {
                 <span className="text-sm font-semibold text-white/70">Bu bir</span>
                 <span className="text-sm font-black bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">BETA</span>
                 <span className="text-sm font-semibold text-white/70">sürümüdür •</span>
-                <span className="text-sm font-bold text-white">👑 Samo Kral</span>
+                <span className="text-sm font-bold text-white">RBG/SAMO</span>
                 <span className="text-sm font-semibold text-white/70">ile yapılmıştır</span>
               </div>
             </div>
