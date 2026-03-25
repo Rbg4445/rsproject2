@@ -20,18 +20,18 @@ function SkillBar({ name, level, color, animate }: { name: string; level: number
 }
 
 const techStack = [
-  { name: 'React', emoji: '⚛️' },
-  { name: 'TypeScript', emoji: '🔷' },
-  { name: 'Python', emoji: '🐍' },
-  { name: 'Node.js', emoji: '🟢' },
-  { name: 'Next.js', emoji: '▲' },
-  { name: 'Tailwind', emoji: '🎨' },
-  { name: 'Docker', emoji: '🐳' },
-  { name: 'PostgreSQL', emoji: '🐘' },
-  { name: 'MongoDB', emoji: '🍃' },
-  { name: 'Redis', emoji: '🔴' },
-  { name: 'GraphQL', emoji: '◉' },
-  { name: 'AWS', emoji: '☁️' },
+  { name: 'React', icon: 'https://cdn-icons-png.flaticon.com/128/1126/1126012.png' },
+  { name: 'TypeScript', icon: 'https://cdn-icons-png.flaticon.com/128/5968/5968381.png' },
+  { name: 'Python', icon: 'https://cdn-icons-png.flaticon.com/128/5968/5968350.png' },
+  { name: 'Node.js', icon: 'https://cdn-icons-png.flaticon.com/128/5968/5968322.png' },
+  { name: 'Next.js', icon: 'https://cdn-icons-png.flaticon.com/128/919/919851.png' },
+  { name: 'Tailwind', icon: 'https://cdn-icons-png.flaticon.com/128/5968/5968672.png' },
+  { name: 'Docker', icon: 'https://cdn-icons-png.flaticon.com/128/5969/5969059.png' },
+  { name: 'PostgreSQL', icon: 'https://cdn-icons-png.flaticon.com/128/5968/5968342.png' },
+  { name: 'MongoDB', icon: 'https://cdn-icons-png.flaticon.com/128/919/919836.png' },
+  { name: 'Redis', icon: 'https://cdn-icons-png.flaticon.com/128/5968/5968914.png' },
+  { name: 'GraphQL', icon: 'https://cdn-icons-png.flaticon.com/128/5968/5968348.png' },
+  { name: 'AWS', icon: 'https://cdn-icons-png.flaticon.com/128/873/873120.png' },
 ];
 
 export default function Skills() {
@@ -87,7 +87,7 @@ export default function Skills() {
                   key={tech.name}
                   className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-gray-800/50 border border-white/5 hover:border-indigo-500/30 hover:bg-gray-800 transition-all duration-300 group cursor-default"
                 >
-                  <span className="text-2xl group-hover:scale-110 transition-transform">{tech.emoji}</span>
+                  <img src={tech.icon} alt={tech.name} className="h-7 w-7 group-hover:scale-110 transition-transform" />
                   <span className="text-xs font-semibold text-white/60 group-hover:text-white/90 transition-colors">{tech.name}</span>
                 </div>
               ))}
@@ -96,8 +96,8 @@ export default function Skills() {
             {/* Stats card */}
             <div className="mt-6 p-6 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-600/10 border border-indigo-500/20">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-xl">
-                  💻
+                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                  <img src="https://cdn-icons-png.flaticon.com/128/1006/1006363.png" alt="code" className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="font-bold text-white">Kod İstatistikleri</p>

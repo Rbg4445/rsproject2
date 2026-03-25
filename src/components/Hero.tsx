@@ -27,7 +27,8 @@ export default function Hero() {
             {/* Beta Banner */}
             <div className="inline-flex flex-wrap items-center gap-2">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 shadow-lg shadow-amber-400/30 animate-pulse-slow">
-                <span className="text-xs font-black text-white tracking-widest uppercase">⚡ BETA</span>
+                <img src="https://cdn-icons-png.flaticon.com/128/1828/1828640.png" alt="beta" className="h-3.5 w-3.5" />
+                <span className="text-xs font-black text-white tracking-widest uppercase">BETA</span>
               </div>
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 shadow-sm backdrop-blur-sm">
                 <span className="text-sm font-semibold text-white/70">Bu bir</span>
@@ -92,10 +93,10 @@ export default function Hero() {
                   <div><span className="text-purple-400">const</span> <span className="text-blue-300">platform</span> <span className="text-white/60">= {'{'}</span></div>
                   <div className="pl-4"><span className="text-green-300">name</span><span className="text-white/60">:</span> <span className="text-amber-300">'{settings.brandName}'</span><span className="text-white/60">,</span></div>
                   <div className="pl-4"><span className="text-green-300">features</span><span className="text-white/60">: [</span></div>
-                  <div className="pl-8"><span className="text-amber-300">'📚 Eğitim'</span><span className="text-white/60">,</span></div>
-                  <div className="pl-8"><span className="text-amber-300">'💻 Kodlama'</span><span className="text-white/60">,</span></div>
-                  <div className="pl-8"><span className="text-amber-300">'🎓 Akademi'</span><span className="text-white/60">,</span></div>
-                  <div className="pl-8"><span className="text-amber-300">'🌐 Topluluk'</span></div>
+                  <div className="pl-8 flex items-center gap-2"><img src="https://cdn-icons-png.flaticon.com/128/2436/2436874.png" alt="egitim" className="h-3.5 w-3.5" /><span className="text-amber-300">'Egitim'</span><span className="text-white/60">,</span></div>
+                  <div className="pl-8 flex items-center gap-2"><img src="https://cdn-icons-png.flaticon.com/128/1006/1006363.png" alt="kodlama" className="h-3.5 w-3.5" /><span className="text-amber-300">'Kodlama'</span><span className="text-white/60">,</span></div>
+                  <div className="pl-8 flex items-center gap-2"><img src="https://cdn-icons-png.flaticon.com/128/3135/3135755.png" alt="akademi" className="h-3.5 w-3.5" /><span className="text-amber-300">'Akademi'</span><span className="text-white/60">,</span></div>
+                  <div className="pl-8 flex items-center gap-2"><img src="https://cdn-icons-png.flaticon.com/128/1828/1828919.png" alt="topluluk" className="h-3.5 w-3.5" /><span className="text-amber-300">'Topluluk'</span></div>
                   <div className="pl-4"><span className="text-white/60">],</span></div>
                   <div className="pl-4"><span className="text-green-300">author</span><span className="text-white/60">:</span> <span className="text-amber-300">'{settings.footerNote}'</span><span className="text-white/60">,</span></div>
                   <div className="pl-4"><span className="text-green-300">version</span><span className="text-white/60">:</span> <span className="text-amber-300">'BETA'</span></div>

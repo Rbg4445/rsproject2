@@ -2,17 +2,40 @@ import { useState } from 'react';
 import { Send, Mail, MapPin, Phone, MessageCircle } from 'lucide-react';
 import { GithubIcon, TwitterIcon, LinkedInIcon, YoutubeIcon } from './icons';
 import { useSiteSettings } from '../store/SiteSettingsContext';
+import { addContactMessage } from '../firebase/firestoreService';
+import { getClientIp } from '../utils/network';
 
 export default function Contact() {
   const { settings } = useSiteSettings();
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+  const [sending, setSending] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
-    setFormData({ name: '', email: '', subject: '', message: '' });
+    setError('');
+    setSending(true);
+    try {
+      const ip = await getClientIp();
+      const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
+      await addContactMessage({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        subject: formData.subject.trim(),
+        message: formData.message.trim(),
+        ip,
+        userAgent,
+      });
+
+      setSubmitted(true);
+      setTimeout(() => setSubmitted(false), 4000);
+      setFormData({ name: '', email: '', subject: '', message: '' });
+    } catch {
+      setError('Mesaj gonderilirken bir hata olustu. Lutfen tekrar deneyin.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const socials = [
@@ -86,7 +109,12 @@ export default function Contact() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {submitted && (
               <div className="p-4 rounded-2xl bg-green-500/20 border border-green-500/30 text-green-400 text-sm font-medium text-center">
-                ✅ Mesajınız gönderildi! En kısa sürede döneceğim.
+                Mesajiniz kaydedildi. En kisa surede geri donus yapilacaktir.
+              </div>
+            )}
+            {error && (
+              <div className="p-4 rounded-2xl bg-red-500/20 border border-red-500/30 text-red-300 text-sm font-medium text-center">
+                {error}
               </div>
             )}
 
@@ -141,10 +169,11 @@ export default function Contact() {
 
             <button
               type="submit"
+              disabled={sending}
               className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-indigo-500/25 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2"
             >
               <Send className="w-5 h-5" />
-              Mesaj Gönder
+              {sending ? 'Gonderiliyor...' : 'Mesaj Gonder'}
             </button>
           </form>
         </div>

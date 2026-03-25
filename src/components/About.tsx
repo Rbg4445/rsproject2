@@ -40,8 +40,12 @@ export default function About() {
             <div className="relative w-72 h-72 mx-auto lg:mx-0">
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl rotate-6 opacity-20" />
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl -rotate-3 opacity-10" />
-              <div className="relative w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl border border-white/10 flex items-center justify-center text-8xl shadow-2xl">
-                👨‍💻
+              <div className="relative w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl border border-white/10 flex items-center justify-center shadow-2xl">
+                <img
+                  src="https://cdn-icons-png.flaticon.com/128/3135/3135715.png"
+                  alt="profil"
+                  className="h-28 w-28 rounded-2xl"
+                />
               </div>
               {/* Floating badges */}
               <div className="absolute -top-4 -right-4 bg-indigo-500 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-lg shadow-indigo-500/30">

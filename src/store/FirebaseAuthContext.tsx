@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { isFirebaseConfigured } from '../firebase/config';
+import { getClientIp } from '../utils/network';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface FirestoreUser {
@@ -137,75 +138,102 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string; remainingSeconds?: number }> => {
+    const ip = await getClientIp();
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
+    const { isIpBlocked, addAccessLog } = await import('../firebase/firestoreService');
+    const blockedIp = await isIpBlocked(ip);
+
+    if (blockedIp) {
+      await addAccessLog({ action: 'LOGIN_FAIL', email, ip, userAgent, success: false, reason: `IP blocked: ${blockedIp.reason}` });
+      return { success: false, error: `Bu IP adresi engellenmis: ${blockedIp.reason}` };
+    }
+
     if (isFirebaseConfigured) {
       try {
         const { loginWithEmail } = await import('../firebase/authService');
+        const { getUserProfile, updateLastLogin } = await import('../firebase/firestoreService');
         const result = await loginWithEmail(email, password);
+
         if (result.user) {
-          const { getUserProfile } = await import('../firebase/firestoreService');
           const profile = await getUserProfile(result.user.uid);
-          if (profile) setUserProfile(ensureRole(profile as FirestoreUser));
+          if (profile) {
+            await updateLastLogin(result.user.uid);
+            setUserProfile(ensureRole(profile as FirestoreUser));
+          }
+          await addAccessLog({ uid: result.user.uid, email, action: 'LOGIN_SUCCESS', ip, userAgent, success: true });
           return { success: true };
         }
+
+        await addAccessLog({ action: 'LOGIN_FAIL', email, ip, userAgent, success: false, reason: 'No user in auth response' });
         return { success: false, error: 'Giriş başarısız.' };
-       } catch (e: unknown) {
-         const msg = (e as Error).message || '';
+      } catch (e: unknown) {
+        const msg = (e as Error).message || '';
 
-          // Firebase auth'ta admin hesabı yoksa, varsayılan admin bilgisi ile otomatik oluştur.
-          if (
-            email.toLowerCase() === 'admin@projeakademi.com' &&
-            password === DEFAULT_ADMIN_PASSWORD &&
-            (msg.includes('user-not-found') || msg.includes('invalid-credential'))
-          ) {
-            try {
-              const { registerWithEmail } = await import('../firebase/authService');
-              const { createUserProfile } = await import('../firebase/firestoreService');
-              const created = await registerWithEmail(email, password);
-              if (created.user) {
-                const adminProfile: FirestoreUser = {
-                  uid: created.user.uid,
-                  username: 'admin',
-                  email,
-                  displayName: 'Admin',
-                  role: 'admin',
-                  createdAt: new Date().toISOString(),
-                  bio: 'Site yoneticisi',
-                };
-                await createUserProfile(adminProfile);
-                setUserProfile(adminProfile);
-                return { success: true };
-              }
-            } catch {
-              // auto-seed başarısızsa normal hata akışına düş.
+        if (
+          email.toLowerCase() === 'admin@projeakademi.com' &&
+          password === DEFAULT_ADMIN_PASSWORD &&
+          (msg.includes('user-not-found') || msg.includes('invalid-credential'))
+        ) {
+          try {
+            const { registerWithEmail } = await import('../firebase/authService');
+            const { createUserProfile } = await import('../firebase/firestoreService');
+            const created = await registerWithEmail(email, password);
+            if (created.user) {
+              const adminProfile: FirestoreUser = {
+                uid: created.user.uid,
+                username: 'admin',
+                email,
+                displayName: 'Admin',
+                role: 'admin',
+                createdAt: new Date().toISOString(),
+                bio: 'Site yoneticisi',
+              };
+              await createUserProfile(adminProfile);
+              setUserProfile(adminProfile);
+              await addAccessLog({ uid: created.user.uid, email, action: 'LOGIN_SUCCESS', ip, userAgent, success: true, reason: 'Auto-seeded admin' });
+              return { success: true };
             }
+          } catch {
+            // fallback to error parser below
           }
+        }
 
-         if (msg.includes('configuration-not-found')) {
-           return {
-             success: false,
-             error:
-               'Firebase Authentication bu proje için tam ayarlanmamış. Firebase Console > Authentication > Sign-in method bölümünden en azından "Email/Password" yöntemini etkinleştirmen gerekiyor.',
-           };
-         }
-          if (msg.includes('user-not-found')) return { success: false, error: 'Bu e-posta ile kayıtlı kullanıcı bulunamadı.' };
-         if (msg.includes('invalid-credential') || msg.includes('wrong-password')) return { success: false, error: 'E-posta veya şifre yanlış.' };
-         if (msg.includes('too-many-requests')) return { success: false, error: 'Çok fazla deneme. Lütfen bekleyin.' };
-         return { success: false, error: 'Giriş başarısız: ' + msg };
-       }
-     }
+        await addAccessLog({ action: 'LOGIN_FAIL', email, ip, userAgent, success: false, reason: msg || 'Unknown error' });
+        if (msg.includes('configuration-not-found')) {
+          return {
+            success: false,
+            error:
+              'Firebase Authentication bu proje için tam ayarlanmamış. Firebase Console > Authentication > Sign-in method bölümünden en azından "Email/Password" yöntemini etkinleştirmen gerekiyor.',
+          };
+        }
+        if (msg.includes('user-not-found')) return { success: false, error: 'Bu e-posta ile kayıtlı kullanıcı bulunamadı.' };
+        if (msg.includes('invalid-credential') || msg.includes('wrong-password')) return { success: false, error: 'E-posta veya şifre yanlış.' };
+        if (msg.includes('too-many-requests')) return { success: false, error: 'Çok fazla deneme. Lütfen bekleyin.' };
+        return { success: false, error: 'Giriş başarısız: ' + msg };
+      }
+    }
 
-    // localStorage login
     const users = getUsers();
-    const user = users.find(u => u.email === email);
-    if (!user) return { success: false, error: 'Bu e-posta adresi kayıtlı değil.' };
-    if (user.isBanned) return { success: false, error: 'Hesabınız yasaklandı: ' + (user.banReason || '') };
+    const user = users.find((u) => u.email === email);
+    if (!user) {
+      await addAccessLog({ action: 'LOGIN_FAIL', email, ip, userAgent, success: false, reason: 'Email not found' });
+      return { success: false, error: 'Bu e-posta adresi kayıtlı değil.' };
+    }
 
-    // Admin için şifre kontrolü
+    if (user.isBanned) {
+      await addAccessLog({ uid: user.uid, email, action: 'LOGIN_FAIL', ip, userAgent, success: false, reason: `User banned: ${user.banReason || ''}` });
+      return { success: false, error: 'Hesabınız yasaklandı: ' + (user.banReason || '') };
+    }
+
     const hashed = hashPassword(password);
     const storedHash = localStorage.getItem(`pa_pw_${user.uid}`);
     if (user.uid === 'admin-001') {
-      if (password !== 'Admin@2025!') return { success: false, error: 'Şifre hatalı.' };
+      if (password !== 'Admin@2025!') {
+        await addAccessLog({ uid: user.uid, email, action: 'LOGIN_FAIL', ip, userAgent, success: false, reason: 'Wrong password' });
+        return { success: false, error: 'Şifre hatalı.' };
+      }
     } else if (storedHash && storedHash !== hashed) {
+      await addAccessLog({ uid: user.uid, email, action: 'LOGIN_FAIL', ip, userAgent, success: false, reason: 'Wrong password' });
       return { success: false, error: 'Şifre hatalı.' };
     }
 
@@ -213,37 +241,63 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
     saveUsers(users);
     localStorage.setItem(LS_SESSION, JSON.stringify({ uid: user.uid, expires: Date.now() + 7 * 24 * 60 * 60 * 1000 }));
     setUserProfile(user);
+    await addAccessLog({ uid: user.uid, email, action: 'LOGIN_SUCCESS', ip, userAgent, success: true });
     return { success: true };
   };
 
   const loginWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
+    const ip = await getClientIp();
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
+    const { isIpBlocked, addAccessLog } = await import('../firebase/firestoreService');
+    const blockedIp = await isIpBlocked(ip);
+
+    if (blockedIp) {
+      await addAccessLog({ action: 'LOGIN_FAIL', ip, userAgent, success: false, reason: `IP blocked: ${blockedIp.reason}` });
+      return { success: false, error: `Bu IP adresi engellenmis: ${blockedIp.reason}` };
+    }
+
     if (isFirebaseConfigured) {
       try {
         const { loginWithGoogle: fbGoogle } = await import('../firebase/authService');
+        const { getUserProfile, createUserProfile, updateLastLogin } = await import('../firebase/firestoreService');
         const result = await fbGoogle();
+
         if (result.user) {
-          const { getUserProfile, createUserProfile } = await import('../firebase/firestoreService');
           let profile = await getUserProfile(result.user.uid);
           if (!profile) {
             const newProfile: FirestoreUser = {
               uid: result.user.uid,
               username: result.user.email?.split('@')[0] || 'user',
               email: result.user.email || '',
-              displayName: result.user.displayName || 'Kullanıcı',
+              displayName: result.user.displayName || 'Kullanici',
               role: 'user',
               createdAt: new Date().toISOString(),
             };
             await createUserProfile(newProfile);
             profile = ensureRole(newProfile);
           }
+
+          await updateLastLogin(result.user.uid);
+          await addAccessLog({
+            uid: result.user.uid,
+            email: result.user.email || undefined,
+            action: 'LOGIN_SUCCESS',
+            ip,
+            userAgent,
+            success: true,
+          });
           setUserProfile(ensureRole(profile as FirestoreUser));
           return { success: true };
         }
+
+        await addAccessLog({ action: 'LOGIN_FAIL', ip, userAgent, success: false, reason: 'Google response had no user' });
         return { success: false, error: 'Google girişi başarısız.' };
       } catch (e: unknown) {
+        await addAccessLog({ action: 'LOGIN_FAIL', ip, userAgent, success: false, reason: (e as Error).message });
         return { success: false, error: (e as Error).message };
       }
     }
+
     return { success: false, error: 'Google girişi için Firebase gerekli.' };
   };
 
@@ -297,12 +351,32 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    const ip = await getClientIp();
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
+    const currentUid = userProfile?.uid;
+    const currentEmail = userProfile?.email;
+
     if (isFirebaseConfigured) {
       try {
         const { logoutUser } = await import('../firebase/authService');
         await logoutUser();
       } catch { /* ignore */ }
     }
+
+    try {
+      const { addAccessLog } = await import('../firebase/firestoreService');
+      await addAccessLog({
+        uid: currentUid,
+        email: currentEmail,
+        action: 'LOGOUT',
+        ip,
+        userAgent,
+        success: true,
+      });
+    } catch {
+      // ignore
+    }
+
     localStorage.removeItem(LS_SESSION);
     setUserProfile(null);
   };

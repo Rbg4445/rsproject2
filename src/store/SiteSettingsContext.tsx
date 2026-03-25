@@ -26,18 +26,18 @@ const defaultSettings: SiteSettings = {
   heroTitle: 'Projelerimi Kesfet & Ogren',
   heroSubtitle:
     'Egitim, kodlama ve akademik projelerimi bir arada bulabileceginiz, toplulukla paylasabileceginiz modern platform.',
-  betaLine: 'Bu bir BETA surumudur • Samo Kral ile yapilmistir',
-  aboutTitle: 'Merhaba, Ben Samo Kral',
+  betaLine: 'Bu bir BETA surumudur',
+  aboutTitle: 'Merhaba, Ben Platform Yoneticisi',
   aboutDescription:
     'Yazilim gelistirme, egitim icerigi uretme ve akademik arastirma alanlarinda aktif calisan bir gelistiriciyim.',
-  contactEmail: 'samo@projeakademi.com',
+  contactEmail: 'iletisim@projeakademi.com',
   contactPhone: '+90 (555) 000 0000',
   contactLocation: 'Istanbul, Turkiye',
   githubUrl: '#',
   twitterUrl: '#',
   linkedinUrl: '#',
   youtubeUrl: '#',
-  footerNote: 'Samo Kral ile yapilmistir',
+  footerNote: 'ProjeAkademi toplulugu tarafindan gelistiriliyor',
 };
 
 interface SiteSettingsContextType {
@@ -55,7 +55,19 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
     try {
       const saved = localStorage.getItem(LS_SETTINGS_KEY);
       if (!saved) return defaultSettings;
-      return { ...defaultSettings, ...(JSON.parse(saved) as Partial<SiteSettings>) };
+      const merged = { ...defaultSettings, ...(JSON.parse(saved) as Partial<SiteSettings>) };
+      const sanitize = (value: string, fallback: string) => {
+        const lower = value.toLowerCase();
+        return lower.includes('samo') || lower.includes('kral') ? fallback : value;
+      };
+
+      return {
+        ...merged,
+        betaLine: sanitize(merged.betaLine, defaultSettings.betaLine),
+        aboutTitle: sanitize(merged.aboutTitle, defaultSettings.aboutTitle),
+        contactEmail: sanitize(merged.contactEmail, defaultSettings.contactEmail),
+        footerNote: sanitize(merged.footerNote, defaultSettings.footerNote),
+      };
     } catch {
       return defaultSettings;
     }

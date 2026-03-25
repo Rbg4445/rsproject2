@@ -38,8 +38,12 @@ function AppContent() {
     return (
       <div className="fixed inset-0 bg-gray-950 flex items-center justify-center z-[999]">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-3xl mb-4 mx-auto animate-pulse">
-            🚀
+          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 mx-auto animate-pulse">
+            <img
+              src="https://cdn-icons-png.flaticon.com/128/1197/1197460.png"
+              alt="loading icon"
+              className="h-8 w-8"
+            />
           </div>
           <p className="text-white/40 text-sm">ProjeAkademi yükleniyor...</p>
         </div>

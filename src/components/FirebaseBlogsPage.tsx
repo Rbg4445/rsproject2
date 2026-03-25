@@ -79,7 +79,11 @@ export default function FirebaseBlogsPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-6xl mb-4">📝</div>
+            <img
+              src="https://cdn-icons-png.flaticon.com/128/2991/2991112.png"
+              alt="blog"
+              className="mx-auto mb-4 h-14 w-14"
+            />
             <h3 className="text-xl font-bold text-white">Blog yazısı bulunamadı</h3>
             <p className="text-white/50 mt-2">Henüz blog yazısı paylaşılmamış</p>
           </div>

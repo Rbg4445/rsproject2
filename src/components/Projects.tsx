@@ -51,7 +51,7 @@ export default function Projects() {
                     : 'bg-gray-800/50 text-white/60 border border-white/10 hover:border-indigo-500/40 hover:text-indigo-400'
                 }`}
               >
-                <span className="mr-1.5">{cat.emoji}</span>
+                <img src={cat.emoji} alt={cat.label} className="mr-1.5 inline-block h-4 w-4" />
                 {cat.label}
               </button>
             ))}
@@ -83,9 +83,13 @@ export default function Projects() {
           </div>
         ) : (
           <div className="text-center py-20">
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-bold text-white">Proje bulunamadı</h3>
-            <p className="text-white/50 mt-2">Farklı bir arama terimi veya kategori deneyin</p>
+            <img
+              src="https://cdn-icons-png.flaticon.com/128/751/751463.png"
+              alt="search"
+              className="mx-auto mb-4 h-12 w-12"
+            />
+            <h3 className="text-xl font-bold text-white">Henuz proje yok</h3>
+            <p className="text-white/50 mt-2">Ilk projeyi eklemek icin giris yapip "Proje Ekle" ozelligini kullanin.</p>
           </div>
         )}
 

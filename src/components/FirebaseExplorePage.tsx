@@ -5,11 +5,11 @@ import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import { GithubIcon } from './icons';
 
 const CATEGORIES = [
-  { key: 'all', label: 'Tümü', emoji: '🌐' },
-  { key: 'egitim', label: 'Eğitim', emoji: '📚' },
-  { key: 'kodlama', label: 'Kodlama', emoji: '💻' },
-  { key: 'akademi', label: 'Akademi', emoji: '🎓' },
-  { key: 'tasarim', label: 'Tasarım', emoji: '🎨' },
+  { key: 'all', label: 'Tümü', icon: 'https://cdn-icons-png.flaticon.com/128/1828/1828884.png' },
+  { key: 'egitim', label: 'Eğitim', icon: 'https://cdn-icons-png.flaticon.com/128/2436/2436874.png' },
+  { key: 'kodlama', label: 'Kodlama', icon: 'https://cdn-icons-png.flaticon.com/128/1006/1006363.png' },
+  { key: 'akademi', label: 'Akademi', icon: 'https://cdn-icons-png.flaticon.com/128/3135/3135755.png' },
+  { key: 'tasarim', label: 'Tasarım', icon: 'https://cdn-icons-png.flaticon.com/128/906/906175.png' },
 ];
 
 export default function FirebaseExplorePage() {
@@ -80,7 +80,7 @@ export default function FirebaseExplorePage() {
                     : 'bg-gray-800/50 text-white/60 border border-white/10 hover:border-indigo-500/40 hover:text-indigo-400'
                 }`}
               >
-                <span className="mr-1">{cat.emoji}</span> {cat.label}
+                <img src={cat.icon} alt={cat.label} className="mr-1 inline-block h-4 w-4" /> {cat.label}
               </button>
             ))}
           </div>
@@ -105,7 +105,7 @@ export default function FirebaseExplorePage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-6xl mb-4">🔍</div>
+            <img src="https://cdn-icons-png.flaticon.com/128/751/751463.png" alt="arama" className="mx-auto mb-4 h-14 w-14" />
             <h3 className="text-xl font-bold text-white">Proje bulunamadı</h3>
             <p className="text-white/50 mt-2">Farklı bir arama terimi deneyin</p>
           </div>

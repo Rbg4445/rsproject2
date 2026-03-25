@@ -111,7 +111,7 @@ export default function FirebaseAuthModal({ onClose, defaultTab = 'login' }: Pro
     setLoading(false);
 
     if (result.success) {
-      setSuccess('🎉 Kayıt başarılı! Email adresinize doğrulama maili gönderildi. Lütfen emailinizi doğrulayın.');
+      setSuccess('Kayit basarili. Email adresinize dogrulama maili gonderildi. Lutfen emailinizi dogrulayin.');
     } else {
       setError(result.error || 'Kayıt başarısız.');
     }
@@ -130,7 +130,11 @@ export default function FirebaseAuthModal({ onClose, defaultTab = 'login' }: Pro
             <X className="w-5 h-5" />
           </button>
           <div className="text-center">
-            <div className="text-3xl mb-1">🚀</div>
+            <img
+              src="https://cdn-icons-png.flaticon.com/128/1197/1197460.png"
+              alt="auth"
+              className="mx-auto mb-1 h-8 w-8"
+            />
             <h2 className="text-xl font-bold text-white">ProjeAkademi</h2>
             <p className="text-white/70 text-sm mt-1">
               {tab === 'login' ? 'Hesabına giriş yap' : 'Yeni hesap oluştur'}
@@ -270,7 +274,7 @@ export default function FirebaseAuthModal({ onClose, defaultTab = 'login' }: Pro
                 <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                 <input
                   type="text"
-                  placeholder="Kullanıcı adı (örn: samo_kral)"
+                  placeholder="Kullanıcı adı (örn: kullanici_adi)"
                   value={regUsername}
                   onChange={(e) => setRegUsername(e.target.value.toLowerCase())}
                   required
