@@ -1,315 +1,188 @@
-import {
-  doc,
-  setDoc,
-  getDoc,
-  updateDoc,
-  collection,
-  addDoc,
-  getDocs,
-  deleteDoc,
-  query,
-  where,
-  orderBy,
-  serverTimestamp,
-  Timestamp,
-  increment,
-  limit,
-  writeBatch,
-} from 'firebase/firestore';
-import { db } from './config';
-import { UserRole, UserStatus } from '../types';
-
-// ─── Kullanıcı Profili ────────────────────────────────────────────────────────
+// Firestore service - localStorage fallback included
+// This file exports the same interface whether Firebase is configured or not
 
 export interface FirestoreUser {
   uid: string;
+  username: string;
   email: string;
   displayName: string;
-  username: string;
   bio?: string;
   avatar?: string;
+  role: 'user' | 'moderator' | 'admin';
   skills?: string[];
   github?: string;
   twitter?: string;
+  linkedin?: string;
   website?: string;
-  role: UserRole;
-  status: UserStatus;
+  createdAt: string;
+  lastLogin?: string;
+  isBanned?: boolean;
   banReason?: string;
-  emailVerified?: boolean;
-  createdAt: Timestamp | null;
-  lastLogin?: Timestamp | null;
+  projectCount?: number;
+  blogCount?: number;
 }
-
-export async function createUserProfile(
-  uid: string,
-  data: Omit<FirestoreUser, 'uid' | 'createdAt'>
-): Promise<void> {
-  await setDoc(doc(db, 'users', uid), {
-    uid,
-    ...data,
-    bio: data.bio || '',
-    skills: data.skills || [],
-    github: data.github || '',
-    twitter: data.twitter || '',
-    website: data.website || '',
-    createdAt: serverTimestamp(),
-    lastLogin: serverTimestamp(),
-  });
-}
-
-export async function getUserProfile(uid: string): Promise<FirestoreUser | null> {
-  const snap = await getDoc(doc(db, 'users', uid));
-  return snap.exists() ? (snap.data() as FirestoreUser) : null;
-}
-
-export async function getUserByUsername(username: string): Promise<FirestoreUser | null> {
-  const q = query(collection(db, 'users'), where('username', '==', username), limit(1));
-  const snap = await getDocs(q);
-  if (snap.empty) return null;
-  return snap.docs[0].data() as FirestoreUser;
-}
-
-export async function updateUserProfile(uid: string, updates: Partial<FirestoreUser>): Promise<void> {
-  await updateDoc(doc(db, 'users', uid), { ...updates });
-}
-
-export async function getAllUsers(): Promise<FirestoreUser[]> {
-  const snap = await getDocs(collection(db, 'users'));
-  return snap.docs.map((d) => d.data() as FirestoreUser);
-}
-
-export async function updateLastLogin(uid: string): Promise<void> {
-  await updateDoc(doc(db, 'users', uid), { lastLogin: serverTimestamp() });
-}
-
-// ─── Projeler ─────────────────────────────────────────────────────────────────
 
 export interface FirestoreProject {
   id: string;
-  userId: string;
-  authorUsername: string;
-  authorName: string;
-  authorAvatar?: string;
+  uid: string;
+  username: string;
+  displayName: string;
   title: string;
   description: string;
-  category: 'egitim' | 'kodlama' | 'akademi' | 'tasarim';
-  tags: string[];
-  image: string;
-  difficulty: 'Başlangıç' | 'Orta' | 'İleri';
+  category: string;
+  difficulty: string;
   duration: string;
+  tags: string[];
   github?: string;
   demo?: string;
-  createdAt: Timestamp | null;
-  likes: number;
-  likedBy: string[];
-  status: 'active' | 'hidden' | 'removed';
-  reportCount: number;
+  image?: string;
+  likes: string[];
+  status: 'active' | 'removed';
+  createdAt: string;
 }
-
-export async function addProject(data: Omit<FirestoreProject, 'id' | 'createdAt'>): Promise<string> {
-  const ref = await addDoc(collection(db, 'projects'), {
-    ...data,
-    createdAt: serverTimestamp(),
-  });
-  await updateDoc(ref, { id: ref.id });
-  return ref.id;
-}
-
-export async function getAllProjects(): Promise<FirestoreProject[]> {
-  const q = query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ ...d.data(), id: d.id } as FirestoreProject));
-}
-
-export async function getUserProjects(userId: string): Promise<FirestoreProject[]> {
-  const q = query(collection(db, 'projects'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ ...d.data(), id: d.id } as FirestoreProject));
-}
-
-export async function deleteProject(projectId: string): Promise<void> {
-  await deleteDoc(doc(db, 'projects', projectId));
-}
-
-export async function updateProject(projectId: string, updates: Partial<FirestoreProject>): Promise<void> {
-  await updateDoc(doc(db, 'projects', projectId), updates);
-}
-
-export async function toggleProjectLike(projectId: string, userId: string, liked: boolean): Promise<void> {
-  const ref = doc(db, 'projects', projectId);
-  if (liked) {
-    await updateDoc(ref, {
-      likes: increment(-1),
-      likedBy: (await getDoc(ref)).data()?.likedBy?.filter((id: string) => id !== userId) || [],
-    });
-  } else {
-    const snap = await getDoc(ref);
-    const likedBy = snap.data()?.likedBy || [];
-    await updateDoc(ref, {
-      likes: increment(1),
-      likedBy: [...likedBy, userId],
-    });
-  }
-}
-
-// ─── Bloglar ──────────────────────────────────────────────────────────────────
 
 export interface FirestoreBlog {
   id: string;
-  userId: string;
-  authorUsername: string;
-  authorName: string;
-  authorAvatar?: string;
+  uid: string;
+  username: string;
+  displayName: string;
   title: string;
   content: string;
-  excerpt: string;
-  coverImage: string;
+  summary: string;
+  coverImage?: string;
   tags: string[];
-  createdAt: Timestamp | null;
-  updatedAt: Timestamp | null;
-  likes: number;
-  likedBy: string[];
+  likes: string[];
   views: number;
-  status: 'active' | 'hidden' | 'removed';
-  reportCount: number;
+  status: 'active' | 'removed';
+  createdAt: string;
 }
 
-export async function addBlog(data: Omit<FirestoreBlog, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
-  const ref = await addDoc(collection(db, 'blogs'), {
-    ...data,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  await updateDoc(ref, { id: ref.id });
-  return ref.id;
+// ─── localStorage helpers ─────────────────────────────────────────────────────
+function getLS<T>(key: string, def: T): T {
+  try { return JSON.parse(localStorage.getItem(key) || 'null') ?? def; } catch { return def; }
+}
+function setLS(key: string, val: unknown) {
+  localStorage.setItem(key, JSON.stringify(val));
 }
 
-export async function getAllBlogs(): Promise<FirestoreBlog[]> {
-  const q = query(collection(db, 'blogs'), orderBy('createdAt', 'desc'));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ ...d.data(), id: d.id } as FirestoreBlog));
+export async function getUserProfile(uid: string): Promise<FirestoreUser | null> {
+  const users: FirestoreUser[] = getLS('pa_users', []);
+  return users.find(u => u.uid === uid) || null;
 }
 
-export async function getUserBlogs(userId: string): Promise<FirestoreBlog[]> {
-  const q = query(collection(db, 'blogs'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ ...d.data(), id: d.id } as FirestoreBlog));
+export async function getUserByUsername(username: string): Promise<FirestoreUser | null> {
+  const users: FirestoreUser[] = getLS('pa_users', []);
+  return users.find(u => u.username === username) || null;
 }
 
-export async function getBlog(blogId: string): Promise<FirestoreBlog | null> {
-  const snap = await getDoc(doc(db, 'blogs', blogId));
-  return snap.exists() ? ({ ...snap.data(), id: snap.id } as FirestoreBlog) : null;
-}
-
-export async function updateBlog(blogId: string, updates: Partial<FirestoreBlog>): Promise<void> {
-  await updateDoc(doc(db, 'blogs', blogId), { ...updates, updatedAt: serverTimestamp() });
-}
-
-export async function deleteBlog(blogId: string): Promise<void> {
-  await deleteDoc(doc(db, 'blogs', blogId));
-}
-
-export async function incrementBlogViews(blogId: string): Promise<void> {
-  await updateDoc(doc(db, 'blogs', blogId), { views: increment(1) });
-}
-
-export async function toggleBlogLike(blogId: string, userId: string, liked: boolean): Promise<void> {
-  const ref = doc(db, 'blogs', blogId);
-  if (liked) {
-    const snap = await getDoc(ref);
-    const likedBy = snap.data()?.likedBy?.filter((id: string) => id !== userId) || [];
-    await updateDoc(ref, { likes: increment(-1), likedBy });
-  } else {
-    const snap = await getDoc(ref);
-    const likedBy = snap.data()?.likedBy || [];
-    await updateDoc(ref, { likes: increment(1), likedBy: [...likedBy, userId] });
+export async function createUserProfile(profile: FirestoreUser): Promise<void> {
+  const users: FirestoreUser[] = getLS('pa_users', []);
+  if (!users.find(u => u.uid === profile.uid)) {
+    users.push(profile);
+    setLS('pa_users', users);
   }
 }
 
-// ─── Raporlar ─────────────────────────────────────────────────────────────────
-
-export interface FirestoreReport {
-  id: string;
-  reporterId: string;
-  targetType: 'project' | 'blog' | 'user';
-  targetId: string;
-  reason: string;
-  details: string;
-  createdAt: Timestamp | null;
-  status: 'pending' | 'resolved' | 'dismissed';
+export async function updateUserProfile(uid: string, updates: Partial<FirestoreUser>): Promise<void> {
+  const users: FirestoreUser[] = getLS('pa_users', []);
+  const idx = users.findIndex(u => u.uid === uid);
+  if (idx !== -1) {
+    users[idx] = { ...users[idx], ...updates };
+    setLS('pa_users', users);
+  }
 }
 
-export async function addReport(data: Omit<FirestoreReport, 'id' | 'createdAt'>): Promise<void> {
-  const ref = await addDoc(collection(db, 'reports'), {
-    ...data,
-    createdAt: serverTimestamp(),
-  });
-  await updateDoc(ref, { id: ref.id });
+export async function updateLastLogin(uid: string): Promise<void> {
+  await updateUserProfile(uid, { lastLogin: new Date().toISOString() });
 }
 
-export async function getAllReports(): Promise<FirestoreReport[]> {
-  const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ ...d.data(), id: d.id } as FirestoreReport));
+export async function getAllUsers(): Promise<FirestoreUser[]> {
+  return getLS('pa_users', []);
 }
 
-export async function updateReport(reportId: string, status: 'resolved' | 'dismissed'): Promise<void> {
-  await updateDoc(doc(db, 'reports', reportId), { status });
+export async function addLog(_log: { action: string; uid?: string; details?: string; success: boolean }): Promise<void> {
+  // no-op in localStorage mode
 }
 
-// ─── Admin İşlemleri ──────────────────────────────────────────────────────────
-
-export async function banUser(uid: string, reason: string): Promise<void> {
-  await updateDoc(doc(db, 'users', uid), { status: 'banned', banReason: reason });
+// ─── Projects ─────────────────────────────────────────────────────────────────
+export async function addProject(project: Omit<FirestoreProject, 'id'>): Promise<string> {
+  const projects: FirestoreProject[] = getLS('pa_projects', []);
+  const id = 'proj_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+  projects.unshift({ ...project, id });
+  setLS('pa_projects', projects);
+  return id;
 }
 
-export async function unbanUser(uid: string): Promise<void> {
-  await updateDoc(doc(db, 'users', uid), { status: 'active', banReason: '' });
+export async function getProjects(): Promise<FirestoreProject[]> {
+  const projects: FirestoreProject[] = getLS('pa_projects', []);
+  return projects.filter(p => p.status === 'active');
 }
 
-export async function changeUserRole(uid: string, role: UserRole): Promise<void> {
-  await updateDoc(doc(db, 'users', uid), { role });
+export async function getUserProjects(uid: string): Promise<FirestoreProject[]> {
+  const projects: FirestoreProject[] = getLS('pa_projects', []);
+  return projects.filter(p => p.uid === uid);
 }
 
-export async function removeContent(
-  type: 'project' | 'blog',
-  id: string,
-  status: 'removed' | 'active'
-): Promise<void> {
-  const col = type === 'project' ? 'projects' : 'blogs';
-  await updateDoc(doc(db, col, id), { status });
+export async function deleteProject(id: string): Promise<void> {
+  const projects: FirestoreProject[] = getLS('pa_projects', []);
+  const idx = projects.findIndex(p => p.id === id);
+  if (idx !== -1) { projects[idx].status = 'removed'; setLS('pa_projects', projects); }
 }
 
-// ─── Aktivite Logları ─────────────────────────────────────────────────────────
-
-export interface FirestoreLog {
-  id: string;
-  userId?: string;
-  username?: string;
-  action: string;
-  details?: string;
-  type: 'success' | 'error' | 'warning' | 'info';
-  createdAt: Timestamp | null;
-  ip?: string;
+export async function toggleProjectLike(id: string, uid: string): Promise<void> {
+  const projects: FirestoreProject[] = getLS('pa_projects', []);
+  const idx = projects.findIndex(p => p.id === id);
+  if (idx !== -1) {
+    const likes = projects[idx].likes || [];
+    if (likes.includes(uid)) projects[idx].likes = likes.filter(l => l !== uid);
+    else projects[idx].likes = [...likes, uid];
+    setLS('pa_projects', projects);
+  }
 }
 
-export async function addLog(data: Omit<FirestoreLog, 'id' | 'createdAt'>): Promise<void> {
-  const ref = await addDoc(collection(db, 'logs'), {
-    ...data,
-    createdAt: serverTimestamp(),
-  });
-  await updateDoc(ref, { id: ref.id });
+// ─── Blogs ────────────────────────────────────────────────────────────────────
+export async function addBlog(blog: Omit<FirestoreBlog, 'id'>): Promise<string> {
+  const blogs: FirestoreBlog[] = getLS('pa_blogs', []);
+  const id = 'blog_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+  blogs.unshift({ ...blog, id });
+  setLS('pa_blogs', blogs);
+  return id;
 }
 
-export async function getLogs(limitCount = 100): Promise<FirestoreLog[]> {
-  const q = query(collection(db, 'logs'), orderBy('createdAt', 'desc'), limit(limitCount));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ ...d.data(), id: d.id } as FirestoreLog));
+export async function getBlogs(): Promise<FirestoreBlog[]> {
+  const blogs: FirestoreBlog[] = getLS('pa_blogs', []);
+  return blogs.filter(b => b.status === 'active');
 }
 
-export async function clearLogs(): Promise<void> {
-  const snap = await getDocs(collection(db, 'logs'));
-  const batch = writeBatch(db);
-  snap.docs.forEach((d) => batch.delete(d.ref));
-  await batch.commit();
+export async function getUserBlogs(uid: string): Promise<FirestoreBlog[]> {
+  const blogs: FirestoreBlog[] = getLS('pa_blogs', []);
+  return blogs.filter(b => b.uid === uid);
+}
+
+export async function getBlog(id: string): Promise<FirestoreBlog | null> {
+  const blogs: FirestoreBlog[] = getLS('pa_blogs', []);
+  return blogs.find(b => b.id === id) || null;
+}
+
+export async function deleteBlog(id: string): Promise<void> {
+  const blogs: FirestoreBlog[] = getLS('pa_blogs', []);
+  const idx = blogs.findIndex(b => b.id === id);
+  if (idx !== -1) { blogs[idx].status = 'removed'; setLS('pa_blogs', blogs); }
+}
+
+export async function toggleBlogLike(id: string, uid: string): Promise<void> {
+  const blogs: FirestoreBlog[] = getLS('pa_blogs', []);
+  const idx = blogs.findIndex(b => b.id === id);
+  if (idx !== -1) {
+    const likes = blogs[idx].likes || [];
+    if (likes.includes(uid)) blogs[idx].likes = likes.filter(l => l !== uid);
+    else blogs[idx].likes = [...likes, uid];
+    setLS('pa_blogs', blogs);
+  }
+}
+
+export async function incrementBlogViews(id: string): Promise<void> {
+  const blogs: FirestoreBlog[] = getLS('pa_blogs', []);
+  const idx = blogs.findIndex(b => b.id === id);
+  if (idx !== -1) { blogs[idx].views = (blogs[idx].views || 0) + 1; setLS('pa_blogs', blogs); }
 }

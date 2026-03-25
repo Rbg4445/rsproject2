@@ -43,7 +43,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-slate-900 text-white">
+    <footer className="bg-gray-950 border-t border-white/5 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer */}
         <div className="py-16 grid sm:grid-cols-2 lg:grid-cols-5 gap-10">
@@ -58,13 +58,13 @@ export default function Footer() {
               </div>
               <div>
                 <span className="text-lg font-bold text-white">ProjeAkademi</span>
-                <span className="block text-[10px] text-slate-400 -mt-1 font-medium">
+                <span className="block text-[10px] text-white/30 -mt-1 font-medium">
                   Eğitim & Kodlama
                 </span>
               </div>
             </a>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
-              Eğitim, akademi ve kodlama alanlarındaki projelerimi paylaştığım platform. 
+            <p className="text-white/40 text-sm leading-relaxed max-w-sm">
+              Eğitim, akademi ve kodlama alanlarındaki projelerimi paylaştığım platform.
               Bilgiyi paylaşarak büyüyoruz.
             </p>
             <div className="flex gap-2">
@@ -72,7 +72,7 @@ export default function Footer() {
                 <a
                   key={i}
                   href={social.href}
-                  className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-indigo-600 hover:text-white transition-all"
+                  className="w-10 h-10 rounded-xl bg-gray-800 border border-white/5 flex items-center justify-center text-white/40 hover:bg-indigo-600 hover:text-white hover:border-transparent transition-all"
                 >
                   {social.icon}
                 </a>
@@ -81,15 +81,15 @@ export default function Footer() {
           </div>
 
           {/* Links */}
-          {footerLinks.map((section) => (
-            <div key={section.title}>
-              <h4 className="font-bold text-white mb-4">{section.title}</h4>
-              <ul className="space-y-2.5">
-                {section.links.map((link) => (
+          {footerLinks.map((group) => (
+            <div key={group.title}>
+              <h4 className="font-bold text-white text-sm mb-4">{group.title}</h4>
+              <ul className="space-y-2">
+                {group.links.map((link) => (
                   <li key={link.label}>
                     <a
                       href={link.href}
-                      className="text-sm text-slate-400 hover:text-indigo-400 transition-colors"
+                      className="text-sm text-white/40 hover:text-indigo-400 transition-colors"
                     >
                       {link.label}
                     </a>
@@ -101,12 +101,16 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="py-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-slate-500">
-            © {currentYear} ProjeAkademi. Tüm hakları saklıdır.
+        <div className="border-t border-white/5 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-white/30 text-sm flex items-center gap-1.5">
+            © {currentYear} ProjeAkademi. 
+            <span className="flex items-center gap-1">
+              👑 Samo Kral ile yapılmıştır
+              <Heart className="w-3.5 h-3.5 text-red-400 fill-red-400" />
+            </span>
           </p>
-          <p className="text-sm text-slate-500 flex items-center gap-1">
-            <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" /> ile yapıldı
+          <p className="text-white/20 text-xs">
+            React • TypeScript • Tailwind CSS
           </p>
         </div>
       </div>

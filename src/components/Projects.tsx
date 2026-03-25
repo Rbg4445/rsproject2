@@ -21,18 +21,18 @@ export default function Projects() {
   });
 
   return (
-    <section id="projects" className="py-24 bg-gradient-to-b from-white to-slate-50">
+    <section id="projects" className="py-24 bg-gray-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center space-y-4 mb-14">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-sm font-semibold">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-sm font-semibold">
             <Filter className="w-4 h-4" />
             Projelerim
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-800">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
             Tüm <span className="gradient-text">Projeler</span>
           </h2>
-          <p className="text-slate-500 max-w-2xl mx-auto">
+          <p className="text-white/50 max-w-2xl mx-auto">
             Eğitim, kodlama, akademi ve tasarım alanlarında geliştirdiğim projeleri keşfedin
           </p>
         </div>
@@ -48,7 +48,7 @@ export default function Projects() {
                 className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                   activeCategory === cat.key
                     ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
+                    : 'bg-gray-800/50 text-white/60 border border-white/10 hover:border-indigo-500/40 hover:text-indigo-400'
                 }`}
               >
                 <span className="mr-1.5">{cat.emoji}</span>
@@ -59,13 +59,13 @@ export default function Projects() {
 
           {/* Search */}
           <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
             <input
               type="text"
               placeholder="Proje ara..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-gray-800/50 text-white placeholder-white/30 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
             />
           </div>
         </div>
@@ -84,13 +84,13 @@ export default function Projects() {
         ) : (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-bold text-slate-700">Proje bulunamadı</h3>
-            <p className="text-slate-500 mt-2">Farklı bir arama terimi veya kategori deneyin</p>
+            <h3 className="text-xl font-bold text-white">Proje bulunamadı</h3>
+            <p className="text-white/50 mt-2">Farklı bir arama terimi veya kategori deneyin</p>
           </div>
         )}
 
         {/* Results Count */}
-        <div className="mt-8 text-center text-sm text-slate-400">
+        <div className="mt-8 text-center text-sm text-white/30">
           {filteredProjects.length} proje gösteriliyor
         </div>
       </div>

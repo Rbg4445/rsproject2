@@ -25,40 +25,30 @@ const highlights = [
 
 export default function About() {
   return (
-    <section id="about" className="py-24 bg-white relative overflow-hidden">
+    <section id="about" className="py-24 bg-gray-900 relative overflow-hidden">
       {/* Background decorations */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-indigo-50 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-purple-50 to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-indigo-900/30 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-purple-900/30 to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Left - Visual */}
+          {/* Left - Profile Visual */}
           <div className="relative">
-            <div className="relative w-full aspect-square max-w-md mx-auto">
-              {/* Background circles */}
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-3xl rotate-6 scale-95" />
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl shadow-2xl shadow-indigo-500/30">
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-8">
-                  <div className="text-7xl mb-4">👨‍💻</div>
-                  <h3 className="text-2xl font-bold mb-2">Merhaba!</h3>
-                  <p className="text-center text-indigo-100 text-sm leading-relaxed">
-                    Yazılım geliştirici, eğitmen ve araştırmacı olarak projelerimle sizlerle buluşuyorum.
-                  </p>
-                  <div className="mt-6 grid grid-cols-3 gap-4 w-full">
-                    <div className="text-center p-3 bg-white/10 rounded-xl backdrop-blur-sm">
-                      <div className="text-xl font-bold">5+</div>
-                      <div className="text-xs text-indigo-200">Yıl Deneyim</div>
-                    </div>
-                    <div className="text-center p-3 bg-white/10 rounded-xl backdrop-blur-sm">
-                      <div className="text-xl font-bold">50+</div>
-                      <div className="text-xs text-indigo-200">Proje</div>
-                    </div>
-                    <div className="text-center p-3 bg-white/10 rounded-xl backdrop-blur-sm">
-                      <div className="text-xl font-bold">1.2K</div>
-                      <div className="text-xs text-indigo-200">Öğrenci</div>
-                    </div>
-                  </div>
-                </div>
+            <div className="relative w-72 h-72 mx-auto lg:mx-0">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl rotate-6 opacity-20" />
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl -rotate-3 opacity-10" />
+              <div className="relative w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl border border-white/10 flex items-center justify-center text-8xl shadow-2xl">
+                👨‍💻
+              </div>
+              {/* Floating badges */}
+              <div className="absolute -top-4 -right-4 bg-indigo-500 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-lg shadow-indigo-500/30">
+                Full-Stack
+              </div>
+              <div className="absolute -bottom-4 -left-4 bg-purple-500 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-lg shadow-purple-500/30">
+                Eğitimci
+              </div>
+              <div className="absolute top-1/2 -right-8 bg-pink-500 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-lg shadow-pink-500/30">
+                Araştırmacı
               </div>
             </div>
           </div>
@@ -66,32 +56,31 @@ export default function About() {
           {/* Right - Content */}
           <div className="space-y-8">
             <div>
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-sm font-semibold mb-4">
-                🧑‍💻 Hakkımda
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-800 mt-4">
-                Kod Yazıyorum,{' '}
-                <span className="gradient-text">Öğretiyorum</span>
-                <br />& Araştırıyorum
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-sm font-medium mb-4">
+                Hakkımda
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">
+                Merhaba, Ben{' '}
+                <span className="gradient-text">Samo Kral</span> 👑
               </h2>
-              <p className="mt-4 text-slate-500 leading-relaxed">
-                Yazılım dünyasına olan tutkumla projeler geliştiriyor, eğitim içerikleri oluşturuyor 
-                ve akademik araştırmalar yürütüyorum. Modern teknolojilerle yenilikçi çözümler 
-                üretmeyi ve bu bilgiyi başkalarıyla paylaşmayı seviyorum.
+              <p className="text-white/60 leading-relaxed">
+                Yazılım geliştirme, eğitim içeriği üretme ve akademik araştırma alanlarında aktif olarak çalışan
+                bir geliştirici ve eğitimciyim. Projelerimi bu platformda paylaşarak topluluğa katkı sağlıyorum.
               </p>
             </div>
 
+            {/* Highlights */}
             <div className="grid sm:grid-cols-2 gap-4">
               {highlights.map((item) => (
                 <div
                   key={item.title}
-                  className="group p-5 rounded-2xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all"
+                  className="p-4 rounded-2xl bg-gray-800/50 border border-white/5 hover:border-indigo-500/30 hover:bg-gray-800 transition-all duration-300 group"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-3 group-hover:scale-110 transition-transform">
                     {item.icon}
                   </div>
-                  <h4 className="font-bold text-slate-800">{item.title}</h4>
-                  <p className="text-sm text-slate-500 mt-1 leading-relaxed">{item.desc}</p>
+                  <h3 className="font-bold text-white text-sm mb-1">{item.title}</h3>
+                  <p className="text-white/50 text-xs leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
