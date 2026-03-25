@@ -44,6 +44,7 @@ const FirebaseAuthContext = createContext<FirebaseAuthContextType | undefined>(u
 const LS_USERS = 'pa_users';
 const LS_SESSION = 'pa_session';
 const ADMIN_EMAILS = ['admin@projeakademi.com'];
+const DEFAULT_ADMIN_PASSWORD = 'Admin@2025!';
 
 function ensureRole(user: FirestoreUser): FirestoreUser {
   if (ADMIN_EMAILS.includes(user.email.toLowerCase())) {
@@ -149,6 +150,36 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: 'Giriş başarısız.' };
        } catch (e: unknown) {
          const msg = (e as Error).message || '';
+
+          // Firebase auth'ta admin hesabı yoksa, varsayılan admin bilgisi ile otomatik oluştur.
+          if (
+            email.toLowerCase() === 'admin@projeakademi.com' &&
+            password === DEFAULT_ADMIN_PASSWORD &&
+            (msg.includes('user-not-found') || msg.includes('invalid-credential'))
+          ) {
+            try {
+              const { registerWithEmail } = await import('../firebase/authService');
+              const { createUserProfile } = await import('../firebase/firestoreService');
+              const created = await registerWithEmail(email, password);
+              if (created.user) {
+                const adminProfile: FirestoreUser = {
+                  uid: created.user.uid,
+                  username: 'admin',
+                  email,
+                  displayName: 'Admin',
+                  role: 'admin',
+                  createdAt: new Date().toISOString(),
+                  bio: 'Site yoneticisi',
+                };
+                await createUserProfile(adminProfile);
+                setUserProfile(adminProfile);
+                return { success: true };
+              }
+            } catch {
+              // auto-seed başarısızsa normal hata akışına düş.
+            }
+          }
+
          if (msg.includes('configuration-not-found')) {
            return {
              success: false,
@@ -156,6 +187,7 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
                'Firebase Authentication bu proje için tam ayarlanmamış. Firebase Console > Authentication > Sign-in method bölümünden en azından "Email/Password" yöntemini etkinleştirmen gerekiyor.',
            };
          }
+          if (msg.includes('user-not-found')) return { success: false, error: 'Bu e-posta ile kayıtlı kullanıcı bulunamadı.' };
          if (msg.includes('invalid-credential') || msg.includes('wrong-password')) return { success: false, error: 'E-posta veya şifre yanlış.' };
          if (msg.includes('too-many-requests')) return { success: false, error: 'Çok fazla deneme. Lütfen bekleyin.' };
          return { success: false, error: 'Giriş başarısız: ' + msg };
