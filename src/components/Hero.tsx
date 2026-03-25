@@ -1,7 +1,10 @@
 import { ArrowDown, Sparkles, BookOpen, Terminal } from 'lucide-react';
 import { stats } from '../data/projects';
+import { useSiteSettings } from '../store/SiteSettingsContext';
 
 export default function Hero() {
+  const { settings } = useSiteSettings();
+
   return (
     <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
       {/* Dark background */}
@@ -29,27 +32,21 @@ export default function Hero() {
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 shadow-sm backdrop-blur-sm">
                 <span className="text-sm font-semibold text-white/70">Bu bir</span>
                 <span className="text-sm font-black bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">BETA</span>
-                <span className="text-sm font-semibold text-white/70">sürümüdür •</span>
-                <span className="text-sm font-bold text-white">RBG/SAMO</span>
-                <span className="text-sm font-semibold text-white/70">ile yapılmıştır</span>
+                <span className="text-sm font-semibold text-white/70">{settings.betaLine}</span>
               </div>
             </div>
 
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/20 border border-indigo-500/30">
               <Sparkles className="w-4 h-4 text-indigo-400" />
-              <span className="text-sm font-medium text-indigo-300">Eğitim & Kodlama Platformu</span>
+              <span className="text-sm font-medium text-indigo-300">{settings.heroBadge}</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight">
-              <span className="text-white">Projelerimi </span>
-              <span className="gradient-text">Keşfet</span>
-              <br />
-              <span className="text-white">& </span>
-              <span className="gradient-text">Öğren</span>
+              <span className="text-white">{settings.heroTitle}</span>
             </h1>
 
             <p className="text-lg text-white/60 max-w-xl leading-relaxed">
-              Eğitim, kodlama ve akademik projelerimi bir arada bulabileceğiniz, toplulukla paylaşabileceğiniz modern platform.
+              {settings.heroSubtitle}
             </p>
 
             <div className="flex flex-wrap gap-4">
@@ -93,14 +90,14 @@ export default function Hero() {
                 </div>
                 <div className="space-y-2 text-xs">
                   <div><span className="text-purple-400">const</span> <span className="text-blue-300">platform</span> <span className="text-white/60">= {'{'}</span></div>
-                  <div className="pl-4"><span className="text-green-300">name</span><span className="text-white/60">:</span> <span className="text-amber-300">'ProjeAkademi'</span><span className="text-white/60">,</span></div>
+                  <div className="pl-4"><span className="text-green-300">name</span><span className="text-white/60">:</span> <span className="text-amber-300">'{settings.brandName}'</span><span className="text-white/60">,</span></div>
                   <div className="pl-4"><span className="text-green-300">features</span><span className="text-white/60">: [</span></div>
                   <div className="pl-8"><span className="text-amber-300">'📚 Eğitim'</span><span className="text-white/60">,</span></div>
                   <div className="pl-8"><span className="text-amber-300">'💻 Kodlama'</span><span className="text-white/60">,</span></div>
                   <div className="pl-8"><span className="text-amber-300">'🎓 Akademi'</span><span className="text-white/60">,</span></div>
                   <div className="pl-8"><span className="text-amber-300">'🌐 Topluluk'</span></div>
                   <div className="pl-4"><span className="text-white/60">],</span></div>
-                  <div className="pl-4"><span className="text-green-300">author</span><span className="text-white/60">:</span> <span className="text-amber-300">'👑 Samo Kral'</span><span className="text-white/60">,</span></div>
+                  <div className="pl-4"><span className="text-green-300">author</span><span className="text-white/60">:</span> <span className="text-amber-300">'{settings.footerNote}'</span><span className="text-white/60">,</span></div>
                   <div className="pl-4"><span className="text-green-300">version</span><span className="text-white/60">:</span> <span className="text-amber-300">'BETA'</span></div>
                   <div><span className="text-white/60">{'}'}</span></div>
                   <div className="mt-4">

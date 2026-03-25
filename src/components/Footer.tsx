@@ -1,7 +1,9 @@
 import { Code2, GraduationCap, Heart } from 'lucide-react';
 import { GithubIcon, TwitterIcon, LinkedInIcon, YoutubeIcon } from './icons';
+import { useSiteSettings } from '../store/SiteSettingsContext';
 
 export default function Footer() {
+  const { settings } = useSiteSettings();
   const currentYear = new Date().getFullYear();
 
   const footerLinks = [
@@ -36,10 +38,10 @@ export default function Footer() {
   ];
 
   const socials = [
-    { icon: <GithubIcon className="w-5 h-5" />, href: '#' },
-    { icon: <TwitterIcon className="w-5 h-5" />, href: '#' },
-    { icon: <LinkedInIcon className="w-5 h-5" />, href: '#' },
-    { icon: <YoutubeIcon className="w-5 h-5" />, href: '#' },
+    { icon: <GithubIcon className="w-5 h-5" />, href: settings.githubUrl },
+    { icon: <TwitterIcon className="w-5 h-5" />, href: settings.twitterUrl },
+    { icon: <LinkedInIcon className="w-5 h-5" />, href: settings.linkedinUrl },
+    { icon: <YoutubeIcon className="w-5 h-5" />, href: settings.youtubeUrl },
   ];
 
   return (
@@ -57,15 +59,14 @@ export default function Footer() {
                 <GraduationCap className="w-4 h-4 text-purple-400 absolute -top-1 -right-1" />
               </div>
               <div>
-                <span className="text-lg font-bold text-white">ProjeAkademi</span>
+                <span className="text-lg font-bold text-white">{settings.brandName}</span>
                 <span className="block text-[10px] text-white/30 -mt-1 font-medium">
-                  Eğitim & Kodlama
+                  {settings.brandSubline}
                 </span>
               </div>
             </a>
             <p className="text-white/40 text-sm leading-relaxed max-w-sm">
-              Eğitim, akademi ve kodlama alanlarındaki projelerimi paylaştığım platform.
-              Bilgiyi paylaşarak büyüyoruz.
+              {settings.aboutDescription}
             </p>
             <div className="flex gap-2">
               {socials.map((social, i) => (
@@ -103,9 +104,9 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-white/5 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-white/30 text-sm flex items-center gap-1.5">
-            © {currentYear} ProjeAkademi. 
+            © {currentYear} {settings.brandName}. 
             <span className="flex items-center gap-1">
-              👑 Samo Kral ile yapılmıştır
+              {settings.footerNote}
               <Heart className="w-3.5 h-3.5 text-red-400 fill-red-400" />
             </span>
           </p>

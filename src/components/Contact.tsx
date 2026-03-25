@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Send, Mail, MapPin, Phone, MessageCircle } from 'lucide-react';
 import { GithubIcon, TwitterIcon, LinkedInIcon, YoutubeIcon } from './icons';
+import { useSiteSettings } from '../store/SiteSettingsContext';
 
 export default function Contact() {
+  const { settings } = useSiteSettings();
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
 
@@ -14,10 +16,10 @@ export default function Contact() {
   };
 
   const socials = [
-    { icon: <GithubIcon className="w-5 h-5" />, label: 'GitHub', href: '#', color: 'hover:bg-gray-700 hover:text-white' },
-    { icon: <TwitterIcon className="w-5 h-5" />, label: 'Twitter', href: '#', color: 'hover:bg-sky-500 hover:text-white' },
-    { icon: <LinkedInIcon className="w-5 h-5" />, label: 'LinkedIn', href: '#', color: 'hover:bg-blue-600 hover:text-white' },
-    { icon: <YoutubeIcon className="w-5 h-5" />, label: 'YouTube', href: '#', color: 'hover:bg-red-600 hover:text-white' },
+    { icon: <GithubIcon className="w-5 h-5" />, label: 'GitHub', href: settings.githubUrl, color: 'hover:bg-gray-700 hover:text-white' },
+    { icon: <TwitterIcon className="w-5 h-5" />, label: 'Twitter', href: settings.twitterUrl, color: 'hover:bg-sky-500 hover:text-white' },
+    { icon: <LinkedInIcon className="w-5 h-5" />, label: 'LinkedIn', href: settings.linkedinUrl, color: 'hover:bg-blue-600 hover:text-white' },
+    { icon: <YoutubeIcon className="w-5 h-5" />, label: 'YouTube', href: settings.youtubeUrl, color: 'hover:bg-red-600 hover:text-white' },
   ];
 
   return (
@@ -47,9 +49,9 @@ export default function Contact() {
           <div className="space-y-8">
             <div className="space-y-4">
               {[
-                { icon: <Mail className="w-5 h-5" />, label: 'E-posta', value: 'samo@projeakademi.com' },
-                { icon: <MapPin className="w-5 h-5" />, label: 'Konum', value: 'İstanbul, Türkiye' },
-                { icon: <Phone className="w-5 h-5" />, label: 'Telefon', value: '+90 (555) 000 0000' },
+                { icon: <Mail className="w-5 h-5" />, label: 'E-posta', value: settings.contactEmail },
+                { icon: <MapPin className="w-5 h-5" />, label: 'Konum', value: settings.contactLocation },
+                { icon: <Phone className="w-5 h-5" />, label: 'Telefon', value: settings.contactPhone },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-4 p-4 rounded-2xl bg-gray-800/50 border border-white/5">
                   <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-400 flex-shrink-0">

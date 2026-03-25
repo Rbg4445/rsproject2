@@ -1,4 +1,5 @@
 import { Award, BookOpen, Code2, Users } from 'lucide-react';
+import { useSiteSettings } from '../store/SiteSettingsContext';
 
 const highlights = [
   {
@@ -24,6 +25,8 @@ const highlights = [
 ];
 
 export default function About() {
+  const { settings } = useSiteSettings();
+
   return (
     <section id="about" className="py-24 bg-gray-900 relative overflow-hidden">
       {/* Background decorations */}
@@ -60,12 +63,10 @@ export default function About() {
                 Hakkımda
               </div>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">
-                Merhaba, Ben{' '}
-                <span className="gradient-text">Samo Kral</span> 👑
+                <span className="gradient-text">{settings.aboutTitle}</span>
               </h2>
               <p className="text-white/60 leading-relaxed">
-                Yazılım geliştirme, eğitim içeriği üretme ve akademik araştırma alanlarında aktif olarak çalışan
-                bir geliştirici ve eğitimciyim. Projelerimi bu platformda paylaşarak topluluğa katkı sağlıyorum.
+                {settings.aboutDescription}
               </p>
             </div>
 

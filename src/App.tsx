@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { FirebaseAuthProvider, useFirebaseAuth } from './store/FirebaseAuthContext';
+import { ThemeProvider } from './store/ThemeContext';
+import { SiteSettingsProvider } from './store/SiteSettingsContext';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Projects from './components/Projects';
@@ -13,11 +15,13 @@ import FirebaseExplorePage from './components/FirebaseExplorePage';
 import FirebaseBlogsPage from './components/FirebaseBlogsPage';
 import AdminPanel from './components/AdminPanel';
 import MouseTrailBackground from './components/MouseTrailBackground';
+import AdminLoginModal from './components/AdminLoginModal';
 
 function AppContent() {
   const { loading } = useFirebaseAuth();
   const [currentPage, setCurrentPage] = useState('home');
   const [showAuth, setShowAuth] = useState(false);
+  const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
 
   const navigate = (page: string) => {
@@ -61,6 +65,7 @@ function AppContent() {
         <MouseTrailBackground />
         <Navbar
           onOpenAuth={() => openAuth('login')}
+          onOpenAdminLogin={() => setShowAdminAuth(true)}
           onNavigate={navigate}
           currentPage={currentPage}
         />
@@ -69,6 +74,12 @@ function AppContent() {
         </div>
         {showAuth && (
           <FirebaseAuthModal onClose={() => setShowAuth(false)} defaultTab={authTab} />
+        )}
+        {showAdminAuth && (
+          <AdminLoginModal
+            onClose={() => setShowAdminAuth(false)}
+            onSuccess={() => navigate('admin')}
+          />
         )}
       </div>
     );
@@ -81,6 +92,7 @@ function AppContent() {
         <MouseTrailBackground />
         <Navbar
           onOpenAuth={() => openAuth('login')}
+          onOpenAdminLogin={() => setShowAdminAuth(true)}
           onNavigate={navigate}
           currentPage={currentPage}
         />
@@ -89,6 +101,12 @@ function AppContent() {
         </div>
         {showAuth && (
           <FirebaseAuthModal onClose={() => setShowAuth(false)} defaultTab={authTab} />
+        )}
+        {showAdminAuth && (
+          <AdminLoginModal
+            onClose={() => setShowAdminAuth(false)}
+            onSuccess={() => navigate('admin')}
+          />
         )}
       </div>
     );
@@ -101,6 +119,7 @@ function AppContent() {
         <MouseTrailBackground />
         <Navbar
           onOpenAuth={() => openAuth('login')}
+          onOpenAdminLogin={() => setShowAdminAuth(true)}
           onNavigate={navigate}
           currentPage={currentPage}
         />
@@ -109,6 +128,12 @@ function AppContent() {
         </div>
         {showAuth && (
           <FirebaseAuthModal onClose={() => setShowAuth(false)} defaultTab={authTab} />
+        )}
+        {showAdminAuth && (
+          <AdminLoginModal
+            onClose={() => setShowAdminAuth(false)}
+            onSuccess={() => navigate('admin')}
+          />
         )}
       </div>
     );
@@ -120,6 +145,7 @@ function AppContent() {
       <MouseTrailBackground />
       <Navbar
         onOpenAuth={() => openAuth('login')}
+        onOpenAdminLogin={() => setShowAdminAuth(true)}
         onNavigate={navigate}
         currentPage="home"
       />
@@ -135,14 +161,24 @@ function AppContent() {
       {showAuth && (
         <FirebaseAuthModal onClose={() => setShowAuth(false)} defaultTab={authTab} />
       )}
+      {showAdminAuth && (
+        <AdminLoginModal
+          onClose={() => setShowAdminAuth(false)}
+          onSuccess={() => navigate('admin')}
+        />
+      )}
     </div>
   );
 }
 
 export default function App() {
   return (
-    <FirebaseAuthProvider>
-      <AppContent />
-    </FirebaseAuthProvider>
+    <ThemeProvider>
+      <SiteSettingsProvider>
+        <FirebaseAuthProvider>
+          <AppContent />
+        </FirebaseAuthProvider>
+      </SiteSettingsProvider>
+    </ThemeProvider>
   );
 }

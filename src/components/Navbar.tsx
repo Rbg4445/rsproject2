@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, Code2, GraduationCap, LogIn, LogOut, User, Compass, ChevronDown, BookOpen, Shield } from 'lucide-react';
+import { Menu, X, Code2, GraduationCap, LogIn, LogOut, User, Compass, ChevronDown, BookOpen, Shield, Moon, Sun } from 'lucide-react';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
+import { useTheme } from '../store/ThemeContext';
+import { useSiteSettings } from '../store/SiteSettingsContext';
 
 interface NavbarProps {
   onOpenAuth: () => void;
+  onOpenAdminLogin: () => void;
   onNavigate: (page: string) => void;
   currentPage: string;
 }
 
-export default function Navbar({ onOpenAuth, onNavigate, currentPage }: NavbarProps) {
+export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, currentPage }: NavbarProps) {
   const { userProfile, isAdmin, logout } = useFirebaseAuth();
+  const { theme, toggleTheme } = useTheme();
+  const { settings } = useSiteSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -66,9 +71,9 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage }: NavbarPr
               <GraduationCap className="w-4 h-4 text-purple-400 absolute -top-1 -right-1" />
             </div>
             <div>
-              <span className="text-lg font-bold gradient-text">ProjeAkademi</span>
+               <span className="text-lg font-bold gradient-text">{settings.brandName}</span>
               <span className="hidden sm:block text-[10px] text-white/30 -mt-1 font-medium">
-                Eğitim & Kodlama
+                 {settings.brandSubline}
               </span>
             </div>
           </button>
@@ -125,6 +130,14 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage }: NavbarPr
                 Admin
               </button>
             )}
+
+            <button
+              onClick={toggleTheme}
+              className="ml-2 rounded-lg border border-white/10 bg-white/5 p-2 text-white/70 transition hover:bg-white/10 hover:text-white"
+              title={theme === 'dark' ? 'Aydinlik moda gec' : 'Karanlik moda gec'}
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
 
             {/* Auth */}
             {userProfile ? (
@@ -186,13 +199,22 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage }: NavbarPr
                 )}
               </div>
             ) : (
-              <button
-                onClick={onOpenAuth}
-                className="ml-3 flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-semibold rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 transition-all hover:-translate-y-0.5"
-              >
-                <LogIn className="w-4 h-4" />
-                Giriş Yap
-              </button>
+              <div className="ml-3 flex items-center gap-2">
+                <button
+                  onClick={onOpenAdminLogin}
+                  className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/20"
+                >
+                  <Shield className="h-4 w-4" />
+                  Admin Girisi
+                </button>
+                <button
+                  onClick={onOpenAuth}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-semibold rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 transition-all hover:-translate-y-0.5"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Giris Yap
+                </button>
+              </div>
             )}
           </div>
 
@@ -237,6 +259,13 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage }: NavbarPr
             <BookOpen className="w-4 h-4" />
             Bloglar
           </button>
+          <button
+            onClick={() => { toggleTheme(); setIsOpen(false); }}
+            className="w-full text-left px-4 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/10 font-medium transition flex items-center gap-2"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {theme === 'dark' ? 'Aydinlik Mod' : 'Karanlik Mod'}
+          </button>
 
           {userProfile ? (
             <>
@@ -265,13 +294,22 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage }: NavbarPr
               </button>
             </>
           ) : (
-            <button
-              onClick={() => { onOpenAuth(); setIsOpen(false); }}
-              className="block w-full text-center mt-2 px-5 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl"
-            >
-              <LogIn className="w-4 h-4 inline mr-2" />
-              Giriş Yap / Kayıt Ol
-            </button>
+            <>
+              <button
+                onClick={() => { onOpenAdminLogin(); setIsOpen(false); }}
+                className="block w-full text-center mt-2 px-5 py-3 border border-red-500/30 bg-red-500/10 text-red-300 font-semibold rounded-xl"
+              >
+                <Shield className="w-4 h-4 inline mr-2" />
+                Admin Girisi
+              </button>
+              <button
+                onClick={() => { onOpenAuth(); setIsOpen(false); }}
+                className="block w-full text-center mt-2 px-5 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl"
+              >
+                <LogIn className="w-4 h-4 inline mr-2" />
+                Giris Yap / Kayit Ol
+              </button>
+            </>
           )}
         </div>
       </div>

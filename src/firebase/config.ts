@@ -4,6 +4,9 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { GoogleAuthProvider } from 'firebase/auth';
 
+// Firebase config - .env.local içindeki değerler doluysa otomatik olarak Firebase modu açılır.
+// Ekstra bir VITE_ENABLE_FIREBASE değişkeni tanımlamana gerek yok.
+
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
@@ -37,6 +40,8 @@ if (isFirebaseConfigured) {
   } catch (e) {
     console.warn('Firebase başlatılamadı, localStorage modu aktif:', e);
   }
+} else {
+  console.info('Firebase anahtarları eksik oldugu icin localStorage modu kullaniliyor.');
 }
 
 export { app, auth, db, storage, googleProvider };

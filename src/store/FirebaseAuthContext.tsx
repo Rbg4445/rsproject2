@@ -43,6 +43,14 @@ const FirebaseAuthContext = createContext<FirebaseAuthContextType | undefined>(u
 // ─── localStorage helpers ─────────────────────────────────────────────────────
 const LS_USERS = 'pa_users';
 const LS_SESSION = 'pa_session';
+const ADMIN_EMAILS = ['admin@projeakademi.com'];
+
+function ensureRole(user: FirestoreUser): FirestoreUser {
+  if (ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+    return { ...user, role: 'admin' };
+  }
+  return user;
+}
 
 function getUsers(): FirestoreUser[] {
   try { return JSON.parse(localStorage.getItem(LS_USERS) || '[]'); } catch { return []; }
@@ -115,7 +123,7 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
         if (fbUser) {
           try {
             const profile = await getUserProfile(fbUser.uid);
-            if (profile) setUserProfile(profile as FirestoreUser);
+            if (profile) setUserProfile(ensureRole(profile as FirestoreUser));
           } catch { /* ignore */ }
         } else {
           setUserProfile(null);
@@ -135,17 +143,24 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
         if (result.user) {
           const { getUserProfile } = await import('../firebase/firestoreService');
           const profile = await getUserProfile(result.user.uid);
-          if (profile) setUserProfile(profile as FirestoreUser);
+          if (profile) setUserProfile(ensureRole(profile as FirestoreUser));
           return { success: true };
         }
         return { success: false, error: 'Giriş başarısız.' };
-      } catch (e: unknown) {
-        const msg = (e as Error).message || '';
-        if (msg.includes('invalid-credential') || msg.includes('wrong-password')) return { success: false, error: 'E-posta veya şifre yanlış.' };
-        if (msg.includes('too-many-requests')) return { success: false, error: 'Çok fazla deneme. Lütfen bekleyin.' };
-        return { success: false, error: 'Giriş başarısız: ' + msg };
-      }
-    }
+       } catch (e: unknown) {
+         const msg = (e as Error).message || '';
+         if (msg.includes('configuration-not-found')) {
+           return {
+             success: false,
+             error:
+               'Firebase Authentication bu proje için tam ayarlanmamış. Firebase Console > Authentication > Sign-in method bölümünden en azından "Email/Password" yöntemini etkinleştirmen gerekiyor.',
+           };
+         }
+         if (msg.includes('invalid-credential') || msg.includes('wrong-password')) return { success: false, error: 'E-posta veya şifre yanlış.' };
+         if (msg.includes('too-many-requests')) return { success: false, error: 'Çok fazla deneme. Lütfen bekleyin.' };
+         return { success: false, error: 'Giriş başarısız: ' + msg };
+       }
+     }
 
     // localStorage login
     const users = getUsers();
@@ -187,9 +202,9 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
               createdAt: new Date().toISOString(),
             };
             await createUserProfile(newProfile);
-            profile = newProfile;
+            profile = ensureRole(newProfile);
           }
-          setUserProfile(profile as FirestoreUser);
+          setUserProfile(ensureRole(profile as FirestoreUser));
           return { success: true };
         }
         return { success: false, error: 'Google girişi başarısız.' };
@@ -212,7 +227,7 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
             username: data.username,
             email: data.email,
             displayName: data.displayName,
-            role: 'user',
+            role: ADMIN_EMAILS.includes(data.email.toLowerCase()) ? 'admin' : 'user',
             createdAt: new Date().toISOString(),
           };
           await createUserProfile(newProfile);
