@@ -30,6 +30,7 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
   const [form, setForm] = useState({
     title: '',
     description: '',
+    content: '',
     category: 'kodlama',
     difficulty: 'Orta',
     duration: '',
@@ -61,6 +62,7 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
         displayName: userProfile.displayName,
         title: form.title,
         description: form.description,
+        content: form.content,
         category: form.category,
         difficulty: form.difficulty,
         duration: form.duration || '1 ay',
@@ -122,6 +124,17 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
               onChange={e => set('description', e.target.value)}
               placeholder="Projenizi kısaca anlatın..."
               rows={3}
+              className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-indigo-500 text-sm resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-white/60 mb-2">Detaylı İnceleme İçeriği</label>
+            <textarea
+              value={form.content}
+              onChange={e => set('content', e.target.value)}
+              placeholder="Projeyi nasıl geliştirdiğini, mimarisini ve kullanılan teknolojileri yaz..."
+              rows={5}
               className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-indigo-500 text-sm resize-none"
             />
           </div>

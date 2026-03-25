@@ -13,15 +13,18 @@ import FirebaseAuthModal from './components/FirebaseAuthModal';
 import FirebaseUserProfile from './components/FirebaseUserProfile';
 import FirebaseExplorePage from './components/FirebaseExplorePage';
 import FirebaseBlogsPage from './components/FirebaseBlogsPage';
+import FirebaseWikiPage from './components/FirebaseWikiPage';
 import AdminPanel from './components/AdminPanel';
 import MouseTrailBackground from './components/MouseTrailBackground';
 import AdminLoginModal from './components/AdminLoginModal';
+import BetaNoticeModal from './components/BetaNoticeModal';
 
 function AppContent() {
   const { loading } = useFirebaseAuth();
   const [currentPage, setCurrentPage] = useState('home');
   const [showAuth, setShowAuth] = useState(false);
   const [showAdminAuth, setShowAdminAuth] = useState(false);
+  const [showBetaNotice, setShowBetaNotice] = useState(true);
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
 
   const navigate = (page: string) => {
@@ -33,6 +36,23 @@ function AppContent() {
     setAuthTab(tab);
     setShowAuth(true);
   };
+
+  const renderOverlayModals = (withAuth = true) => (
+    <>
+      {withAuth && showAuth && (
+        <FirebaseAuthModal onClose={() => setShowAuth(false)} defaultTab={authTab} />
+      )}
+      {withAuth && showAdminAuth && (
+        <AdminLoginModal
+          onClose={() => setShowAdminAuth(false)}
+          onSuccess={() => navigate('admin')}
+        />
+      )}
+      {showBetaNotice && (
+        <BetaNoticeModal onClose={() => setShowBetaNotice(false)} isOpen={showBetaNotice} />
+      )}
+    </>
+  );
 
   if (loading) {
     return (
@@ -57,6 +77,7 @@ function AppContent() {
       <div className="min-h-screen bg-gray-950">
         <MouseTrailBackground />
         <AdminPanel onBack={() => navigate('home')} />
+        {renderOverlayModals(false)}
       </div>
     );
   }
@@ -76,15 +97,7 @@ function AppContent() {
         <div className="relative z-10">
           <FirebaseUserProfile username={username} />
         </div>
-        {showAuth && (
-          <FirebaseAuthModal onClose={() => setShowAuth(false)} defaultTab={authTab} />
-        )}
-        {showAdminAuth && (
-          <AdminLoginModal
-            onClose={() => setShowAdminAuth(false)}
-            onSuccess={() => navigate('admin')}
-          />
-        )}
+        {renderOverlayModals()}
       </div>
     );
   }
@@ -103,15 +116,7 @@ function AppContent() {
         <div className="relative z-10">
           <FirebaseExplorePage />
         </div>
-        {showAuth && (
-          <FirebaseAuthModal onClose={() => setShowAuth(false)} defaultTab={authTab} />
-        )}
-        {showAdminAuth && (
-          <AdminLoginModal
-            onClose={() => setShowAdminAuth(false)}
-            onSuccess={() => navigate('admin')}
-          />
-        )}
+        {renderOverlayModals()}
       </div>
     );
   }
@@ -130,15 +135,26 @@ function AppContent() {
         <div className="relative z-10">
           <FirebaseBlogsPage />
         </div>
-        {showAuth && (
-          <FirebaseAuthModal onClose={() => setShowAuth(false)} defaultTab={authTab} />
-        )}
-        {showAdminAuth && (
-          <AdminLoginModal
-            onClose={() => setShowAdminAuth(false)}
-            onSuccess={() => navigate('admin')}
-          />
-        )}
+        {renderOverlayModals()}
+      </div>
+    );
+  }
+
+  // Wiki page
+  if (currentPage === 'wiki') {
+    return (
+      <div className="min-h-screen bg-gray-950">
+        <MouseTrailBackground />
+        <Navbar
+          onOpenAuth={() => openAuth('login')}
+          onOpenAdminLogin={() => setShowAdminAuth(true)}
+          onNavigate={navigate}
+          currentPage={currentPage}
+        />
+        <div className="relative z-10">
+          <FirebaseWikiPage />
+        </div>
+        {renderOverlayModals()}
       </div>
     );
   }
@@ -162,15 +178,7 @@ function AppContent() {
         <Footer />
       </div>
 
-      {showAuth && (
-        <FirebaseAuthModal onClose={() => setShowAuth(false)} defaultTab={authTab} />
-      )}
-      {showAdminAuth && (
-        <AdminLoginModal
-          onClose={() => setShowAdminAuth(false)}
-          onSuccess={() => navigate('admin')}
-        />
-      )}
+      {renderOverlayModals()}
     </div>
   );
 }

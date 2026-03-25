@@ -18,6 +18,7 @@ export default function FirebaseExplorePage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
+  const [selectedProject, setSelectedProject] = useState<FirestoreProject | null>(null);
 
   useEffect(() => {
     loadProjects();
@@ -51,6 +52,88 @@ export default function FirebaseExplorePage() {
       };
     }));
   };
+
+  if (selectedProject) {
+    const liked = userProfile ? (selectedProject.likes || []).includes(userProfile.uid) : false;
+
+    return (
+      <div className="min-h-screen pt-24 pb-16 px-4">
+        <div className="max-w-4xl mx-auto bg-gray-900/70 border border-white/10 rounded-2xl overflow-hidden">
+          <button
+            onClick={() => setSelectedProject(null)}
+            className="m-4 text-sm text-white/60 hover:text-white"
+          >
+            ← Tum projeler
+          </button>
+
+          <div className="relative h-72">
+            <img
+              src={selectedProject.image || 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=1200&q=80'}
+              alt={selectedProject.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent" />
+            <div className="absolute bottom-4 left-4 right-4">
+              <span className="inline-flex px-3 py-1 rounded-full text-xs bg-indigo-500/30 border border-indigo-500/30 text-indigo-300 mb-3">
+                {selectedProject.category}
+              </span>
+              <h1 className="text-3xl font-extrabold text-white">{selectedProject.title}</h1>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-6">
+            <div className="flex flex-wrap gap-2">
+              {selectedProject.tags.map((tag) => (
+                <span key={tag} className="px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs">#{tag}</span>
+              ))}
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-4 text-sm">
+              <div className="rounded-xl border border-white/10 bg-gray-800/40 p-3">
+                <p className="text-white/40 text-xs">Zorluk</p>
+                <p className="text-white font-semibold mt-1">{selectedProject.difficulty}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-gray-800/40 p-3">
+                <p className="text-white/40 text-xs">Sure</p>
+                <p className="text-white font-semibold mt-1">{selectedProject.duration}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-gray-800/40 p-3">
+                <p className="text-white/40 text-xs">Begeni</p>
+                <p className="text-white font-semibold mt-1">{(selectedProject.likes || []).length}</p>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-lg font-bold text-white mb-2">Proje Aciklamasi</h2>
+              <p className="text-white/70 leading-relaxed whitespace-pre-wrap">
+                {selectedProject.content || selectedProject.description}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              {selectedProject.github && (
+                <a href={selectedProject.github} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-white/80 hover:text-white">
+                  <GithubIcon className="w-4 h-4" /> GitHub
+                </a>
+              )}
+              {selectedProject.demo && (
+                <a href={selectedProject.demo} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/20 px-4 py-2 text-indigo-300 hover:text-indigo-200">
+                  <ExternalLink className="w-4 h-4" /> Canli Demo
+                </a>
+              )}
+              <button
+                onClick={() => handleLike(selectedProject.id)}
+                className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm ${liked ? 'border border-red-500/30 bg-red-500/20 text-red-400' : 'border border-white/10 bg-white/5 text-white/70'}`}
+              >
+                <Heart className={`h-4 w-4 ${liked ? 'fill-red-400' : ''}`} />
+                Begen ({(selectedProject.likes || []).length})
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
@@ -117,6 +200,7 @@ export default function FirebaseExplorePage() {
                 project={project}
                 currentUid={userProfile?.uid}
                 onLike={handleLike}
+                onOpen={setSelectedProject}
               />
             ))}
           </div>
@@ -128,10 +212,11 @@ export default function FirebaseExplorePage() {
   );
 }
 
-function ProjectCard({ project, currentUid, onLike }: {
+function ProjectCard({ project, currentUid, onLike, onOpen }: {
   project: FirestoreProject;
   currentUid?: string;
   onLike: (id: string) => void;
+  onOpen?: (project: FirestoreProject) => void;
 }) {
   const liked = currentUid ? (project.likes || []).includes(currentUid) : false;
   const initials = project.displayName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
@@ -146,7 +231,7 @@ function ProjectCard({ project, currentUid, onLike }: {
   const img = project.image || coverImages[project.category] || coverImages.kodlama;
 
   return (
-    <div className="group bg-gray-800/50 border border-white/5 rounded-2xl overflow-hidden hover:border-indigo-500/30 transition-all duration-300 card-hover">
+    <button onClick={() => onOpen?.(project)} className="group w-full text-left bg-gray-800/50 border border-white/5 rounded-2xl overflow-hidden hover:border-indigo-500/30 transition-all duration-300 card-hover">
       <div className="relative h-44 overflow-hidden">
         <img src={img} alt={project.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent" />
@@ -188,7 +273,7 @@ function ProjectCard({ project, currentUid, onLike }: {
             <span className="text-xs text-white/50">{project.displayName}</span>
           </div>
           <button
-            onClick={() => onLike(project.id)}
+            onClick={(e) => { e.stopPropagation(); onLike(project.id); }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               liked ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-gray-700/50 text-white/40 border border-white/5 hover:border-red-500/30 hover:text-red-400'
             }`}
@@ -198,6 +283,6 @@ function ProjectCard({ project, currentUid, onLike }: {
           </button>
         </div>
       </div>
-    </div>
+    </button>
   );
 }

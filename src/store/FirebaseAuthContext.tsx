@@ -124,7 +124,14 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
       onAuthChange(async (fbUser) => {
         if (fbUser) {
           try {
+            const { logoutUser } = await import('../firebase/authService');
             const profile = await getUserProfile(fbUser.uid);
+            if (profile?.isBanned) {
+              await logoutUser();
+              setUserProfile(null);
+              setLoading(false);
+              return;
+            }
             if (profile) setUserProfile(ensureRole(profile as FirestoreUser));
           } catch { /* ignore */ }
         } else {
@@ -156,6 +163,24 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
 
         if (result.user) {
           const profile = await getUserProfile(result.user.uid);
+          if (profile?.isBanned) {
+            const { logoutUser } = await import('../firebase/authService');
+            await logoutUser();
+            await addAccessLog({
+              uid: result.user.uid,
+              email,
+              action: 'LOGIN_FAIL',
+              ip,
+              userAgent,
+              success: false,
+              reason: `User banned: ${profile.banReason || 'Sebep belirtilmedi'}`,
+            });
+            return {
+              success: false,
+              error: `Banlandiniz. Bu hesaba erisiminiz engellendi. Sebep: ${profile.banReason || 'Kural ihlali'}`,
+            };
+          }
+
           if (profile) {
             await updateLastLogin(result.user.uid);
             setUserProfile(ensureRole(profile as FirestoreUser));
@@ -275,6 +300,24 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
             };
             await createUserProfile(newProfile);
             profile = ensureRole(newProfile);
+          }
+
+          if (profile?.isBanned) {
+            const { logoutUser } = await import('../firebase/authService');
+            await logoutUser();
+            await addAccessLog({
+              uid: result.user.uid,
+              email: result.user.email || undefined,
+              action: 'LOGIN_FAIL',
+              ip,
+              userAgent,
+              success: false,
+              reason: `User banned: ${profile.banReason || 'Sebep belirtilmedi'}`,
+            });
+            return {
+              success: false,
+              error: `Banlandiniz. Bu hesaba erisiminiz engellendi. Sebep: ${profile.banReason || 'Kural ihlali'}`,
+            };
           }
 
           await updateLastLogin(result.user.uid);

@@ -26,6 +26,7 @@ export interface FirestoreProject {
   displayName: string;
   title: string;
   description: string;
+  content?: string;
   category: string;
   difficulty: string;
   duration: string;
@@ -36,6 +37,23 @@ export interface FirestoreProject {
   likes: string[];
   status: 'active' | 'removed';
   createdAt: string;
+}
+
+export interface FirestoreArticle {
+  id: string;
+  uid: string;
+  username: string;
+  displayName: string;
+  title: string;
+  summary: string;
+  content: string;
+  tags: string[];
+  coverImage?: string;
+  likes: string[];
+  views: number;
+  status: 'active' | 'removed';
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface FirestoreBlog {
@@ -101,6 +119,7 @@ function setLS(key: string, val: unknown) {
 const USERS_KEY = 'pa_users';
 const PROJECTS_KEY = 'pa_projects';
 const BLOGS_KEY = 'pa_blogs';
+const ARTICLES_KEY = 'pa_articles';
 const ACCESS_LOG_KEY = 'pa_access_logs';
 const BLOCKED_IPS_KEY = 'pa_blocked_ips';
 const CONTACT_MESSAGES_KEY = 'pa_contact_messages';
@@ -245,6 +264,58 @@ export async function toggleBlogLike(id: string, uid: string): Promise<void> {
     const likes = blogs[idx].likes || [];
     blogs[idx].likes = likes.includes(uid) ? likes.filter((l) => l !== uid) : [...likes, uid];
     setLS(BLOGS_KEY, blogs);
+  }
+}
+
+export async function addArticle(article: Omit<FirestoreArticle, 'id'>): Promise<string> {
+  const articles: FirestoreArticle[] = getLS(ARTICLES_KEY, []);
+  const id = `article_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  articles.unshift({ ...article, id });
+  setLS(ARTICLES_KEY, articles);
+  return id;
+}
+
+export async function getArticles(): Promise<FirestoreArticle[]> {
+  const articles: FirestoreArticle[] = getLS(ARTICLES_KEY, []);
+  return articles.filter((a) => a.status === 'active');
+}
+
+export async function getArticleById(id: string): Promise<FirestoreArticle | null> {
+  const articles: FirestoreArticle[] = getLS(ARTICLES_KEY, []);
+  return articles.find((a) => a.id === id) || null;
+}
+
+export async function getUserArticles(uid: string): Promise<FirestoreArticle[]> {
+  const articles: FirestoreArticle[] = getLS(ARTICLES_KEY, []);
+  return articles.filter((a) => a.uid === uid && a.status === 'active');
+}
+
+export async function toggleArticleLike(id: string, uid: string): Promise<void> {
+  const articles: FirestoreArticle[] = getLS(ARTICLES_KEY, []);
+  const idx = articles.findIndex((a) => a.id === id);
+  if (idx !== -1) {
+    const likes = articles[idx].likes || [];
+    articles[idx].likes = likes.includes(uid) ? likes.filter((l) => l !== uid) : [...likes, uid];
+    setLS(ARTICLES_KEY, articles);
+  }
+}
+
+export async function incrementArticleViews(id: string): Promise<void> {
+  const articles: FirestoreArticle[] = getLS(ARTICLES_KEY, []);
+  const idx = articles.findIndex((a) => a.id === id);
+  if (idx !== -1) {
+    articles[idx].views = (articles[idx].views || 0) + 1;
+    setLS(ARTICLES_KEY, articles);
+  }
+}
+
+export async function setArticleStatus(id: string, status: FirestoreArticle['status']): Promise<void> {
+  const articles: FirestoreArticle[] = getLS(ARTICLES_KEY, []);
+  const idx = articles.findIndex((a) => a.id === id);
+  if (idx !== -1) {
+    articles[idx].status = status;
+    articles[idx].updatedAt = new Date().toISOString();
+    setLS(ARTICLES_KEY, articles);
   }
 }
 
