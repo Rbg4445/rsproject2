@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Plus, Trash2, Upload } from 'lucide-react';
+import { X, Plus, Trash2, Upload, FileText } from 'lucide-react';
 import { addProject } from '../firebase/firestoreService';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 
@@ -27,6 +27,9 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
   const { userProfile } = useFirebaseAuth();
   const [loading, setLoading] = useState(false);
   const [tagInput, setTagInput] = useState('');
+  const [documents, setDocuments] = useState<
+    { id: string; name: string; type: string; size: number; dataUrl: string; uploadedAt: string }[]
+  >([]);
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -51,6 +54,34 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
     }
   };
 
+  const fileToDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('Belge okunamadi'));
+      reader.readAsDataURL(file);
+    });
+
+  const handleDocumentUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    const picked = Array.from(files);
+    const accepted = picked.filter((file) => file.size <= 5 * 1024 * 1024).slice(0, 5 - documents.length);
+
+    const mapped = await Promise.all(
+      accepted.map(async (file) => ({
+        id: `doc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        name: file.name,
+        type: file.type || 'application/octet-stream',
+        size: file.size,
+        dataUrl: await fileToDataUrl(file),
+        uploadedAt: new Date().toISOString(),
+      }))
+    );
+
+    setDocuments((prev) => [...prev, ...mapped]);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userProfile) return;
@@ -70,6 +101,7 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
         github: form.github,
         demo: form.demo,
         image: form.customImage || form.image,
+        documents,
         likes: [],
         status: 'active',
         createdAt: new Date().toISOString(),
@@ -254,6 +286,41 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
               placeholder="Veya özel görsel URL'si girin"
               className="w-full px-4 py-2.5 rounded-xl bg-gray-800/50 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-indigo-500 text-sm"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-white/60 mb-2">Belgeler (PDF, DOCX, ZIP) - Max 5 adet, her biri 5MB</label>
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-gray-800/40 px-4 py-3 text-sm text-white/70 hover:border-indigo-500/40 hover:text-white">
+              <FileText className="h-4 w-4" />
+              Belge Sec
+              <input
+                type="file"
+                multiple
+                className="hidden"
+                accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx,.zip,.rar"
+                onChange={(e) => void handleDocumentUpload(e.target.files)}
+              />
+            </label>
+
+            {documents.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {documents.map((doc) => (
+                  <div key={doc.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-gray-800/40 px-3 py-2 text-sm">
+                    <div>
+                      <p className="text-white/90">{doc.name}</p>
+                      <p className="text-white/50 text-xs">{(doc.size / 1024 / 1024).toFixed(2)} MB</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDocuments((prev) => prev.filter((d) => d.id !== doc.id))}
+                      className="rounded-lg p-2 text-red-300 hover:bg-red-500/15"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Submit */}

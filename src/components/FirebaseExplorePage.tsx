@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Heart, ExternalLink, Tag } from 'lucide-react';
+import { Search, Filter, Heart, ExternalLink, Tag, Download, FileText } from 'lucide-react';
 import { getProjects, toggleProjectLike, FirestoreProject } from '../firebase/firestoreService';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import { GithubIcon } from './icons';
@@ -109,6 +109,36 @@ export default function FirebaseExplorePage() {
                 {selectedProject.content || selectedProject.description}
               </p>
             </div>
+
+            {!!selectedProject.documents?.length && (
+              <div>
+                <h2 className="mb-2 text-lg font-bold text-white">Belgeler</h2>
+                <div className="space-y-2">
+                  {selectedProject.documents.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex items-center justify-between rounded-xl border border-white/10 bg-gray-800/40 px-3 py-2"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-indigo-300" />
+                        <div>
+                          <p className="text-sm text-white">{doc.name}</p>
+                          <p className="text-xs text-white/50">{(doc.size / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                      </div>
+                      <a
+                        href={doc.dataUrl}
+                        download={doc.name}
+                        className="inline-flex items-center gap-1 rounded-lg border border-indigo-500/30 bg-indigo-500/15 px-3 py-1.5 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/25"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Indir
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-wrap gap-3">
               {selectedProject.github && (

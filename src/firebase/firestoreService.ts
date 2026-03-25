@@ -34,9 +34,19 @@ export interface FirestoreProject {
   github?: string;
   demo?: string;
   image?: string;
+  documents?: ProjectDocument[];
   likes: string[];
   status: 'active' | 'removed';
   createdAt: string;
+}
+
+export interface ProjectDocument {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  dataUrl: string;
+  uploadedAt: string;
 }
 
 export interface FirestoreArticle {

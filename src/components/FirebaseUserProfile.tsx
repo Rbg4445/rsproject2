@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BookOpen, FolderPlus, PenLine, Trash2 } from 'lucide-react';
+import { BookOpen, FolderPlus, PenLine, Trash2, Download, FileText } from 'lucide-react';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import {
   type FirestoreBlog,
@@ -109,6 +109,23 @@ export default function FirebaseUserProfile({ username }: Props) {
                     <div>
                       <h3 className="font-semibold text-white">{project.title}</h3>
                       <p className="mt-1 text-sm text-white/60">{project.description}</p>
+
+                      {!!project.documents?.length && (
+                        <div className="mt-3 space-y-1.5">
+                          {project.documents.map((doc) => (
+                            <a
+                              key={doc.id}
+                              href={doc.dataUrl}
+                              download={doc.name}
+                              className="inline-flex items-center gap-1 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-1 text-xs text-indigo-300 hover:bg-indigo-500/20"
+                            >
+                              <FileText className="h-3.5 w-3.5" />
+                              {doc.name}
+                              <Download className="h-3.5 w-3.5" />
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     {isOwner && (
                       <button
