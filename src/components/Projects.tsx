@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
-import { projects, categories } from '../data/projects';
+import { categories } from '../data/projects';
 import type { ProjectCategory, Project } from '../data/projects';
+import { getProjects, FirestoreProject } from '../firebase/firestoreService';
 import ProjectCard from './ProjectCard';
 import ProjectModal from './ProjectModal';
 
@@ -9,8 +10,44 @@ export default function Projects() {
   const [activeCategory, setActiveCategory] = useState<ProjectCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [firestoreProjects, setFirestoreProjects] = useState<FirestoreProject[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredProjects = projects.filter((project) => {
+  useEffect(() => {
+    void loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    setLoading(true);
+    const data = await getProjects();
+    setFirestoreProjects(data);
+    setLoading(false);
+  };
+
+  const adaptedProjects: Project[] = firestoreProjects.map((p, index) => ({
+    id: index + 1,
+    title: p.title,
+    description: p.description,
+    category: p.category as ProjectCategory,
+    tags: p.tags,
+    image:
+      p.image ||
+      (p.category === 'egitim'
+        ? 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=80'
+        : p.category === 'akademi'
+        ? 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=600&q=80'
+        : p.category === 'tasarim'
+        ? 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&q=80'
+        : 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&q=80'),
+    date: p.createdAt || new Date().toISOString(),
+    difficulty: (p.difficulty as Project['difficulty']) || 'Orta',
+    duration: p.duration || '1 ay',
+    github: p.github,
+    demo: p.demo,
+    featured: false,
+  }));
+
+  const filteredProjects = adaptedProjects.filter((project) => {
     const matchCategory = activeCategory === 'all' || project.category === activeCategory;
     const matchSearch =
       searchQuery === '' ||
@@ -71,7 +108,16 @@ export default function Projects() {
         </div>
 
         {/* Grid */}
-        {filteredProjects.length > 0 ? (
+        {loading ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="h-64 rounded-2xl border border-white/5 bg-gray-800/50 animate-pulse"
+              />
+            ))}
+          </div>
+        ) : filteredProjects.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((project) => (
               <ProjectCard

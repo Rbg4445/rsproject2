@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Search, Heart, Eye, BookOpen, Tag } from 'lucide-react';
+import { Search, Heart, Eye, BookOpen, Tag, Plus } from 'lucide-react';
 import { getBlogs, toggleBlogLike, FirestoreBlog } from '../firebase/firestoreService';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
+import FirebaseBlogEditor from './FirebaseBlogEditor';
 
 export default function FirebaseBlogsPage() {
   const { userProfile } = useFirebaseAuth();
@@ -9,6 +10,7 @@ export default function FirebaseBlogsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<FirestoreBlog | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
 
   useEffect(() => {
     loadBlogs();
@@ -49,15 +51,27 @@ export default function FirebaseBlogsPage() {
     <div className="min-h-screen pt-24 pb-16 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-sm font-medium mb-4">
-            <BookOpen className="w-4 h-4" />
-            Topluluk Blogları
+        <div className="mb-8 flex flex-col items-center justify-between gap-4 sm:mb-12 sm:flex-row">
+          <div className="text-center sm:text-left">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-sm font-medium mb-3">
+              <BookOpen className="w-4 h-4" />
+              Topluluk Blogları
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-2">
+              Blog <span className="gradient-text">Yazıları</span>
+            </h1>
+            <p className="text-white/50 text-sm sm:text-base">Topluluk üyelerinin paylaştığı blog yazılarını oku</p>
           </div>
-          <h1 className="text-4xl font-extrabold text-white mb-3">
-            Blog <span className="gradient-text">Yazıları</span>
-          </h1>
-          <p className="text-white/50">Topluluk üyelerinin paylaştığı blog yazılarını oku</p>
+
+          {userProfile && (
+            <button
+              onClick={() => setShowEditor(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40"
+            >
+              <Plus className="h-4 w-4" />
+              Blog Yaz
+            </button>
+          )}
         </div>
 
         {/* Search */}
@@ -96,6 +110,15 @@ export default function FirebaseBlogsPage() {
         )}
         <p className="text-center text-white/30 text-sm mt-8">{filtered.length} blog yazısı</p>
       </div>
+
+      {userProfile && showEditor && (
+        <FirebaseBlogEditor
+          onClose={() => setShowEditor(false)}
+          onSuccess={() => {
+            void loadBlogs();
+          }}
+        />
+      )}
     </div>
   );
 }

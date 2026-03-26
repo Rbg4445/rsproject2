@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Heart, ExternalLink, Tag, Download, FileText } from 'lucide-react';
+import { Search, Filter, Heart, ExternalLink, Tag, Download, FileText, Plus } from 'lucide-react';
 import { getProjects, toggleProjectLike, FirestoreProject } from '../firebase/firestoreService';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import { GithubIcon } from './icons';
+import FirebaseAddProjectModal from './FirebaseAddProjectModal';
 
 const CATEGORIES = [
   { key: 'all', label: 'Tümü', icon: 'https://cdn-icons-png.flaticon.com/128/1828/1828884.png' },
@@ -19,6 +20,7 @@ export default function FirebaseExplorePage() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [selectedProject, setSelectedProject] = useState<FirestoreProject | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     loadProjects();
@@ -169,15 +171,27 @@ export default function FirebaseExplorePage() {
     <div className="min-h-screen pt-24 pb-16 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-sm font-medium mb-4">
-            <Filter className="w-4 h-4" />
-            Topluluk Projeleri
+        <div className="mb-8 flex flex-col items-center justify-between gap-4 sm:mb-12 sm:flex-row">
+          <div className="text-center sm:text-left">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-sm font-medium mb-3">
+              <Filter className="w-4 h-4" />
+              Topluluk Projeleri
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-2">
+              Projeleri <span className="gradient-text">Keşfet</span>
+            </h1>
+            <p className="text-white/50 text-sm sm:text-base">Topluluk üyelerinin paylaştığı projeleri incele ve ilham al</p>
           </div>
-          <h1 className="text-4xl font-extrabold text-white mb-3">
-            Projeleri <span className="gradient-text">Keşfet</span>
-          </h1>
-          <p className="text-white/50">Topluluk üyelerinin paylaştığı projeleri incele ve ilham al</p>
+
+          {userProfile && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40"
+           >
+              <Plus className="h-4 w-4" />
+              Proje Ekle
+            </button>
+          )}
         </div>
 
         {/* Filters */}
@@ -238,6 +252,15 @@ export default function FirebaseExplorePage() {
 
         <p className="text-center text-white/30 text-sm mt-8">{filtered.length} proje gösteriliyor</p>
       </div>
+
+      {userProfile && showAddModal && (
+        <FirebaseAddProjectModal
+          onClose={() => setShowAddModal(false)}
+          onSuccess={() => {
+            void loadProjects();
+          }}
+        />
+      )}
     </div>
   );
 }
