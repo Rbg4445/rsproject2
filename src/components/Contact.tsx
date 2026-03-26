@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Send, Mail, MapPin, Phone, MessageCircle } from 'lucide-react';
 import { GithubIcon, TwitterIcon, LinkedInIcon, YoutubeIcon } from './icons';
 import { useSiteSettings } from '../store/SiteSettingsContext';
 import { addContactMessage } from '../firebase/firestoreService';
 import { getClientIp } from '../utils/network';
+import ConditionalRecaptcha from './ConditionalRecaptcha';
+import { clearRecaptchaState, markRecaptchaVerified, needsRecaptcha, recordSuspiciousAttempt } from '../utils/recaptcha';
 
 export default function Contact() {
   const { settings } = useSiteSettings();
@@ -11,9 +13,22 @@ export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [showCaptcha, setShowCaptcha] = useState(false);
+
+  useEffect(() => {
+    setShowCaptcha(needsRecaptcha(`contact:${formData.email.trim().toLowerCase() || 'guest'}`));
+  }, [formData.email]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const scope = `contact:${formData.email.trim().toLowerCase() || 'guest'}`;
+    if (needsRecaptcha(scope) && !captchaToken) {
+      setShowCaptcha(true);
+      setError('Mesaji gondermeden once reCAPTCHA dogrulamasini tamamlayin.');
+      return;
+    }
+
     setError('');
     setSending(true);
     try {
@@ -28,10 +43,16 @@ export default function Contact() {
         userAgent,
       });
 
+      clearRecaptchaState(scope);
       setSubmitted(true);
       setTimeout(() => setSubmitted(false), 4000);
       setFormData({ name: '', email: '', subject: '', message: '' });
+      setCaptchaToken(null);
+      setShowCaptcha(false);
     } catch {
+      recordSuspiciousAttempt(scope);
+      setShowCaptcha(needsRecaptcha(scope));
+      if (captchaToken) markRecaptchaVerified(scope);
       setError('Mesaj gonderilirken bir hata olustu. Lutfen tekrar deneyin.');
     } finally {
       setSending(false);
@@ -166,6 +187,16 @@ export default function Contact() {
                 className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-indigo-500 transition-colors text-sm resize-none"
               />
             </div>
+
+            <ConditionalRecaptcha
+              show={showCaptcha}
+              value={captchaToken}
+              onChange={(token) => {
+                setCaptchaToken(token);
+                if (token) markRecaptchaVerified(`contact:${formData.email.trim().toLowerCase() || 'guest'}`);
+              }}
+              description="Kisa surede tekrarlanan mesaj denemeleri algilandi. Mesaji gondermek icin dogrulamayi tamamlayin."
+            />
 
             <button
               type="submit"

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, Code2, GraduationCap, LogIn, LogOut, User, Compass, ChevronDown, BookOpen, BookText, Shield, Moon, Sun } from 'lucide-react';
+import { Menu, X, Code2, GraduationCap, LogIn, LogOut, User, Compass, ChevronDown, BookOpen, BookText, Shield, Moon, Sun, Gamepad2 } from 'lucide-react';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import { useTheme } from '../store/ThemeContext';
 import { useSiteSettings } from '../store/SiteSettingsContext';
@@ -126,6 +126,18 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
             >
               <BookText className="w-4 h-4" />
               Wiki
+            </button>
+
+            <button
+              onClick={() => onNavigate('rbg')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
+                currentPage === 'rbg'
+                  ? 'bg-emerald-500/20 text-emerald-300'
+                  : 'text-white/60 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Gamepad2 className="w-4 h-4" />
+              RBG
             </button>
 
             {/* Admin Button */}
@@ -277,6 +289,13 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
           >
             <BookText className="w-4 h-4" />
             Wiki
+          </button>
+          <button
+            onClick={() => { onNavigate('rbg'); setIsOpen(false); }}
+            className="w-full text-left px-4 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/10 font-medium transition flex items-center gap-2"
+          >
+            <Gamepad2 className="w-4 h-4" />
+            RBG
           </button>
           <button
             onClick={() => { toggleTheme(); setIsOpen(false); }}

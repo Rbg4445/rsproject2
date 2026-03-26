@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FirebaseAuthProvider, useFirebaseAuth } from './store/FirebaseAuthContext';
 import { ThemeProvider } from './store/ThemeContext';
 import { SiteSettingsProvider } from './store/SiteSettingsContext';
@@ -18,18 +18,44 @@ import AdminPanel from './components/AdminPanel';
 import MouseTrailBackground from './components/MouseTrailBackground';
 import AdminLoginModal from './components/AdminLoginModal';
 import BetaNoticeModal from './components/BetaNoticeModal';
+import RbgPage from './components/RbgPage';
+
+function parseRouteFromHash() {
+  const raw = window.location.hash.replace(/^#/, '').trim();
+  if (!raw) return 'home';
+  return decodeURIComponent(raw);
+}
 
 function AppContent() {
   const { loading } = useFirebaseAuth();
-  const [currentPage, setCurrentPage] = useState('home');
+  const [currentPage, setCurrentPage] = useState(parseRouteFromHash());
   const [showAuth, setShowAuth] = useState(false);
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [showBetaNotice, setShowBetaNotice] = useState(true);
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
 
+  useEffect(() => {
+    const handleHashChange = () => {
+      setCurrentPage(parseRouteFromHash());
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    if (!window.location.hash) {
+      window.history.replaceState(null, '', '#home');
+      setCurrentPage('home');
+    }
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   const navigate = (page: string) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const nextHash = `#${encodeURIComponent(page)}`;
+    if (window.location.hash !== nextHash) {
+      window.location.hash = nextHash;
+    } else {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const openAuth = (tab: 'login' | 'register' = 'login') => {
@@ -45,7 +71,10 @@ function AppContent() {
       {withAuth && showAdminAuth && (
         <AdminLoginModal
           onClose={() => setShowAdminAuth(false)}
-          onSuccess={() => navigate('admin')}
+          onSuccess={() => {
+            setShowAdminAuth(false);
+            navigate('admin');
+          }}
         />
       )}
       {showBetaNotice && (
@@ -71,7 +100,6 @@ function AppContent() {
     );
   }
 
-  // Admin panel
   if (currentPage === 'admin') {
     return (
       <div className="min-h-screen bg-gray-950">
@@ -82,7 +110,23 @@ function AppContent() {
     );
   }
 
-  // Profile page
+  if (currentPage === 'rbg') {
+    return (
+      <div className="min-h-screen bg-gray-950">
+        <Navbar
+          onOpenAuth={() => openAuth('login')}
+          onOpenAdminLogin={() => setShowAdminAuth(true)}
+          onNavigate={navigate}
+          currentPage={currentPage}
+        />
+        <div className="relative z-10">
+          <RbgPage />
+        </div>
+        {renderOverlayModals()}
+      </div>
+    );
+  }
+
   if (currentPage.startsWith('profile:')) {
     const username = currentPage.split(':')[1];
     return (
@@ -102,7 +146,6 @@ function AppContent() {
     );
   }
 
-  // Explore page
   if (currentPage === 'explore') {
     return (
       <div className="min-h-screen bg-gray-950">
@@ -121,7 +164,6 @@ function AppContent() {
     );
   }
 
-  // Blogs page
   if (currentPage === 'blogs') {
     return (
       <div className="min-h-screen bg-gray-950">
@@ -140,7 +182,6 @@ function AppContent() {
     );
   }
 
-  // Wiki page
   if (currentPage === 'wiki') {
     return (
       <div className="min-h-screen bg-gray-950">
@@ -159,7 +200,6 @@ function AppContent() {
     );
   }
 
-  // Home page
   return (
     <div className="min-h-screen bg-gray-950">
       <MouseTrailBackground />
@@ -177,7 +217,6 @@ function AppContent() {
         <Contact />
         <Footer />
       </div>
-
       {renderOverlayModals()}
     </div>
   );

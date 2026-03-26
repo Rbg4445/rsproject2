@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { BookOpen, FolderPlus, PenLine, Trash2, Download, FileText } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { BookOpen, FolderPlus, PenLine, Trash2, Download, FileText, Gamepad2 } from 'lucide-react';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import {
   type FirestoreBlog,
@@ -28,6 +28,11 @@ export default function FirebaseUserProfile({ username }: Props) {
   const [showBlogModal, setShowBlogModal] = useState(false);
 
   const isOwner = !!userProfile && userProfile.username === username;
+  const isRbgProfile = useMemo(() => {
+    const uname = profile?.username?.toLowerCase() || username.toLowerCase();
+    const display = profile?.displayName?.toLowerCase() || '';
+    return uname === 'rbg' || display === 'rbg';
+  }, [profile, username]);
 
   useEffect(() => {
     loadProfileData();
@@ -75,7 +80,18 @@ export default function FirebaseUserProfile({ username }: Props) {
             </div>
 
             {isOwner && (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                {isRbgProfile && (
+                  <button
+                    onClick={() => {
+                      window.location.hash = '#rbg';
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white"
+                  >
+                    <Gamepad2 className="h-4 w-4" />
+                    RBG Sayfami Yonet
+                  </button>
+                )}
                 <button
                   onClick={() => setShowProjectModal(true)}
                   className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"

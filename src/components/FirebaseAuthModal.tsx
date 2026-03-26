@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { X, Eye, EyeOff, Mail, Lock, User, AtSign, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import { validatePasswordStrength } from '../utils/security';
+import ConditionalRecaptcha from './ConditionalRecaptcha';
+import { clearRecaptchaState, markRecaptchaVerified, needsRecaptcha, recordSuspiciousAttempt } from '../utils/recaptcha';
 
 interface Props {
   onClose: () => void;
@@ -18,6 +20,12 @@ export default function FirebaseAuthModal({ onClose, defaultTab = 'login' }: Pro
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [countdown, setCountdown] = useState(0);
+  const [loginCaptchaToken, setLoginCaptchaToken] = useState<string | null>(null);
+  const [googleCaptchaToken, setGoogleCaptchaToken] = useState<string | null>(null);
+  const [registerCaptchaToken, setRegisterCaptchaToken] = useState<string | null>(null);
+  const [showLoginCaptcha, setShowLoginCaptcha] = useState(false);
+  const [showGoogleCaptcha, setShowGoogleCaptcha] = useState(false);
+  const [showRegisterCaptcha, setShowRegisterCaptcha] = useState(false);
 
   // Login form
   const [loginEmail, setLoginEmail] = useState('');
@@ -50,9 +58,24 @@ export default function FirebaseAuthModal({ onClose, defaultTab = 'login' }: Pro
     }
   }, [regPassword]);
 
+  useEffect(() => {
+    setShowLoginCaptcha(needsRecaptcha(`login:${loginEmail.trim().toLowerCase() || 'anonymous'}`));
+  }, [loginEmail]);
+
+  useEffect(() => {
+    setShowRegisterCaptcha(needsRecaptcha(`register:${regEmail.trim().toLowerCase() || 'anonymous'}`));
+  }, [regEmail]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (countdown > 0) return;
+    const scope = `login:${loginEmail.trim().toLowerCase() || 'anonymous'}`;
+    if (needsRecaptcha(scope) && !loginCaptchaToken) {
+      setShowLoginCaptcha(true);
+      setError('Devam etmek icin once reCAPTCHA dogrulamasini tamamlayin.');
+      return;
+    }
+
     setError('');
     setLoading(true);
 
@@ -60,28 +83,49 @@ export default function FirebaseAuthModal({ onClose, defaultTab = 'login' }: Pro
     setLoading(false);
 
     if (result.success) {
+      clearRecaptchaState(scope);
       onClose();
     } else {
+      recordSuspiciousAttempt(scope);
+      setShowLoginCaptcha(needsRecaptcha(scope));
+      if (loginCaptchaToken) markRecaptchaVerified(scope);
       setError(result.error || 'Giriş başarısız.');
       if (result.remainingSeconds) setCountdown(result.remainingSeconds);
     }
   };
 
   const handleGoogleLogin = async () => {
+    const scope = 'google_login';
+    if (needsRecaptcha(scope) && !googleCaptchaToken) {
+      setShowGoogleCaptcha(true);
+      setError('Supheli tekrar algilandi. Google girisi icin once reCAPTCHA dogrulamasi yapin.');
+      return;
+    }
+
     setError('');
     setGoogleLoading(true);
     const result = await loginWithGoogle();
     setGoogleLoading(false);
 
     if (result.success) {
+      clearRecaptchaState(scope);
       onClose();
     } else {
+      recordSuspiciousAttempt(scope);
+      setShowGoogleCaptcha(needsRecaptcha(scope));
+      if (googleCaptchaToken) markRecaptchaVerified(scope);
       setError(result.error || 'Google ile giriş başarısız.');
     }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    const scope = `register:${regEmail.trim().toLowerCase() || 'anonymous'}`;
+    if (needsRecaptcha(scope) && !registerCaptchaToken) {
+      setShowRegisterCaptcha(true);
+      setError('Kayda devam etmek icin reCAPTCHA dogrulamasini tamamlayin.');
+      return;
+    }
     setError('');
 
     if (regPassword !== regConfirmPassword) {
@@ -111,8 +155,12 @@ export default function FirebaseAuthModal({ onClose, defaultTab = 'login' }: Pro
     setLoading(false);
 
     if (result.success) {
+      clearRecaptchaState(scope);
       setSuccess('Kayit basarili. Email adresinize dogrulama maili gonderildi. Lutfen emailinizi dogrulayin.');
     } else {
+      recordSuspiciousAttempt(scope);
+      setShowRegisterCaptcha(needsRecaptcha(scope));
+      if (registerCaptchaToken) markRecaptchaVerified(scope);
       setError(result.error || 'Kayıt başarısız.');
     }
   };
@@ -202,6 +250,16 @@ export default function FirebaseAuthModal({ onClose, defaultTab = 'login' }: Pro
                 <span className="text-white/40 text-xs">veya email ile</span>
                 <div className="flex-1 h-px bg-white/10" />
               </div>
+
+              <ConditionalRecaptcha
+                show={showGoogleCaptcha}
+                value={googleCaptchaToken}
+                onChange={(token) => {
+                  setGoogleCaptchaToken(token);
+                  if (token) markRecaptchaVerified('google_login');
+                }}
+                description="Google girisinde art arda supheli denemeler algilandi. Devam etmek icin dogrulamayi tamamlayin."
+              />
             </>
           )}
 
@@ -238,6 +296,16 @@ export default function FirebaseAuthModal({ onClose, defaultTab = 'login' }: Pro
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+
+              <ConditionalRecaptcha
+                show={showLoginCaptcha}
+                value={loginCaptchaToken}
+                onChange={(token) => {
+                  setLoginCaptchaToken(token);
+                  if (token) markRecaptchaVerified(`login:${loginEmail.trim().toLowerCase() || 'anonymous'}`);
+                }}
+                description="Bu hesap icin tekrar eden hatali girisler algilandi. Devam etmek icin dogrulamayi tamamlayin."
+              />
 
               <button
                 type="submit"
@@ -364,6 +432,16 @@ export default function FirebaseAuthModal({ onClose, defaultTab = 'login' }: Pro
                   Kayıt sonrası email adresinize <strong>doğrulama maili</strong> gönderilecektir.
                 </p>
               </div>
+
+              <ConditionalRecaptcha
+                show={showRegisterCaptcha}
+                value={registerCaptchaToken}
+                onChange={(token) => {
+                  setRegisterCaptchaToken(token);
+                  if (token) markRecaptchaVerified(`register:${regEmail.trim().toLowerCase() || 'anonymous'}`);
+                }}
+                description="Bu e-posta icin tekrar eden kayit denemeleri algilandi. Devam etmek icin dogrulamayi tamamlayin."
+              />
 
               <button
                 type="submit"

@@ -114,6 +114,25 @@ export interface ContactMessage {
   status: 'new' | 'read' | 'resolved';
 }
 
+export interface RbgLinkItem {
+  id: string;
+  title: string;
+  url: string;
+  description?: string;
+  iconUrl?: string;
+}
+
+export interface RbgPageData {
+  ownerUid?: string;
+  ownerUsername?: string;
+  title: string;
+  subtitle: string;
+  avatarUrl: string;
+  backgroundImage: string;
+  links: RbgLinkItem[];
+  updatedAt: string;
+}
+
 function getLS<T>(key: string, def: T): T {
   try {
     return JSON.parse(localStorage.getItem(key) || 'null') ?? def;
@@ -133,6 +152,7 @@ const ARTICLES_KEY = 'pa_articles';
 const ACCESS_LOG_KEY = 'pa_access_logs';
 const BLOCKED_IPS_KEY = 'pa_blocked_ips';
 const CONTACT_MESSAGES_KEY = 'pa_contact_messages';
+const RBG_PAGE_KEY = 'pa_rbg_page';
 
 export async function getUserProfile(uid: string): Promise<FirestoreUser | null> {
   const users: FirestoreUser[] = getLS(USERS_KEY, []);
@@ -378,10 +398,7 @@ export async function blockIp(ip: string, reason: string, createdBy: string): Pr
 
 export async function unblockIp(ip: string): Promise<void> {
   const blockedIps = getLS<BlockedIp[]>(BLOCKED_IPS_KEY, []);
-  setLS(
-    BLOCKED_IPS_KEY,
-    blockedIps.filter((entry) => entry.ip !== ip)
-  );
+  setLS(BLOCKED_IPS_KEY, blockedIps.filter((entry) => entry.ip !== ip));
 }
 
 export async function addContactMessage(
@@ -410,6 +427,30 @@ export async function setContactMessageStatus(
   const messages = getLS<ContactMessage[]>(CONTACT_MESSAGES_KEY, []);
   const next = messages.map((msg) => (msg.id === id ? { ...msg, status } : msg));
   setLS(CONTACT_MESSAGES_KEY, next);
+}
+
+export async function getRbgPageData(): Promise<RbgPageData> {
+  return getLS<RbgPageData>(RBG_PAGE_KEY, {
+    title: 'RBG',
+    subtitle: 'Kisisel baglantilarim ve ozel sayfam.',
+    avatarUrl: 'https://cdn-icons-png.flaticon.com/128/3135/3135715.png',
+    backgroundImage:
+      'https://images.unsplash.com/photo-1618331833071-ce81bd50d300?auto=format&fit=crop&w=1600&q=80',
+    links: [],
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+export async function updateRbgPageData(updates: Partial<RbgPageData>): Promise<RbgPageData> {
+  const current = await getRbgPageData();
+  const next: RbgPageData = {
+    ...current,
+    ...updates,
+    links: updates.links ?? current.links,
+    updatedAt: new Date().toISOString(),
+  };
+  setLS(RBG_PAGE_KEY, next);
+  return next;
 }
 
 export async function addLog(_log: { action: string; uid?: string; details?: string; success: boolean }): Promise<void> {

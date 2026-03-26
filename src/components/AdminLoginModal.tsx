@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Shield, Lock, Mail, X } from 'lucide-react';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
+import ConditionalRecaptcha from './ConditionalRecaptcha';
+import { clearRecaptchaState, markRecaptchaVerified, needsRecaptcha, recordSuspiciousAttempt } from '../utils/recaptcha';
 
 interface AdminLoginModalProps {
   onClose: () => void;
@@ -13,19 +15,36 @@ export default function AdminLoginModal({ onClose, onSuccess }: AdminLoginModalP
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [showCaptcha, setShowCaptcha] = useState(false);
+
+  useEffect(() => {
+    setShowCaptcha(needsRecaptcha(`admin:${email.trim().toLowerCase() || 'admin'}`));
+  }, [email]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const scope = `admin:${email.trim().toLowerCase() || 'admin'}`;
+    if (needsRecaptcha(scope) && !captchaToken) {
+      setShowCaptcha(true);
+      setError('Supheli tekrar algilandi. Admin girisi icin once reCAPTCHA dogrulamasini tamamlayin.');
+      return;
+    }
+
     setError('');
     setLoading(true);
 
     const result = await login(email, password);
     if (!result.success) {
+      recordSuspiciousAttempt(scope);
+      setShowCaptcha(needsRecaptcha(scope));
+      if (captchaToken) markRecaptchaVerified(scope);
       setLoading(false);
       setError(result.error || 'Admin girisi basarisiz.');
       return;
     }
 
+    clearRecaptchaState(scope);
     setTimeout(async () => {
       await refreshProfile();
       if (userProfile?.role === 'admin' || email.toLowerCase() === 'admin@projeakademi.com') {
@@ -89,6 +108,16 @@ export default function AdminLoginModal({ onClose, onSuccess }: AdminLoginModalP
             className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-3 text-sm text-white outline-none focus:border-red-400"
           />
         </div>
+
+        <ConditionalRecaptcha
+          show={showCaptcha}
+          value={captchaToken}
+          onChange={(token) => {
+            setCaptchaToken(token);
+            if (token) markRecaptchaVerified(`admin:${email.trim().toLowerCase() || 'admin'}`);
+          }}
+          description="Yonetici girisinde tekrar eden supheli denemeler algilandi. Devam etmek icin dogrulamayi tamamlayin."
+        />
 
         <button
           type="submit"
