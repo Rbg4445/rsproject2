@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, Code2, GraduationCap, LogIn, LogOut, User, Compass, ChevronDown, BookOpen, BookText, Shield, Moon, Sun, Gamepad2 } from 'lucide-react';
+import { Menu, X, LogIn, LogOut, User, Compass, ChevronDown, BookOpen, BookText, Shield, Moon, Sun, Gamepad2 } from 'lucide-react';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import { useTheme } from '../store/ThemeContext';
 import { useSiteSettings } from '../store/SiteSettingsContext';
@@ -64,16 +64,15 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <button onClick={() => onNavigate('home')} className="flex items-center gap-2 group">
-            <div className="relative">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-500/50 transition-shadow">
-                <Code2 className="w-5 h-5 text-white" />
-              </div>
-              <GraduationCap className="w-4 h-4 text-purple-400 absolute -top-1 -right-1" />
-            </div>
+            <img
+              src="https://github.com/Rbg4445/rsproject2/blob/main/Proje%20akademi.png?raw=true"
+              alt={settings.brandName || 'ProjeAkademi'}
+              className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-500/50 transition-shadow bg-gray-900/40 border border-white/10"
+            />
             <div>
-               <span className="text-lg font-bold gradient-text">{settings.brandName}</span>
+              <span className="text-lg font-bold gradient-text">{settings.brandName}</span>
               <span className="hidden sm:block text-[10px] text-white/30 -mt-1 font-medium">
-                 {settings.brandSubline}
+                {settings.brandSubline}
               </span>
             </div>
           </button>

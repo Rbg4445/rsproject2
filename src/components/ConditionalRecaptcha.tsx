@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import { useState } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { ShieldCheck } from 'lucide-react';
+import { getRecaptchaSiteKey } from '../utils/recaptcha';
 
 interface ConditionalRecaptchaProps {
   show: boolean;
@@ -15,38 +16,19 @@ export default function ConditionalRecaptcha({
   onChange,
   description = 'Sik tekrar deneme algilandi. Devam etmek icin dogrulamayi tamamlayin.',
 }: ConditionalRecaptchaProps) {
-  const { executeRecaptcha } = useGoogleReCaptcha();
-  const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState('');
+  const siteKey = getRecaptchaSiteKey();
 
-  const runVerification = async () => {
-    if (!executeRecaptcha) {
-      setLocalError('reCAPTCHA henuz hazir degil. Biraz bekleyip tekrar deneyin.');
-      return;
-    }
-
-    setLoading(true);
+  const handleChange = (token: string | null) => {
     setLocalError('');
-    try {
-      const token = await executeRecaptcha('suspicious_repeat_check');
-      if (!token) {
-        setLocalError('Dogrulama tokeni alinamadi. Lutfen tekrar deneyin.');
-        return;
-      }
-      onChange(token);
-    } catch {
-      setLocalError('reCAPTCHA calistirilamadi. Domain ayarlarinizi kontrol edin.');
-    } finally {
-      setLoading(false);
-    }
+    onChange(token);
   };
 
-  useEffect(() => {
-    if (show && !value) {
-      void runVerification();
-    }
-    // executeRecaptcha hazır hale gelince bir kez daha denemesi için dependency'de tutuldu.
-  }, [show, value, executeRecaptcha]);
+  const handleErrored = () => {
+    setLocalError('reCAPTCHA calistirilamadi. Domain ve anahtar ayarlarinizi kontrol edin.');
+    onChange(null);
+  };
+
 
   if (!show) return null;
 
@@ -62,17 +44,19 @@ export default function ConditionalRecaptcha({
         </div>
       </div>
 
-      <div className="rounded-xl border border-amber-300/30 bg-amber-500/5 p-3">
-        <button
-          type="button"
-          onClick={() => void runVerification()}
-          disabled={loading}
-          className="w-full rounded-lg bg-amber-400/20 px-3 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-400/30 disabled:opacity-60"
-        >
-          {loading ? 'Dogrulama calistiriliyor...' : 'reCAPTCHA dogrulamasini calistir'}
-        </button>
-        {localError && <p className="mt-2 text-xs text-red-200">{localError}</p>}
-        {value && <p className="mt-2 text-xs text-emerald-200">Dogrulama basarili. Devam edebilirsiniz.</p>}
+      <div className="rounded-xl border border-amber-300/30 bg-amber-500/5 p-3 space-y-2">
+        {siteKey ? (
+          <ReCAPTCHA
+            sitekey={siteKey}
+            onChange={handleChange}
+            onErrored={handleErrored}
+            theme="dark"
+          />
+        ) : (
+          <p className="text-xs text-red-200">reCAPTCHA anahtari bulunamadi.</p>
+        )}
+        {localError && <p className="text-xs text-red-200">{localError}</p>}
+        {value && <p className="text-xs text-emerald-200">Dogrulama basarili. Devam edebilirsiniz.</p>}
       </div>
 
       {!value && <p className="text-xs text-amber-100/70">Dogrulama tamamlanmadan isleme devam edemezsiniz.</p>}
