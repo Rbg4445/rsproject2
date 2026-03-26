@@ -1,4 +1,4 @@
-const RECAPTCHA_SITE_KEY = '6LcNrJksAAAAAPEu_fSAJHwBkvK08jJbD5f5uzt6';
+const RECAPTCHA_SITE_KEY = '6LcrtJksAAAAAG7d2S2_pIStwbDrABJjzH0RDnOL';
 const RC_PREFIX = 'pa_recaptcha';
 
 function key(scope: string) {
