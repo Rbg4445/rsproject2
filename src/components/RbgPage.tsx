@@ -14,7 +14,7 @@ const minecraftBg =
   'https://images.unsplash.com/photo-1618331833071-ce81bd50d300?auto=format&fit=crop&w=1800&q=80';
 
 export default function RbgPage() {
-  const { userProfile } = useFirebaseAuth();
+  const { userProfile, isAdmin } = useFirebaseAuth();
   const [pageData, setPageData] = useState<RbgPageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -98,8 +98,20 @@ export default function RbgPage() {
       <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/40 via-black/50 to-black/80" />
 
       <div className="relative z-10 mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <section className="rounded-3xl border border-white/10 bg-black/45 p-6 backdrop-blur-md sm:p-8">
+        <div
+          className={
+            isAdmin
+              ? 'grid gap-8 lg:grid-cols-[1.1fr_0.9fr]'
+              : 'flex flex-col items-center justify-center'
+          }
+        >
+          <section
+            className={
+              isAdmin
+                ? 'rounded-3xl border border-white/10 bg-black/45 p-6 backdrop-blur-md sm:p-8'
+                : 'w-full max-w-xl rounded-3xl border border-white/10 bg-black/45 p-6 backdrop-blur-md sm:p-8'
+            }
+          >
             <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
               <img
                 src={pageData.avatarUrl}
@@ -146,13 +158,14 @@ export default function RbgPage() {
               )}
             </div>
           </section>
-
-          <aside className="rounded-3xl border border-white/10 bg-black/45 p-6 backdrop-blur-md sm:p-8">
-            <h2 className="text-2xl font-black text-white">RBG Link Paneli</h2>
-            <p className="mt-2 text-sm text-white/65">
-              Bu alan sadece RBG hesabindan duzenlenebilir. Diger kullanicilar sadece goruntuler.
-            </p>
-
+ 
+          {isAdmin && (
+            <aside className="rounded-3xl border border-white/10 bg-black/45 p-6 backdrop-blur-md sm:p-8">
+              <h2 className="text-2xl font-black text-white">RBG Link Paneli</h2>
+              <p className="mt-2 text-sm text-white/65">
+                Bu alan sadece RBG veya admin hesabindan duzenlenebilir.
+              </p>
+          
             {isOwner ? (
               <div className="mt-6 space-y-5">
                 <div className="space-y-3">
@@ -254,6 +267,7 @@ export default function RbgPage() {
               </div>
             )}
           </aside>
+          )}
         </div>
       </div>
     </div>

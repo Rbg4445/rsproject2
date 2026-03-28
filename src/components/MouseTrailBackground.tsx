@@ -192,7 +192,8 @@ export default function MouseTrailBackground() {
       const dy = mouseRef.current.y - prevMouseRef.current.y;
       const speed = Math.sqrt(dx * dx + dy * dy);
 
-      const count = Math.min(Math.floor(speed / 3) + 1, 5);
+      // Daha hafif performans: üretilen parçacık sayısını azalt
+      const count = Math.min(Math.floor(speed / 4) + 1, 3);
       for (let i = 0; i < count; i++) {
         const t = i / count;
         const px = prevMouseRef.current.x + dx * t + (Math.random() - 0.5) * 20;

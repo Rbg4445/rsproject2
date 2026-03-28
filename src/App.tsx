@@ -20,8 +20,6 @@ import AdminLoginModal from './components/AdminLoginModal';
 import BetaNoticeModal from './components/BetaNoticeModal';
 import RbgPage from './components/RbgPage';
 import CookieConsent from './components/CookieConsent';
-import ConditionalRecaptcha from './components/ConditionalRecaptcha';
-import { markRecaptchaVerified, needsRecaptcha } from './utils/recaptcha';
 
 function parseRouteFromHash() {
   const raw = window.location.hash.replace(/^#/, '').trim();
@@ -36,8 +34,6 @@ function AppContent() {
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [showBetaNotice, setShowBetaNotice] = useState(true);
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
-  const [entryCaptchaToken, setEntryCaptchaToken] = useState<string | null>(null);
-  const [showEntryCaptcha, setShowEntryCaptcha] = useState(false);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -53,14 +49,6 @@ function AppContent() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Entry-level captcha: siteye ilk girişte hafif güvenlik taraması
-  useEffect(() => {
-    const scope = 'entry';
-    if (!needsRecaptcha(scope)) {
-      return;
-    }
-    setShowEntryCaptcha(true);
-  }, []);
 
   const navigate = (page: string) => {
     const nextHash = `#${encodeURIComponent(page)}`;
@@ -94,26 +82,6 @@ function AppContent() {
       {showBetaNotice && (
         <BetaNoticeModal onClose={() => setShowBetaNotice(false)} isOpen={showBetaNotice} />
       )}
-
-      {/* Siteye girişte hafif captcha katmanı */}
-      {showEntryCaptcha && !entryCaptchaToken && (
-        <div className="fixed inset-x-0 top-16 z-[80] flex justify-center px-2">
-          <div className="max-w-3xl w-full rounded-2xl border border-amber-400/40 bg-amber-900/90 px-4 py-3 shadow-2xl shadow-black/40 backdrop-blur">
-            <ConditionalRecaptcha
-              show
-              value={entryCaptchaToken}
-              onChange={(token) => {
-                setEntryCaptchaToken(token);
-                if (token) {
-                  markRecaptchaVerified('entry');
-                  setShowEntryCaptcha(false);
-                }
-              }}
-              description="Guvenlik icin, bu siteye ilk girisinizde kisa bir reCAPTCHA dogrulamasindan gecmeniz gerekiyor."
-            />
-          </div>
-        </div>
-      )}
     </>
   );
 
@@ -137,7 +105,7 @@ function AppContent() {
   if (currentPage === 'admin') {
     return (
       <div className="min-h-screen bg-gray-950">
-        <MouseTrailBackground />
+        {/* MouseTrailBackground kaldırıldı: admin sayfası için performans optimizasyonu */}
         <AdminPanel onBack={() => navigate('home')} />
         {renderOverlayModals(false)}
         <CookieConsent />
@@ -186,7 +154,7 @@ function AppContent() {
   if (currentPage === 'explore') {
     return (
       <div className="min-h-screen bg-gray-950">
-        <MouseTrailBackground />
+        {/* MouseTrailBackground kaldırıldı: keşfet sayfası için performans optimizasyonu */}
         <Navbar
           onOpenAuth={() => openAuth('login')}
           onOpenAdminLogin={() => setShowAdminAuth(true)}
