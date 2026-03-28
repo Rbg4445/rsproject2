@@ -19,16 +19,20 @@ export default function RbgPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // RBG sahibini ve duzenleme yetkisini belirle
   const isOwner = useMemo(() => {
     if (!userProfile) return false;
     const username = userProfile.username?.toLowerCase();
     const display = userProfile.displayName?.toLowerCase();
-    return username === 'rbg' || display === 'rbg' || userProfile.email?.toLowerCase().includes('rbg');
+    const email = userProfile.email?.toLowerCase() || '';
+    return username === 'rbg' || display === 'rbg' || email.includes('rbg');
   }, [userProfile]);
 
-  useEffect(() => {
-    void loadData();
-  }, []);
+  const canEdit = isAdmin || isOwner;
+ 
+   useEffect(() => {
+     void loadData();
+   }, []);
 
   async function loadData() {
     setLoading(true);
@@ -100,14 +104,14 @@ export default function RbgPage() {
       <div className="relative z-10 mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
         <div
           className={
-            isAdmin
+            canEdit
               ? 'grid gap-8 lg:grid-cols-[1.1fr_0.9fr]'
               : 'flex flex-col items-center justify-center'
           }
         >
           <section
             className={
-              isAdmin
+              canEdit
                 ? 'rounded-3xl border border-white/10 bg-black/45 p-6 backdrop-blur-md sm:p-8'
                 : 'w-full max-w-xl rounded-3xl border border-white/10 bg-black/45 p-6 backdrop-blur-md sm:p-8'
             }
@@ -159,7 +163,7 @@ export default function RbgPage() {
             </div>
           </section>
  
-          {isAdmin && (
+          {canEdit && (
             <aside className="rounded-3xl border border-white/10 bg-black/45 p-6 backdrop-blur-md sm:p-8">
               <h2 className="text-2xl font-black text-white">RBG Link Paneli</h2>
               <p className="mt-2 text-sm text-white/65">
