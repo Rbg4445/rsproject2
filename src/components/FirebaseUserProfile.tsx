@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, FolderPlus, PenLine, Trash2, Download, FileText, Gamepad2 } from 'lucide-react';
+import { BookOpen, FolderPlus, PenLine, Trash2, Download, FileText, Gamepad2, UserCog } from 'lucide-react';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import {
   type FirestoreBlog,
@@ -13,6 +13,7 @@ import {
 } from '../firebase/firestoreService';
 import FirebaseAddProjectModal from './FirebaseAddProjectModal';
 import FirebaseBlogEditor from './FirebaseBlogEditor';
+import EditProfileModal from './EditProfileModal';
 
 interface Props {
   username: string;
@@ -26,6 +27,8 @@ export default function FirebaseUserProfile({ username }: Props) {
   const [loading, setLoading] = useState(true);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showBlogModal, setShowBlogModal] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+
 
   const isOwner = !!userProfile && userProfile.username === username;
   const isRbgProfile = useMemo(() => {
@@ -81,6 +84,13 @@ export default function FirebaseUserProfile({ username }: Props) {
 
             {isOwner && (
               <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setShowEditProfile(true)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gray-800 px-4 py-2 text-sm font-semibold text-white/80 hover:bg-gray-700"
+                >
+                  <UserCog className="h-4 w-4" />
+                  Profili Düzenle
+                </button>
                 {isRbgProfile && (
                   <button
                     onClick={() => {
@@ -206,6 +216,16 @@ export default function FirebaseUserProfile({ username }: Props) {
         <FirebaseBlogEditor
           onClose={() => setShowBlogModal(false)}
           onSuccess={() => {
+            void loadProfileData();
+          }}
+        />
+      )}
+
+      {showEditProfile && profile && (
+        <EditProfileModal
+          user={profile}
+          onClose={() => setShowEditProfile(false)}
+          onUpdated={() => {
             void loadProfileData();
           }}
         />

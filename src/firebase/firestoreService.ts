@@ -31,6 +31,7 @@ export interface FirestoreUser {
   banReason?: string;
   projectCount?: number;
   blogCount?: number;
+  lastProfileUpdateAt?: string; // profil en son ne zaman guncellendi
 }
 
 export interface FirestoreProject {
