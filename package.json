@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.100.1",
     "@types/react-google-recaptcha": "^2.1.9",
     "clsx": "2.1.1",
     "firebase": "^12.11.0",
