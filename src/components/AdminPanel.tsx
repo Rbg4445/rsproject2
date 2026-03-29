@@ -10,6 +10,7 @@ import {
   type FirestoreBlog,
   type FirestoreProject,
   type FirestoreUser,
+  type FirestoreArticle,
   addAccessLog,
   blockIp,
   getAccessLogs,
@@ -18,9 +19,11 @@ import {
   getBlockedIps,
   getContactMessages,
   getProjectsAdmin,
+  getArticles,
   setContactMessageStatus,
   setBlogStatus,
   setProjectStatus,
+  setArticleStatus,
   setUserBan,
   setUserRole,
   unblockIp,
@@ -93,6 +96,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const [users, setUsers] = useState<FirestoreUser[]>([]);
   const [projects, setProjects] = useState<FirestoreProject[]>([]);
   const [blogs, setBlogs] = useState<FirestoreBlog[]>([]);
+  const [articles, setArticles] = useState<FirestoreArticle[]>([]);
   const [accessLogs, setAccessLogs] = useState<AccessLog[]>([]);
   const [blockedIps, setBlockedIps] = useState<BlockedIp[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -111,10 +115,11 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   }, [isAdmin]);
 
   async function refreshAdminData() {
-    const [allUsers, allProjects, allBlogs, logs, blocked, contactMessages] = await Promise.all([
+    const [allUsers, allProjects, allBlogs, allArticles, logs, blocked, contactMessages] = await Promise.all([
       getAllUsers(),
       getProjectsAdmin(),
       getBlogsAdmin(),
+      getArticles(),
       getAccessLogs(),
       getBlockedIps(),
       getContactMessages(),
@@ -122,6 +127,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     setUsers(allUsers);
     setProjects(allProjects);
     setBlogs(allBlogs);
+    setArticles(allArticles);
     setAccessLogs(logs);
     setBlockedIps(blocked);
     setMessages(contactMessages);
@@ -366,7 +372,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
           )}
 
           {activeTab === 'content' && (
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-6 lg:grid-cols-3">
               <div>
                 <h3 className="mb-3 font-bold">Projeler</h3>
                 <div className="max-h-[26rem] space-y-2 overflow-auto pr-1">
@@ -375,7 +381,15 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                       <p className="text-sm font-semibold text-white">{p.title}</p>
                       <p className="text-xs text-white/50">@{p.username}</p>
                       <div className="mt-2 flex items-center gap-2">
-                        <span className={`rounded-full px-2 py-1 text-xs ${p.status === 'active' ? 'bg-green-500/15 text-green-300' : 'bg-red-500/15 text-red-300'}`}>
+                        <span
+                          className={`rounded-full px-2 py-1 text-xs ${
+                            p.status === 'active'
+                              ? 'bg-green-500/15 text-green-300'
+                              : p.status === 'pending'
+                              ? 'bg-yellow-500/15 text-yellow-300'
+                              : 'bg-red-500/15 text-red-300'
+                          }`}
+                        >
                           {p.status}
                         </span>
                         <button
@@ -399,7 +413,15 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                       <p className="text-sm font-semibold text-white">{b.title}</p>
                       <p className="text-xs text-white/50">@{b.username}</p>
                       <div className="mt-2 flex items-center gap-2">
-                        <span className={`rounded-full px-2 py-1 text-xs ${b.status === 'active' ? 'bg-green-500/15 text-green-300' : 'bg-red-500/15 text-red-300'}`}>
+                        <span
+                          className={`rounded-full px-2 py-1 text-xs ${
+                            b.status === 'active'
+                              ? 'bg-green-500/15 text-green-300'
+                              : b.status === 'pending'
+                              ? 'bg-yellow-500/15 text-yellow-300'
+                              : 'bg-red-500/15 text-red-300'
+                          }`}
+                        >
                           {b.status}
                         </span>
                         <button
@@ -408,6 +430,38 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                         >
                           {b.status === 'active' ? <Trash2 className="h-3.5 w-3.5" /> : <Undo2 className="h-3.5 w-3.5" />}
                           {b.status === 'active' ? 'Kaldir' : 'Geri Al'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="mb-3 font-bold">Wiki Makaleleri</h3>
+                <div className="max-h-[26rem] space-y-2 overflow-auto pr-1">
+                  {articles.map((a) => (
+                    <div key={a.id} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <p className="text-sm font-semibold text-white">{a.title}</p>
+                      <p className="text-xs text-white/50">@{a.username}</p>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span
+                          className={`rounded-full px-2 py-1 text-xs ${
+                            a.status === 'active'
+                              ? 'bg-green-500/15 text-green-300'
+                              : a.status === 'pending'
+                              ? 'bg-yellow-500/15 text-yellow-300'
+                              : 'bg-red-500/15 text-red-300'
+                          }`}
+                        >
+                          {a.status}
+                        </span>
+                        <button
+                          onClick={() => void setArticleStatus(a.id, a.status === 'active' ? 'removed' : 'active').then(refreshAdminData)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-xs"
+                        >
+                          {a.status === 'active' ? <Trash2 className="h-3.5 w-3.5" /> : <Undo2 className="h-3.5 w-3.5" />}
+                          {a.status === 'active' ? 'Kaldir' : 'Geri Al'}
                         </button>
                       </div>
                     </div>

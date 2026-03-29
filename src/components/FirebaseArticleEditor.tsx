@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X, Plus, Trash2, BookText } from 'lucide-react';
-import { addArticle } from '../firebase/firestoreService';
+import { addArticle, FirestoreArticle } from '../firebase/firestoreService';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 
 interface Props {
@@ -35,7 +35,7 @@ export default function FirebaseArticleEditor({ onClose, onSuccess }: Props) {
     setLoading(true);
     try {
       const now = new Date().toISOString();
-      await addArticle({
+            const articleData: Omit<FirestoreArticle, 'id'> = {
         uid: userProfile.uid,
         username: userProfile.username,
         displayName: userProfile.displayName,
@@ -43,13 +43,19 @@ export default function FirebaseArticleEditor({ onClose, onSuccess }: Props) {
         summary: form.summary,
         content: form.content,
         tags: form.tags,
-        coverImage: form.coverImage || undefined,
         likes: [],
         views: 0,
-        status: 'active',
+        status: 'pending', // admin onayi bekliyor
         createdAt: now,
         updatedAt: now,
-      });
+      };
+
+      if (form.coverImage && form.coverImage.trim() !== '') {
+        // Bos degilse ancak o zaman coverImage alanini ekle
+        (articleData as any).coverImage = form.coverImage.trim();
+      }
+
+      await addArticle(articleData);
       onSuccess();
       onClose();
     } catch (error) {

@@ -53,7 +53,7 @@ export default function FirebaseBlogEditor({ onClose, onSuccess }: Props) {
         tags: form.tags,
         likes: [],
         views: 0,
-        status: 'active',
+        status: 'pending', // admin onayi bekliyor
         createdAt: new Date().toISOString(),
       });
       onSuccess();

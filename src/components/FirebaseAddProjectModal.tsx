@@ -103,7 +103,7 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
         image: form.customImage || form.image,
         documents,
         likes: [],
-        status: 'active',
+        status: 'pending', // admin onayi bekliyor
         createdAt: new Date().toISOString(),
       });
       onSuccess();

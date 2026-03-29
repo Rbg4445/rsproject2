@@ -51,7 +51,7 @@ export interface FirestoreProject {
   image?: string;
   documents?: ProjectDocument[];
   likes: string[];
-  status: 'active' | 'removed';
+  status: 'pending' | 'active' | 'removed';
   createdAt: string;
 }
 
@@ -76,7 +76,7 @@ export interface FirestoreArticle {
   coverImage?: string;
   likes: string[];
   views: number;
-  status: 'active' | 'removed';
+  status: 'pending' | 'active' | 'removed';
   createdAt: string;
   updatedAt: string;
 }
@@ -93,7 +93,7 @@ export interface FirestoreBlog {
   tags: string[];
   likes: string[];
   views: number;
-  status: 'active' | 'removed';
+  status: 'pending' | 'active' | 'removed';
   createdAt: string;
 }
 
