@@ -35,15 +35,8 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
 
   const isHome = currentPage === 'home';
 
-  const navLinks = isHome
-    ? [
-        { label: 'Ana Sayfa', href: '#hero' },
-        { label: 'Projeler', href: '#projects' },
-        { label: 'Hakkımda', href: '#about' },
-        { label: 'Yetenekler', href: '#skills' },
-        { label: 'İletişim', href: '#contact' },
-      ]
-    : [];
+  // Üst menüde yalnızca soldaki ana menü butonları kalsın, eski anchor linkler kaldırıldı
+  const navLinks: { label: string; href: string }[] = [];
 
   const initials = userProfile?.displayName
     ?.split(' ')
@@ -61,7 +54,7 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 md:h-20">
+        <div className="flex items-center justify-between md:justify-start md:gap-8 h-16 md:h-20">
           {/* Logo */}
           <button
             onClick={() => onNavigate('home')}

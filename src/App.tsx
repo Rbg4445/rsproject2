@@ -34,6 +34,16 @@ function AppContent() {
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [showBetaNotice, setShowBetaNotice] = useState(true);
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    // BETA splash ekranı: ilk açılışta göster, 2.2 saniye sonra kapat
+    const timer = window.setTimeout(() => {
+      setShowSplash(false);
+    }, 2200);
+
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -85,18 +95,33 @@ function AppContent() {
     </>
   );
 
+  if (showSplash) {
+    return (
+      <div className="fixed inset-0 bg-gradient-to-br from-purple-900 via-fuchsia-800 to-slate-950 flex items-center justify-center z-[999] overflow-hidden">
+        <div className="text-center">
+          <div className="beta-splash-card w-52 h-52 md:w-72 md:h-72 bg-gradient-to-br from-purple-500 via-fuchsia-500 to-pink-500 rounded-3xl flex items-center justify-center mb-6 mx-auto shadow-2xl shadow-fuchsia-500/50 border border-white/20">
+            <span className="text-4xl md:text-5xl font-black tracking-tight text-white drop-shadow-lg">
+              BETA
+            </span>
+          </div>
+          <p className="text-white/60 text-xs md:text-sm tracking-wide uppercase">ProjeAkademi Proje Platformu</p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-gray-950 flex items-center justify-center z-[999]">
+      <div className="fixed inset-0 bg-gray-950 flex items-center justify-center z-[998]">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 mx-auto animate-pulse">
+          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-3 mx-auto animate-pulse">
             <img
               src="https://cdn-icons-png.flaticon.com/128/1197/1197460.png"
               alt="loading icon"
-              className="h-8 w-8"
+              className="h-6 w-6"
             />
           </div>
-          <p className="text-white/40 text-sm">ProjeAkademi yükleniyor...</p>
+          <p className="text-white/40 text-sm">Yükleniyor...</p>
         </div>
       </div>
     );
