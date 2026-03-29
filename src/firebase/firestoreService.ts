@@ -129,6 +129,28 @@ export interface ContactMessage {
   status: 'new' | 'read' | 'resolved';
 }
 
+export interface Comment {
+  id: string;
+  refType: 'project' | 'blog' | 'article';
+  refId: string;
+  uid: string;
+  username: string;
+  content: string;
+  createdAt: string;
+  status: 'pending' | 'active' | 'hidden';
+}
+
+export interface Notification {
+  id: string;
+  uid: string; // bildirimin hedef kullanıcısı
+  type: 'approve' | 'reject' | 'comment' | 'like';
+  refType: 'project' | 'blog' | 'article';
+  refId: string;
+  message: string;
+  createdAt: string;
+  read: boolean;
+}
+
 export interface RbgLinkItem {
   id: string;
   title: string;
@@ -656,6 +678,131 @@ export async function setContactMessageStatus(
   const messages = getLS<ContactMessage[]>(CONTACT_MESSAGES_KEY, []);
   const next = messages.map((msg) => (msg.id === id ? { ...msg, status } : msg));
   setLS(CONTACT_MESSAGES_KEY, next);
+}
+
+// ─── Yorumlar ───────────────────────────────────────────────────────────────────
+
+export async function addComment(
+  payload: Omit<Comment, 'id' | 'createdAt' | 'status'>
+): Promise<string> {
+  const entry: Comment = {
+    ...payload,
+    id: `cmt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    createdAt: new Date().toISOString(),
+    status: 'pending',
+  };
+
+  if (canUseRemote && db) {
+    const ref = await addDoc(collection(db, 'comments'), entry);
+    await updateDoc(ref, { id: entry.id }); // kendi id'mizi koruyoruz
+    return entry.id;
+  }
+
+  const comments = getLS<Comment[]>('pa_comments', []);
+  comments.unshift(entry);
+  setLS('pa_comments', comments);
+  return entry.id;
+}
+
+export async function getCommentsForRef(
+  refType: Comment['refType'],
+  refId: string,
+  includePending = false
+): Promise<Comment[]> {
+  if (canUseRemote && db) {
+    let qRef = query(
+      collection(db, 'comments'),
+      where('refType', '==', refType),
+      where('refId', '==', refId)
+    );
+    const snap = await getDocs(qRef);
+    let items = snap.docs.map((d) => d.data() as Comment);
+    if (!includePending) {
+      items = items.filter((c) => c.status === 'active');
+    }
+    return items.sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt));
+  }
+
+  const all = getLS<Comment[]>('pa_comments', []);
+  let items = all.filter((c) => c.refType === refType && c.refId === refId);
+  if (!includePending) {
+    items = items.filter((c) => c.status === 'active');
+  }
+  return items.sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt));
+}
+
+export async function setCommentStatus(
+  id: string,
+  status: Comment['status']
+): Promise<void> {
+  if (canUseRemote && db) {
+    const qRef = query(collection(db, 'comments'), where('id', '==', id));
+    const snap = await getDocs(qRef);
+    await Promise.all(
+      snap.docs.map((d) => updateDoc(doc(db!, 'comments', d.id), { status }))
+    );
+    return;
+  }
+
+  const comments = getLS<Comment[]>('pa_comments', []);
+  const next = comments.map((c) => (c.id === id ? { ...c, status } : c));
+  setLS('pa_comments', next);
+}
+
+// ─── Bildirimler ────────────────────────────────────────────────────────────────
+
+export async function addNotification(
+  payload: Omit<Notification, 'id' | 'createdAt' | 'read'>
+): Promise<string> {
+  const entry: Notification = {
+    ...payload,
+    id: `ntf_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    createdAt: new Date().toISOString(),
+    read: false,
+  };
+
+  if (canUseRemote && db) {
+    const ref = await addDoc(collection(db, 'notifications'), entry);
+    await updateDoc(ref, { id: entry.id });
+    return entry.id;
+  }
+
+  const notifs = getLS<Notification[]>('pa_notifications', []);
+  notifs.unshift(entry);
+  setLS('pa_notifications', notifs);
+  return entry.id;
+}
+
+export async function getUserNotifications(uid: string): Promise<Notification[]> {
+  if (canUseRemote && db) {
+    const qRef = query(collection(db, 'notifications'), where('uid', '==', uid));
+    const snap = await getDocs(qRef);
+    const items = snap.docs.map((d) => d.data() as Notification);
+    return items
+      .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
+      .slice(0, 50);
+  }
+
+  const notifs = getLS<Notification[]>('pa_notifications', []);
+  return notifs
+    .filter((n) => n.uid === uid)
+    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
+    .slice(0, 50);
+}
+
+export async function markNotificationRead(id: string): Promise<void> {
+  if (canUseRemote && db) {
+    const qRef = query(collection(db, 'notifications'), where('id', '==', id));
+    const snap = await getDocs(qRef);
+    await Promise.all(
+      snap.docs.map((d) => updateDoc(doc(db!, 'notifications', d.id), { read: true }))
+    );
+    return;
+  }
+
+  const notifs = getLS<Notification[]>('pa_notifications', []);
+  const next = notifs.map((n) => (n.id === id ? { ...n, read: true } : n));
+  setLS('pa_notifications', next);
 }
 
 // ─── RBG özel sayfası ──────────────────────────────────────────────────────────

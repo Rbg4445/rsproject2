@@ -26,10 +26,6 @@ export default function Hero() {
           <div className="space-y-8 animate-fade-in">
             {/* Beta Banner */}
             <div className="inline-flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 shadow-lg shadow-amber-400/30 animate-pulse-slow">
-                <img src="https://cdn-icons-png.flaticon.com/128/1828/1828640.png" alt="beta" className="h-3.5 w-3.5" />
-                <span className="text-xs font-black text-white tracking-widest uppercase">BETA</span>
-              </div>
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 shadow-sm backdrop-blur-sm">
                 <span className="text-sm font-semibold text-white/70">Bu bir</span>
                 <span className="text-sm font-black bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">BETA</span>

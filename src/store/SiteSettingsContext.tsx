@@ -21,23 +21,23 @@ export interface SiteSettings {
 
 const defaultSettings: SiteSettings = {
   brandName: 'ProjeAkademi',
-  brandSubline: 'Egitim & Kodlama',
-  heroBadge: 'Egitim & Kodlama Platformu',
-  heroTitle: 'Projelerimi Kesfet & Ogren',
+  brandSubline: 'Proje Odaklı Portföy',
+  heroBadge: 'Proje Paylaşım ve Geliştirme Platformu',
+  heroTitle: 'Projelerini Göster, Yeni Fikirler Üret',
   heroSubtitle:
-    'Egitim, kodlama ve akademik projelerimi bir arada bulabileceginiz, toplulukla paylasabileceginiz modern platform.',
-  betaLine: 'Bu bir BETA surumudur',
-  aboutTitle: 'Merhaba, Ben Platform Yoneticisi',
+    'Kişisel ve ekip projelerini tek bir yerde topladığın, sürecini dokümante edip toplulukla paylaştığın modern bir proje platformu.',
+  betaLine: 'Bu bir beta sürümüdür',
+  aboutTitle: 'Merhaba, ben bu projenin geliştiricisiyim',
   aboutDescription:
-    'Yazilim gelistirme, egitim icerigi uretme ve akademik arastirma alanlarinda aktif calisan bir gelistiriciyim.',
+    'Bu platformu; yazılım, oyun, tasarım ve her türlü proje fikrini sergileyebileceğin, ilerlemeni kaydedebileceğin ve başkalarına ilham olabileceğin bir alan olarak tasarladım.',
   contactEmail: 'iletisim@projeakademi.com',
   contactPhone: '+90 (555) 000 0000',
-  contactLocation: 'Istanbul, Turkiye',
+  contactLocation: 'İstanbul, Türkiye',
   githubUrl: '#',
   twitterUrl: '#',
   linkedinUrl: '#',
   youtubeUrl: '#',
-  footerNote: 'ProjeAkademi toplulugu tarafindan gelistiriliyor',
+  footerNote: 'ProjeAkademi, projelerini sergileyebileceğin ve geliştirebileceğin topluluk odaklı bir platformdur.',
 };
 
 interface SiteSettingsContextType {

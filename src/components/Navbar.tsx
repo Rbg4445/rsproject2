@@ -63,16 +63,19 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <button onClick={() => onNavigate('home')} className="flex items-center gap-2 group">
-            <img
-              src="https://github.com/Rbg4445/rsproject2/blob/main/Proje%20akademi.png?raw=true"
-              alt={settings.brandName || 'ProjeAkademi'}
-              className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-500/50 transition-shadow bg-gray-900/40 border border-white/10"
-            />
-            <div>
-              <span className="text-lg font-bold gradient-text">{settings.brandName}</span>
-              <span className="hidden sm:block text-[10px] text-white/30 -mt-1 font-medium">
-                {settings.brandSubline}
+          <button
+            onClick={() => onNavigate('home')}
+            className="flex items-center gap-3 group"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 shadow-lg shadow-sky-500/40 border border-white/10 transition-all group-hover:-translate-y-0.5 group-hover:shadow-sky-500/70">
+              <span className="text-xs font-black tracking-tight text-white">RBG</span>
+            </div>
+            <div className="text-left">
+              <span className="block text-lg font-semibold tracking-tight text-white">
+                {settings.brandName || 'rbgprojects'}
+              </span>
+              <span className="hidden sm:block text-[11px] text-white/40 font-medium">
+                Projeler · Eğitim · Wiki
               </span>
             </div>
           </button>
@@ -337,7 +340,7 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
                 className="block w-full text-center mt-2 px-5 py-3 border border-red-500/30 bg-red-500/10 text-red-300 font-semibold rounded-xl"
               >
                 <Shield className="w-4 h-4 inline mr-2" />
-                Admin Girisi
+                Admin Girişi
               </button>
               <button
                 onClick={() => { onOpenAuth(); setIsOpen(false); }}

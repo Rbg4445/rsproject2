@@ -103,7 +103,7 @@ export default function FirebaseWikiPage() {
                 Bilgiyi <span className="gradient-text">Kesfet</span>
               </h1>
               <p className="text-white/55 max-w-2xl mx-auto text-sm">
-                Topluluk tarafindan olusturulan makaleler, rehberler ve notlar. Arama kutusunu kullanarak istedigin konuyu bulabilir veya yeni bir viki yazisi olusturabilirsin.
+                Proje fikri, teknik detay veya geliştirme süreci hakkında oluşturduğun dökümanları burada bir araya getirebilirsin. Arama kutusunu kullanarak belirli bir teknoloji ya da proje başlığına gidebilir veya yeni bir viki yazısı oluşturarak projeni dokümante edebilirsin.
               </p>
             </div>
 

@@ -56,9 +56,9 @@ export default function BetaNoticeModal({ isOpen, onClose }: BetaNoticeModalProp
             zaman zaman degisebilir, yeni alanlar eklenebilir veya mevcut alanlarin davranisi guncellenebilir.
           </p>
           <p>
-            Beta doneminde olusan iceriklerin korunmasi hedeflenir ancak teknik iyilestirmeler nedeniyle gecis surecinde
-            gecici tutarsizliklar yasanabilir. Onemli verileriniz icin periyodik yedek almaniz onerilir. Geri bildirimler,
-            platformun stabil surume ulasmasi icin dogrudan gelistirme surecine dahil edilir.
+            Beta döneminde oluşan içeriklerin korunması hedeflenir ancak teknik iyileştirmeler nedeniyle geçiş sürecinde
+            geçici tutarsızlıklar yaşanabilir. Önemli verileriniz için periyodik yedek almanız önerilir. Geri bildirimler,
+            platformun kararlı sürüme ulaşması için doğrudan geliştirme sürecine dahil edilir.
           </p>
         </div>
 
@@ -66,7 +66,7 @@ export default function BetaNoticeModal({ isOpen, onClose }: BetaNoticeModalProp
           <div className={`rounded-xl border p-3 ${dark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-gray-50'}`}>
             <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
               <ShieldCheck className="h-4 w-4 text-emerald-500" />
-              Guvenlik Notu
+              Güvenlik Notu
             </div>
             <p className={`text-xs ${dark ? 'text-white/65' : 'text-gray-600'}`}>
               Erisim kontrolleri ve yonetim araci aktif durumdadir. Supheli etkinlikler loglanir ve gerekli durumlarda

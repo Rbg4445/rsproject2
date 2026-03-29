@@ -6,7 +6,7 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Projects from './components/Projects';
 import About from './components/About';
-import Skills from './components/Skills';
+// import Skills from './components/Skills';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import FirebaseAuthModal from './components/FirebaseAuthModal';
@@ -104,8 +104,8 @@ function AppContent() {
 
   if (currentPage === 'admin') {
     return (
-      <div className="min-h-screen bg-gray-950">
-        {/* MouseTrailBackground kaldırıldı: admin sayfası için performans optimizasyonu */}
+      <div className="min-h-screen bg-slate-950/80">
+        {/* Admin sayfası: sade koyu arka plan, animasyonsuz */}
         <AdminPanel onBack={() => navigate('home')} />
         {renderOverlayModals(false)}
         <CookieConsent />
@@ -115,7 +115,7 @@ function AppContent() {
 
   if (currentPage === 'rbg') {
     return (
-      <div className="min-h-screen bg-gray-950">
+      <div className="min-h-screen bg-transparent">
         <Navbar
           onOpenAuth={() => openAuth('login')}
           onOpenAdminLogin={() => setShowAdminAuth(true)}
@@ -134,7 +134,7 @@ function AppContent() {
   if (currentPage.startsWith('profile:')) {
     const username = currentPage.split(':')[1];
     return (
-      <div className="min-h-screen bg-gray-950">
+      <div className="min-h-screen bg-transparent">
         <MouseTrailBackground />
         <Navbar
           onOpenAuth={() => openAuth('login')}
@@ -153,7 +153,7 @@ function AppContent() {
 
   if (currentPage === 'explore') {
     return (
-      <div className="min-h-screen bg-gray-950">
+      <div className="min-h-screen bg-transparent">
         {/* MouseTrailBackground kaldırıldı: keşfet sayfası için performans optimizasyonu */}
         <Navbar
           onOpenAuth={() => openAuth('login')}
@@ -172,7 +172,7 @@ function AppContent() {
 
   if (currentPage === 'blogs') {
     return (
-      <div className="min-h-screen bg-gray-950">
+      <div className="min-h-screen bg-transparent">
         <MouseTrailBackground />
         <Navbar
           onOpenAuth={() => openAuth('login')}
@@ -191,7 +191,7 @@ function AppContent() {
 
   if (currentPage === 'wiki') {
     return (
-      <div className="min-h-screen bg-gray-950">
+      <div className="min-h-screen bg-transparent">
         <MouseTrailBackground />
         <Navbar
           onOpenAuth={() => openAuth('login')}
@@ -209,7 +209,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-transparent">
       <MouseTrailBackground />
       <Navbar
         onOpenAuth={() => openAuth('login')}
@@ -221,7 +221,6 @@ function AppContent() {
         <Hero />
         <Projects />
         <About />
-        <Skills />
         <Contact />
         <Footer />
       </div>

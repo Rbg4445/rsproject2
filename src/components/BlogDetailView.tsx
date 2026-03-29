@@ -1,6 +1,7 @@
 import { ArrowLeft, Heart, Eye, Calendar, Tag, Edit3, Trash2, Share2, User } from 'lucide-react';
 import { BlogPost } from '../types';
 import { User as UserType } from '../types';
+import CommentsSection from './CommentsSection';
 
 interface BlogDetailViewProps {
   blog: BlogPost;
@@ -142,6 +143,9 @@ export default function BlogDetailView({ blog, author, onBack, onLike, isOwner, 
           className="prose-custom"
           dangerouslySetInnerHTML={{ __html: renderMarkdown(blog.content) }}
         />
+
+        {/* Yorumlar */}
+        <CommentsSection refType="blog" refId={blog.id} />
       </div>
     </div>
   );
