@@ -13,6 +13,7 @@ export default function FirebaseWikiPage() {
   const { userProfile } = useFirebaseAuth();
   const [articles, setArticles] = useState<FirestoreArticle[]>([]);
   const [search, setSearch] = useState('');
+  const [activeTag, setActiveTag] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<FirestoreArticle | null>(null);
   const [showEditor, setShowEditor] = useState(false);
@@ -30,15 +31,24 @@ export default function FirebaseWikiPage() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return articles;
-    return articles.filter((article) => {
+    let base = articles;
+
+    if (activeTag) {
+      base = base.filter((article) =>
+        (article.tags || []).map((t) => t.toLowerCase()).includes(activeTag.toLowerCase())
+      );
+    }
+
+    if (!q) return base;
+
+    return base.filter((article) => {
       return (
         article.title.toLowerCase().includes(q) ||
         article.summary.toLowerCase().includes(q) ||
         article.tags.some((tag) => tag.toLowerCase().includes(q))
       );
     });
-  }, [articles, search]);
+  }, [articles, search, activeTag]);
 
   const openArticle = async (article: FirestoreArticle) => {
     setSelected(article);
@@ -90,32 +100,111 @@ export default function FirebaseWikiPage() {
                 ProjeAkademi Wiki
               </div>
               <h1 className="mb-3 text-4xl font-extrabold text-white">
-                Makaleleri <span className="gradient-text">Incele</span>
+                Bilgiyi <span className="gradient-text">Kesfet</span>
               </h1>
-              <p className="text-white/50">Wikipedia benzeri topluluk makale havuzu</p>
+              <p className="text-white/55 max-w-2xl mx-auto text-sm">
+                Topluluk tarafindan olusturulan makaleler, rehberler ve notlar. Arama kutusunu kullanarak istedigin konuyu bulabilir veya yeni bir viki yazisi olusturabilirsin.
+              </p>
             </div>
 
-            <div className="mb-8 flex flex-col items-center justify-between gap-3 sm:flex-row">
-              <div className="relative w-full sm:w-96">
+            <div className="mb-6 grid gap-4 lg:grid-cols-[1.5fr_1fr] items-stretch">
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Makale ara..."
-                  className="w-full rounded-xl border border-white/10 bg-gray-800/60 py-2.5 pl-10 pr-4 text-sm text-white placeholder-white/30 focus:border-cyan-500 focus:outline-none"
+                  placeholder="Vikide ara: konu, kavram veya etiket yaz..."
+                  className="w-full rounded-xl border border-white/10 bg-gray-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 focus:border-cyan-500 focus:outline-none"
                 />
+                <p className="mt-2 text-xs text-left text-white/40">
+                  Ornek: "React hook", "Veri yapilari", "Algoritmalar" veya favori teknolojinin adi.
+                </p>
               </div>
 
-              {userProfile && (
-                <button
-                  onClick={() => setShowEditor(true)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white"
-                >
-                  <Plus className="h-4 w-4" />
-                  Makale Ekle
-                </button>
-              )}
+              <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-gray-900/60 p-3 text-left">
+                <p className="text-xs font-semibold uppercase tracking-wide text-white/50">Viki kisa yollari</p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => {
+                      setSearch('React');
+                      setActiveTag(null);
+                    }}
+                    className="rounded-full bg-gray-800 px-3 py-1 text-xs text-white/70 hover:bg-cyan-600/30 hover:text-cyan-200"
+                  >
+                    React
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSearch('JavaScript');
+                      setActiveTag(null);
+                    }}
+                    className="rounded-full bg-gray-800 px-3 py-1 text-xs text-white/70 hover:bg-cyan-600/30 hover:text-cyan-200"
+                  >
+                    JavaScript
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSearch('Algoritma');
+                      setActiveTag(null);
+                    }}
+                    className="rounded-full bg-gray-800 px-3 py-1 text-xs text-white/70 hover:bg-cyan-600/30 hover:text-cyan-200"
+                  >
+                    Algoritmalar
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSearch('Veri yapilari');
+                      setActiveTag(null);
+                    }}
+                    className="rounded-full bg-gray-800 px-3 py-1 text-xs text-white/70 hover:bg-cyan-600/30 hover:text-cyan-200"
+                  >
+                    Veri yapilari
+                  </button>
+                </div>
+
+                {userProfile && (
+                  <button
+                    onClick={() => setShowEditor(true)}
+                    className="mt-auto inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 px-4 py-2.5 text-xs font-semibold text-white"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Yeni viki makalesi yaz
+                  </button>
+                )}
+              </div>
             </div>
+
+            {articles.length > 0 && (
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-white/50">
+                  <span className="font-semibold uppercase tracking-wide text-white/60">Populer etiketler:</span>
+                  {[...new Set(articles.flatMap((a) => a.tags || []))].slice(0, 6).map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => setActiveTag((prev) => (prev === tag ? null : tag))}
+                      className={`rounded-full border px-3 py-1 ${
+                        activeTag === tag
+                          ? 'border-cyan-400 bg-cyan-500/20 text-cyan-200'
+                          : 'border-white/10 bg-gray-900/60 text-white/70 hover:border-cyan-400/60 hover:text-cyan-200'
+                      } text-[11px]`}
+                    >
+                      #{tag}
+                    </button>
+                  ))}
+                  {activeTag && (
+                    <button
+                      onClick={() => setActiveTag(null)}
+                      className="ml-1 text-[11px] text-cyan-300 underline underline-offset-4"
+                    >
+                      Etiket filtresini temizle
+                    </button>
+                  )}
+                </div>
+                <div className="text-xs text-white/40">
+                  Toplam {articles.length} makale listeleniyor
+                </div>
+              </div>
+            )}
 
             {loading ? (
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
