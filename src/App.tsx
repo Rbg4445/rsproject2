@@ -20,6 +20,7 @@ import AdminLoginModal from './components/AdminLoginModal';
 import BetaNoticeModal from './components/BetaNoticeModal';
 import RbgPage from './components/RbgPage';
 import CookieConsent from './components/CookieConsent';
+import LeaderboardPage from './components/LeaderboardPage';
 
 function parseRouteFromHash() {
   const raw = window.location.hash.replace(/^#/, '').trim();
@@ -149,6 +150,25 @@ function AppContent() {
         />
         <div className="relative z-10">
           <RbgPage />
+        </div>
+        {renderOverlayModals()}
+        <CookieConsent />
+      </div>
+    );
+  }
+
+  if (currentPage === 'leaderboard') {
+    return (
+      <div className="min-h-screen bg-transparent">
+        <MouseTrailBackground />
+        <Navbar
+          onOpenAuth={() => openAuth('login')}
+          onOpenAdminLogin={() => setShowAdminAuth(true)}
+          onNavigate={navigate}
+          currentPage={currentPage}
+        />
+        <div className="relative z-10">
+          <LeaderboardPage />
         </div>
         {renderOverlayModals()}
         <CookieConsent />

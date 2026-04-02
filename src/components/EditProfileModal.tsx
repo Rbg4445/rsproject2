@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { X, UserCog } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { FirestoreUser } from '../firebase/firestoreService';
 import { updateUserProfile } from '../firebase/firestoreService';
 
@@ -52,12 +53,22 @@ export default function EditProfileModal({ user, onClose, onUpdated }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-[220] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-      <div
-        className="relative w-full max-w-lg rounded-3xl border border-white/10 bg-gray-900/95 p-6 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[220] flex items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-black/70 backdrop-blur-sm" 
+          onClick={onClose} 
+        />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="relative w-full max-w-lg rounded-3xl border border-white/10 bg-gray-900/95 p-6 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500">
@@ -123,7 +134,8 @@ export default function EditProfileModal({ user, onClose, onUpdated }: Props) {
             </button>
           </div>
         </form>
+        </motion.div>
       </div>
-    </div>
+    </AnimatePresence>
   );
 }

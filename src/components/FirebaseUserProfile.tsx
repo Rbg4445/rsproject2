@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, FolderPlus, PenLine, Trash2, Download, FileText, Gamepad2, UserCog } from 'lucide-react';
+import { BookOpen, FolderPlus, PenLine, Trash2, Download, FileText, Gamepad2, UserCog, BarChart3, Activity } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import {
   type FirestoreBlog,
@@ -28,6 +29,7 @@ export default function FirebaseUserProfile({ username }: Props) {
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showBlogModal, setShowBlogModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [activeTab, setActiveTab] = useState<'projects' | 'blogs' | 'analytics'>('projects');
 
 
   const isOwner = !!userProfile && userProfile.username === username;
@@ -121,85 +123,195 @@ export default function FirebaseUserProfile({ username }: Props) {
           </div>
         </div>
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-2">
-          <section>
-            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-white">
-              <FolderPlus className="h-5 w-5 text-indigo-400" />
-              Projeler ({projects.length})
-            </h2>
-            <div className="space-y-3">
-              {projects.length === 0 && <p className="text-sm text-white/50">Henuz proje yok.</p>}
-              {projects.map((project) => (
-                <div key={project.id} className="rounded-xl border border-white/10 bg-gray-900/50 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold text-white">{project.title}</h3>
-                      <p className="mt-1 text-sm text-white/60">{project.description}</p>
+        {/* Tabs */}
+        <div className="flex items-center gap-2 mt-6 border-b border-white/10 pb-4">
+          <button
+            onClick={() => setActiveTab('projects')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === 'projects' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'text-white/60 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <FolderPlus className="w-4 h-4" /> Projeler ({projects.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('blogs')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === 'blogs' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'text-white/60 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <BookOpen className="w-4 h-4" /> Bloglar ({blogs.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === 'analytics' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-white/60 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <BarChart3 className="w-4 h-4" /> Analizler
+          </button>
+        </div>
 
-                      {!!project.documents?.length && (
-                        <div className="mt-3 space-y-1.5">
-                          {project.documents.map((doc) => (
-                            <a
-                              key={doc.id}
-                              href={doc.dataUrl}
-                              download={doc.name}
-                              className="inline-flex items-center gap-1 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-1 text-xs text-indigo-300 hover:bg-indigo-500/20"
-                            >
-                              <FileText className="h-3.5 w-3.5" />
-                              {doc.name}
-                              <Download className="h-3.5 w-3.5" />
-                            </a>
-                          ))}
+        <div className="mt-8">
+          <AnimatePresence mode="wait">
+            {activeTab === 'projects' && (
+              <motion.section 
+                key="projects"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="grid sm:grid-cols-2 gap-4"
+              >
+                {projects.length === 0 && <p className="text-sm text-white/50 col-span-2 text-center py-10">Henuz proje yok.</p>}
+                {projects.map((project, idx) => (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.05 }}
+                    key={project.id} 
+                    className="rounded-2xl border border-white/10 bg-gray-900/50 p-5 hover:border-indigo-500/30 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-bold text-white text-lg">{project.title}</h3>
+                          <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${project.status === 'active' ? 'bg-green-500/20 text-green-400' : project.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>
+                            {project.status === 'active' ? 'Yayında' : project.status === 'pending' ? 'Bekliyor' : 'Kaldırıldı'}
+                          </span>
                         </div>
+                        <p className="mt-1 text-sm text-white/60 line-clamp-2">{project.description}</p>
+
+                        {!!project.documents?.length && (
+                          <div className="mt-4 space-y-2">
+                            {project.documents.map((doc) => (
+                              <a
+                                key={doc.id}
+                                href={doc.dataUrl}
+                                download={doc.name}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-xs text-indigo-300 hover:bg-indigo-500/20 transition-colors w-full sm:w-auto"
+                              >
+                                <FileText className="h-4 w-4" />
+                                <span className="truncate max-w-[150px]">{doc.name}</span>
+                                <Download className="h-3.5 w-3.5 ml-auto" />
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {isOwner && (
+                        <button
+                          onClick={async () => {
+                            if (window.confirm("Silmek istediğinize emin misiniz?")) {
+                              await deleteProject(project.id);
+                              await loadProfileData();
+                            }
+                          }}
+                          className="rounded-xl p-2 text-white/40 hover:bg-red-500/20 hover:text-red-400 transition"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
                       )}
                     </div>
-                    {isOwner && (
-                      <button
-                        onClick={async () => {
-                          await deleteProject(project.id);
-                          await loadProfileData();
-                        }}
-                        className="rounded-lg p-2 text-red-300 hover:bg-red-500/15"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+                  </motion.div>
+                ))}
+              </motion.section>
+            )}
 
-          <section>
-            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-white">
-              <BookOpen className="h-5 w-5 text-purple-400" />
-              Blog Yazilari ({blogs.length})
-            </h2>
-            <div className="space-y-3">
-              {blogs.length === 0 && <p className="text-sm text-white/50">Henuz blog yok.</p>}
-              {blogs.map((blog) => (
-                <div key={blog.id} className="rounded-xl border border-white/10 bg-gray-900/50 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold text-white">{blog.title}</h3>
-                      <p className="mt-1 text-sm text-white/60">{blog.summary}</p>
+            {activeTab === 'blogs' && (
+              <motion.section 
+                key="blogs"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="grid sm:grid-cols-2 gap-4"
+              >
+                {blogs.length === 0 && <p className="text-sm text-white/50 col-span-2 text-center py-10">Henuz blog yok.</p>}
+                {blogs.map((blog, idx) => (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.05 }}
+                    key={blog.id} 
+                    className="rounded-2xl border border-white/10 bg-gray-900/50 p-5 hover:border-purple-500/30 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-bold text-white text-lg">{blog.title}</h3>
+                          <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${blog.status === 'active' ? 'bg-green-500/20 text-green-400' : blog.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>
+                            {blog.status === 'active' ? 'Yayında' : blog.status === 'pending' ? 'Bekliyor' : 'Kaldırıldı'}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-sm text-white/60 line-clamp-2">{blog.summary}</p>
+                      </div>
+                      {isOwner && (
+                        <button
+                          onClick={async () => {
+                            if (window.confirm("Silmek istediğinize emin misiniz?")) {
+                              await deleteBlog(blog.id);
+                              await loadProfileData();
+                            }
+                          }}
+                          className="rounded-xl p-2 text-white/40 hover:bg-red-500/20 hover:text-red-400 transition"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      )}
                     </div>
-                    {isOwner && (
-                      <button
-                        onClick={async () => {
-                          await deleteBlog(blog.id);
-                          await loadProfileData();
-                        }}
-                        className="rounded-lg p-2 text-red-300 hover:bg-red-500/15"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
+                  </motion.div>
+                ))}
+              </motion.section>
+            )}
+
+            {activeTab === 'analytics' && (
+              <motion.section 
+                key="analytics"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-6"
+              >
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-5 text-center">
+                    <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-2">Toplam Proje</p>
+                    <p className="text-3xl font-black text-indigo-400">{projects.length}</p>
+                  </div>
+                  <div className="bg-purple-500/10 border border-purple-500/20 rounded-2xl p-5 text-center">
+                    <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-2">Toplam Blog</p>
+                    <p className="text-3xl font-black text-purple-400">{blogs.length}</p>
+                  </div>
+                  <div className="bg-pink-500/10 border border-pink-500/20 rounded-2xl p-5 text-center">
+                    <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-2">Alınan Beğeni</p>
+                    <p className="text-3xl font-black text-pink-400">
+                      {projects.reduce((acc, curr) => acc + (curr.likes?.length || 0), 0) + blogs.reduce((acc, curr) => acc + (curr.likes?.length || 0), 0)}
+                    </p>
+                  </div>
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-5 text-center">
+                    <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-2">Profil Puanı</p>
+                    <p className="text-3xl font-black text-emerald-400">
+                      {(projects.length * 50) + (blogs.length * 30) + ((projects.reduce((acc, curr) => acc + (curr.likes?.length || 0), 0) + blogs.reduce((acc, curr) => acc + (curr.likes?.length || 0), 0)) * 10)}
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
+
+                <div className="bg-gray-800/40 border border-white/5 rounded-2xl p-6">
+                  <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2"><Activity className="w-5 h-5 text-indigo-400" /> Detaylı Dağılım</h3>
+                  <div className="space-y-4">
+                    {/* Basit bir CSS "Bar" Grafiği */}
+                    <div>
+                      <div className="flex items-center justify-between text-xs text-white/50 mb-1">
+                        <span>Aktif vs Bekleyen Projeler</span>
+                        <span>{projects.filter(p=>p.status==='active').length} / {projects.filter(p=>p.status==='pending').length}</span>
+                      </div>
+                      <div className="h-2 w-full bg-gray-700/50 rounded-full overflow-hidden flex">
+                        <div className="bg-emerald-400 h-full" style={{ width: `${projects.length > 0 ? (projects.filter(p=>p.status==='active').length / projects.length) * 100 : 0}%` }}></div>
+                        <div className="bg-yellow-400 h-full" style={{ width: `${projects.length > 0 ? (projects.filter(p=>p.status==='pending').length / projects.length) * 100 : 0}%` }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.section>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 

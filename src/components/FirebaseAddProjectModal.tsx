@@ -138,27 +138,62 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-white/60 mb-2">Proje Başlığı *</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-white/60">Proje Başlığı *</label>
+              <span className={`text-xs font-mono ${
+                form.title.length > 55 ? 'text-red-400' :
+                form.title.length > 45 ? 'text-yellow-400' :
+                'text-white/30'
+              }`}>
+                {form.title.length}/60
+              </span>
+            </div>
             <input
               type="text"
               required
+              maxLength={60}
               value={form.title}
               onChange={e => set('title', e.target.value)}
-              placeholder="Projenizin adı"
-              className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-indigo-500 text-sm"
+              placeholder="Projenizin adı (max 60 karakter)"
+              className={`w-full px-4 py-3 rounded-xl bg-gray-800/50 border text-white placeholder-white/30 focus:outline-none text-sm transition-colors ${
+                form.title.length > 55
+                  ? 'border-red-500/60 focus:border-red-500'
+                  : form.title.length > 45
+                  ? 'border-yellow-500/40 focus:border-yellow-500'
+                  : 'border-white/10 focus:border-indigo-500'
+              }`}
             />
+            {form.title.length >= 60 && (
+              <p className="mt-1 text-xs text-red-400">⚠ Maksimum karakter sınırına ulaşıldı.</p>
+            )}
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-white/60 mb-2">Açıklama *</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-white/60">Açıklama *</label>
+              <span className={`text-xs font-mono ${
+                form.description.length > 270 ? 'text-red-400' :
+                form.description.length > 220 ? 'text-yellow-400' :
+                'text-white/30'
+              }`}>
+                {form.description.length}/300
+              </span>
+            </div>
             <textarea
               required
+              maxLength={300}
               value={form.description}
               onChange={e => set('description', e.target.value)}
-              placeholder="Projenizi kısaca anlatın..."
+              placeholder="Projenizi kısaca anlatın... (max 300 karakter)"
               rows={3}
-              className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-indigo-500 text-sm resize-none"
+              className={`w-full px-4 py-3 rounded-xl bg-gray-800/50 border text-white placeholder-white/30 focus:outline-none text-sm resize-none transition-colors ${
+                form.description.length > 270
+                  ? 'border-red-500/60 focus:border-red-500'
+                  : form.description.length > 220
+                  ? 'border-yellow-500/40 focus:border-yellow-500'
+                  : 'border-white/10 focus:border-indigo-500'
+              }`}
             />
           </div>
 

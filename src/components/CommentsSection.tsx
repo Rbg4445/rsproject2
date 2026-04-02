@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { MessageCircle, Send } from 'lucide-react';
+import { MessageCircle, Send, Terminal } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import {
   type Comment,
@@ -59,54 +61,70 @@ export default function CommentsSection({ refType, refId }: CommentsSectionProps
       </div>
 
       {loading ? (
-        <p className="text-xs text-white/50">Yorumlar yukleniyor...</p>
+        <div className="flex items-center justify-center py-4">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent"></div>
+        </div>
       ) : comments.length === 0 ? (
-        <p className="text-xs text-white/50">Henuz yorum yok. Ilk yorumu sen yaz.</p>
+        <p className="text-xs text-white/50 text-center py-4">Henuz yorum yok. Ilk yorumu sen yaz.</p>
       ) : (
         <ul className="space-y-3 mb-4">
-          {comments.map((c) => (
-            <li
-              key={c.id}
-              className={`rounded-xl border px-3 py-2 text-xs ${
-                c.status === 'pending'
-                  ? 'border-yellow-500/40 bg-yellow-500/5 text-yellow-100'
-                  : 'border-white/10 bg-white/5 text-white/80'
-              }`}
-            >
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <span className="font-semibold text-[11px] uppercase tracking-wide text-white/60">
-                  {c.username}
-                </span>
-                <span className="text-[10px] text-white/40">
-                  {new Date(c.createdAt).toLocaleString('tr-TR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
-              </div>
-              <p className="text-[11px] leading-relaxed">{c.content}</p>
-              {c.status === 'pending' && (
-                <p className="mt-1 text-[10px] text-yellow-300/80">
-                  Bu yorum admin onayindan sonra diger kullanicilara gorunecek.
-                </p>
-              )}
-            </li>
-          ))}
+          <AnimatePresence>
+            {comments.map((c, idx) => (
+              <motion.li
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ delay: idx * 0.05 }}
+                key={c.id}
+                className={`rounded-xl border px-4 py-3 text-sm ${
+                  c.status === 'pending'
+                    ? 'border-yellow-500/40 bg-yellow-500/5 text-yellow-100'
+                    : 'border-white/10 bg-black/40 text-white/80'
+                }`}
+              >
+                <div className="mb-2 flex items-center justify-between gap-2 border-b border-white/5 pb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-[10px] font-bold text-white shadow-inner">
+                      {c.username.substring(0, 2).toUpperCase()}
+                    </div>
+                    <span className="font-bold text-xs text-white/80">{c.username}</span>
+                  </div>
+                  <span className="text-[10px] text-white/40">
+                    {new Date(c.createdAt).toLocaleString('tr-TR', {
+                      day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit',
+                    })}
+                  </span>
+                </div>
+                
+                <div className="prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-gray-900 prose-pre:border prose-pre:border-white/10">
+                  <ReactMarkdown>{c.content}</ReactMarkdown>
+                </div>
+                
+                {c.status === 'pending' && (
+                  <p className="mt-2 text-[10px] text-yellow-500 font-medium">
+                    ⚠️ Bu yorum admin onayindan sonra diger kullanicilara gorunecek.
+                  </p>
+                )}
+              </motion.li>
+            ))}
+          </AnimatePresence>
         </ul>
       )}
 
       {userProfile ? (
         <form onSubmit={handleSubmit} className="mt-2 flex flex-col gap-2">
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={3}
-            placeholder="Yorumunu yaz (once admin onayi gerekecek)..."
-            className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-white placeholder-white/35 focus:border-cyan-500 focus:outline-none"
-          />
+            <div className="relative">
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={4}
+                placeholder="Yorumunuzu buraya yazın... (Markdown kodları desteklenmektedir, örneğin: **kalın** veya `kod`)"
+                className="w-full rounded-xl border border-white/10 bg-gray-900/80 px-4 py-3 text-sm text-white placeholder-white/30 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 transition-all font-mono"
+              />
+              <div className="absolute top-3 right-3 text-white/20">
+                <Terminal className="w-4 h-4" />
+              </div>
+            </div>
           <div className="flex items-center justify-between">
             <p className="text-[10px] text-white/35">
               Yorumlar once admin onayina gonderilir. Uygun olmayan icerikler silinir.

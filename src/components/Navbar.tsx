@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, LogIn, LogOut, User, Compass, ChevronDown, BookOpen, BookText, Shield, Moon, Sun, Gamepad2 } from 'lucide-react';
+import { Menu, X, LogIn, LogOut, User, Compass, ChevronDown, BookOpen, BookText, Shield, Moon, Sun, Gamepad2, Bell, Trophy } from 'lucide-react';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import { useTheme } from '../store/ThemeContext';
 import { useSiteSettings } from '../store/SiteSettingsContext';
+import NotificationsDropdown from './NotificationsDropdown';
+import { getUserNotifications } from '../firebase/firestoreService';
 
 interface NavbarProps {
   onOpenAuth: () => void;
@@ -18,6 +20,18 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifs, setShowNotifs] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (userProfile?.uid) {
+      getUserNotifications(userProfile.uid).then(data => {
+        setUnreadCount(data.filter(n => !n.read).length);
+      });
+    } else {
+      setUnreadCount(0);
+    }
+  }, [userProfile?.uid]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -135,6 +149,19 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
               RBG
             </button>
 
+            {/* Leaderboard Button */}
+            <button
+              onClick={() => onNavigate('leaderboard')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
+                currentPage === 'leaderboard'
+                  ? 'bg-yellow-500/20 text-yellow-400'
+                  : 'text-white/60 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Trophy className="w-4 h-4" />
+              Liderlik
+            </button>
+
             {/* Admin Button */}
             {isAdmin && (
               <button
@@ -160,9 +187,32 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
 
             {/* Auth */}
             {userProfile ? (
-              <div className="relative ml-3">
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowUserMenu(!showUserMenu); }}
+              <div className="flex items-center ml-3 gap-2">
+                <div className="relative">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setShowNotifs(!showNotifs); setShowUserMenu(false); }}
+                    className="p-2 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition"
+                  >
+                    <Bell className="w-4 h-4" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-gray-900" />
+                    )}
+                  </button>
+                  {showNotifs && (
+                    <NotificationsDropdown 
+                      uid={userProfile.uid} 
+                      onClose={() => {
+                        setShowNotifs(false);
+                        // Kapatırken local state'i güncelle (gerçek senaryoda Context vs. kullanılmalı)
+                        setUnreadCount(0);
+                      }} 
+                    />
+                  )}
+                </div>
+                
+                <div className="relative">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowUserMenu(!showUserMenu); setShowNotifs(false); }}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-lg hover:shadow-indigo-500/30 transition-all"
                 >
                   <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-xs font-bold">
@@ -217,8 +267,9 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="ml-3 flex items-center gap-2">
+            </div>
+          ) : (
+            <div className="ml-3 flex items-center gap-2">
                 <button
                   onClick={onOpenAdminLogin}
                   className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/20"
@@ -291,6 +342,13 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
           >
             <Gamepad2 className="w-4 h-4" />
             RBG
+          </button>
+          <button
+            onClick={() => { onNavigate('leaderboard'); setIsOpen(false); }}
+            className="w-full text-left px-4 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/10 font-medium transition flex items-center gap-2"
+          >
+            <Trophy className="w-4 h-4" />
+            Liderlik
           </button>
           <button
             onClick={() => { toggleTheme(); setIsOpen(false); }}
