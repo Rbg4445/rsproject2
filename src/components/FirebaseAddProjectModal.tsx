@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Plus, Trash2, Upload, FileText } from 'lucide-react';
+import { X, Plus, Trash2, Upload, FileText, Video } from 'lucide-react';
 import { addProject } from '../firebase/firestoreService';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 
@@ -40,6 +40,7 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
     tags: [] as string[],
     github: '',
     demo: '',
+    videoUrl: '',
     image: COVER_IMAGES[1].url,
     customImage: '',
   });
@@ -100,6 +101,7 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
         tags: form.tags,
         github: form.github,
         demo: form.demo,
+        videoUrl: form.videoUrl || undefined,
         image: form.customImage || form.image,
         documents,
         likes: [],
@@ -257,6 +259,27 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
                 className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-indigo-500 text-sm"
               />
             </div>
+          </div>
+
+          {/* Video URL */}
+          <div>
+            <label className="block text-sm font-medium text-white/60 mb-2">
+              <span className="inline-flex items-center gap-1.5">
+                <Video className="w-4 h-4 text-purple-400" />
+                Video Linki
+                <span className="ml-1 text-white/30 text-xs font-normal">(YouTube, Vimeo veya direkt video URL)</span>
+              </span>
+            </label>
+            <input
+              type="url"
+              value={form.videoUrl}
+              onChange={e => set('videoUrl', e.target.value)}
+              placeholder="https://youtube.com/watch?v=... veya https://vimeo.com/..."
+              className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-purple-500 text-sm"
+            />
+            {form.videoUrl && (
+              <p className="mt-1.5 text-xs text-purple-400/70">✓ Video linki eklendi — proje sayfasında oynatıcı olarak gösterilecek</p>
+            )}
           </div>
 
           {/* Cover Image */}

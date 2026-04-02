@@ -1,9 +1,38 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Heart, ExternalLink, Tag, Download, FileText, Plus } from 'lucide-react';
+import { Search, Filter, Heart, ExternalLink, Tag, Download, FileText, Plus, Video } from 'lucide-react';
 import { getProjects, toggleProjectLike, FirestoreProject } from '../firebase/firestoreService';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import { GithubIcon } from './icons';
 import FirebaseAddProjectModal from './FirebaseAddProjectModal';
+
+// ─── Video embed yardımcı fonksiyonu ──────────────────────────────────────────
+function getVideoEmbed(url: string): { type: 'youtube' | 'vimeo' | 'direct'; src: string } | null {
+  try {
+    const u = new URL(url);
+    // YouTube
+    if (u.hostname.includes('youtube.com') || u.hostname.includes('youtu.be')) {
+      const id = u.hostname.includes('youtu.be')
+        ? u.pathname.slice(1)
+        : u.searchParams.get('v') || u.pathname.split('/').pop();
+      if (!id) return null;
+      return { type: 'youtube', src: `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1` };
+    }
+    // Vimeo
+    if (u.hostname.includes('vimeo.com')) {
+      const id = u.pathname.split('/').filter(Boolean).pop();
+      if (!id) return null;
+      return { type: 'vimeo', src: `https://player.vimeo.com/video/${id}?badge=0&autopause=0` };
+    }
+    // Direkt video dosyası
+    const ext = u.pathname.split('.').pop()?.toLowerCase();
+    if (['mp4', 'webm', 'ogg', 'mov'].includes(ext || '')) {
+      return { type: 'direct', src: url };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 const CATEGORIES = [
   { key: 'all', label: 'Tümü', icon: 'https://cdn-icons-png.flaticon.com/128/1828/1828884.png' },
@@ -111,6 +140,44 @@ export default function FirebaseExplorePage() {
                 {selectedProject.content || selectedProject.description}
               </p>
             </div>
+
+            {/* ─── Video Oynatıcı ─────────────────────────────────────────── */}
+            {selectedProject.videoUrl && (() => {
+              const embed = getVideoEmbed(selectedProject.videoUrl!);
+              return embed ? (
+                <div>
+                  <h2 className="mb-3 text-lg font-bold text-white flex items-center gap-2">
+                    <Video className="w-5 h-5 text-purple-400" />
+                    Proje Videosu
+                  </h2>
+                  {embed.type === 'direct' ? (
+                    <video
+                      src={embed.src}
+                      controls
+                      className="w-full rounded-2xl border border-white/10 bg-black max-h-80"
+                    />
+                  ) : (
+                    <div className="relative w-full rounded-2xl overflow-hidden border border-white/10" style={{ paddingTop: '56.25%' }}>
+                      <iframe
+                        src={embed.src}
+                        title="Proje Videosu"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="absolute inset-0 w-full h-full"
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-gray-800/40 px-4 py-3">
+                  <Video className="w-4 h-4 text-purple-400" />
+                  <a href={selectedProject.videoUrl} target="_blank" rel="noopener noreferrer"
+                    className="text-purple-400 hover:underline text-sm">
+                    Videoyu Aç
+                  </a>
+                </div>
+              );
+            })()}
 
             {!!selectedProject.documents?.length && (
               <div>
@@ -289,6 +356,11 @@ function ProjectCard({ project, currentUid, onLike, onOpen }: {
         <img src={img} alt={project.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent" />
         <div className="absolute top-3 right-3 flex gap-2">
+          {project.videoUrl && (
+            <span className="w-8 h-8 bg-purple-600/80 backdrop-blur rounded-full flex items-center justify-center" title="Video mevcut">
+              <Video className="w-4 h-4 text-white" />
+            </span>
+          )}
           {project.github && (
             <a href={project.github} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
               className="w-8 h-8 bg-black/60 backdrop-blur rounded-full flex items-center justify-center hover:bg-black/80 transition">

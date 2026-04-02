@@ -49,6 +49,7 @@ export interface FirestoreProject {
   github?: string;
   demo?: string;
   image?: string;
+  videoUrl?: string;
   documents?: ProjectDocument[];
   likes: string[];
   status: 'pending' | 'active' | 'removed';
