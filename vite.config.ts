@@ -16,4 +16,15 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
+  server: {
+    proxy: {
+      // VirusTotal API — CORS bypass (sadece dev ortamında)
+      '/api/virustotal': {
+        target: 'https://www.virustotal.com/api/v3',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/virustotal/, ''),
+        secure: true,
+      },
+    },
+  },
 });

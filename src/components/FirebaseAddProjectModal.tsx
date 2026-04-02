@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { X, Plus, Trash2, Upload, FileText, Video } from 'lucide-react';
+import { X, Plus, Trash2, Upload, FileText, Video, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { addProject } from '../firebase/firestoreService';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
+import { uploadFileToSupabase } from '../lib/supabaseClient';
+import { scanFile } from '../lib/virusTotalService';
 
 interface Props { onClose: () => void; onSuccess: () => void; }
 
@@ -15,21 +17,33 @@ const CATEGORIES = [
 const DIFFICULTIES = ['Başlangıç', 'Orta', 'İleri'];
 
 const COVER_IMAGES = [
-  { label: 'Eğitim', url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=80' },
+  { label: 'Eğitim',  url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=80' },
   { label: 'Kodlama', url: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&q=80' },
   { label: 'Akademi', url: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=600&q=80' },
   { label: 'Tasarım', url: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&q=80' },
-  { label: 'Data', url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80' },
-  { label: 'Mobil', url: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&q=80' },
+  { label: 'Data',    url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80' },
+  { label: 'Mobil',   url: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&q=80' },
 ];
+
+type ScanStatus = 'idle' | 'scanning' | 'clean' | 'infected' | 'error';
+
+interface DocEntry {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  url: string;          // Supabase Storage public URL
+  uploadedAt: string;
+  scanStatus: ScanStatus;
+  scanMsg: string;
+  malicious: number;
+}
 
 export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
   const { userProfile } = useFirebaseAuth();
   const [loading, setLoading] = useState(false);
   const [tagInput, setTagInput] = useState('');
-  const [documents, setDocuments] = useState<
-    { id: string; name: string; type: string; size: number; dataUrl: string; uploadedAt: string }[]
-  >([]);
+  const [documents, setDocuments] = useState([] as DocEntry[]);
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -55,39 +69,121 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
     }
   };
 
-  const fileToDataUrl = (file: File) =>
-    new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ''));
-      reader.onerror = () => reject(new Error('Belge okunamadi'));
-      reader.readAsDataURL(file);
-    });
-
+  /**
+   * Dosyaları sırayla işle (VT rate-limit: 4 istek/dk için sıralı çalıştırıyoruz):
+   * 1. VirusTotal taraması
+   * 2. Temizse Supabase Storage'a yükle
+   */
   const handleDocumentUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    if (!userProfile) return;
 
-    const picked = Array.from(files);
-    const accepted = picked.filter((file) => file.size <= 5 * 1024 * 1024).slice(0, 5 - documents.length);
+    const picked = Array.from(files)
+      .filter((f) => f.size <= 5 * 1024 * 1024)
+      .slice(0, 5 - documents.length);
 
-    const mapped = await Promise.all(
-      accepted.map(async (file) => ({
-        id: `doc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        name: file.name,
-        type: file.type || 'application/octet-stream',
-        size: file.size,
-        dataUrl: await fileToDataUrl(file),
-        uploadedAt: new Date().toISOString(),
-      }))
-    );
+    for (const file of picked) {
+      const tempId = `doc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-    setDocuments((prev) => [...prev, ...mapped]);
+      // Listeye "scanning" durumunda ekle
+      setDocuments((prev) => [
+        ...prev,
+        {
+          id: tempId,
+          name: file.name,
+          type: file.type || 'application/octet-stream',
+          size: file.size,
+          url: '',
+          uploadedAt: '',
+          scanStatus: 'scanning',
+          scanMsg: 'Taranıyor...',
+          malicious: 0,
+        },
+      ]);
+
+      try {
+        // Adım 1: VirusTotal taraması
+        const result = await scanFile(file, (msg) => {
+          setDocuments((prev) =>
+            prev.map((d) => (d.id === tempId ? { ...d, scanMsg: msg } : d))
+          );
+        });
+
+        if (!result.safe) {
+          // Virüslü → listeye ekle ama yüklemeyi engelle
+          setDocuments((prev) =>
+            prev.map((d) =>
+              d.id === tempId
+                ? {
+                    ...d,
+                    scanStatus: 'infected',
+                    scanMsg: `${result.malicious} antivirüs motoru tehdit tespit etti!`,
+                    malicious: result.malicious,
+                  }
+                : d
+            )
+          );
+          continue; // Sonraki dosyaya geç
+        }
+
+        // Adım 2: Temizse Supabase Storage'a yükle
+        setDocuments((prev) =>
+          prev.map((d) => (d.id === tempId ? { ...d, scanMsg: 'Supabase\'e yükleniyor...' } : d))
+        );
+
+        const publicUrl = await uploadFileToSupabase(`projects/${userProfile.uid}`, file);
+
+        setDocuments((prev) =>
+          prev.map((d) =>
+            d.id === tempId
+              ? {
+                  ...d,
+                  url: publicUrl,
+                  uploadedAt: new Date().toISOString(),
+                  scanStatus: 'clean',
+                  scanMsg: `Temiz — ${result.harmless + result.undetected} motor onayladı`,
+                }
+              : d
+          )
+        );
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Bilinmeyen hata';
+        setDocuments((prev) =>
+          prev.map((d) =>
+            d.id === tempId ? { ...d, scanStatus: 'error', scanMsg: msg } : d
+          )
+        );
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userProfile) return;
+
+    // Hâlâ taranan veya virüslü belge varsa gönderme
+    const hasInfected = documents.some((d) => d.scanStatus === 'infected');
+    const hasScanning = documents.some((d) => d.scanStatus === 'scanning');
+    if (hasInfected) {
+      alert('Virüslü belgeler tespit edildi. Lütfen bu dosyaları kaldırın.');
+      return;
+    }
+    if (hasScanning) {
+      alert('Bazı belgeler hâlâ taranıyor. Lütfen bekleyin.');
+      return;
+    }
+
     setLoading(true);
     try {
+      // Sadece başarıyla yüklenen temiz belgeleri kaydet
+      const cleanDocs = documents
+        .filter((d) => d.scanStatus === 'clean' && d.url)
+        .map(({ id, name, type, size, url, uploadedAt }) => ({
+          id, name, type, size,
+          dataUrl: url,   // Firestore'daki mevcut alan adını koruyoruz (geriye dönük uyumluluk)
+          uploadedAt,
+        }));
+
       await addProject({
         uid: userProfile.uid,
         username: userProfile.username,
@@ -99,13 +195,13 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
         difficulty: form.difficulty,
         duration: form.duration || '1 ay',
         tags: form.tags,
-        ...(form.github  ? { github:   form.github  } : {}),
-        ...(form.demo    ? { demo:     form.demo    } : {}),
+        ...(form.github   ? { github:   form.github   } : {}),
+        ...(form.demo     ? { demo:     form.demo     } : {}),
         ...(form.videoUrl ? { videoUrl: form.videoUrl } : {}),
         image: form.customImage || form.image,
-        documents,
+        documents: cleanDocs,
         likes: [],
-        status: 'pending', // admin onayi bekliyor
+        status: 'pending',
         createdAt: new Date().toISOString(),
       });
 
@@ -113,6 +209,7 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
       onClose();
     } catch (err) {
       console.error(err);
+      alert('Proje kaydedilemedi. Lütfen tekrar deneyin.');
     }
     setLoading(false);
   };
@@ -347,11 +444,18 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
             />
           </div>
 
+          {/* Belgeler — VirusTotal + Supabase */}
           <div>
-            <label className="block text-sm font-medium text-white/60 mb-2">Belgeler (PDF, DOCX, ZIP) - Max 5 adet, her biri 5MB</label>
-            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-gray-800/40 px-4 py-3 text-sm text-white/70 hover:border-indigo-500/40 hover:text-white">
+            <div className="flex items-center gap-2 mb-2">
+              <label className="block text-sm font-medium text-white/60">Belgeler (PDF, DOCX, ZIP) — Max 5 adet, her biri 5MB</label>
+              <span className="inline-flex items-center gap-1 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                <CheckCircle className="w-3 h-3" /> VirusTotal Korumalı
+              </span>
+            </div>
+
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-gray-800/40 px-4 py-3 text-sm text-white/70 hover:border-indigo-500/40 hover:text-white transition">
               <FileText className="h-4 w-4" />
-              Belge Sec
+              Belge Seç
               <input
                 type="file"
                 multiple
@@ -364,20 +468,69 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
             {documents.length > 0 && (
               <div className="mt-3 space-y-2">
                 {documents.map((doc) => (
-                  <div key={doc.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-gray-800/40 px-3 py-2 text-sm">
-                    <div>
-                      <p className="text-white/90">{doc.name}</p>
-                      <p className="text-white/50 text-xs">{(doc.size / 1024 / 1024).toFixed(2)} MB</p>
+                  <div
+                    key={doc.id}
+                    className={`flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition-colors ${
+                      doc.scanStatus === 'infected'
+                        ? 'border-red-500/30 bg-red-500/10'
+                        : doc.scanStatus === 'clean'
+                        ? 'border-emerald-500/20 bg-emerald-500/5'
+                        : doc.scanStatus === 'error'
+                        ? 'border-yellow-500/20 bg-yellow-500/5'
+                        : 'border-white/10 bg-gray-800/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      {/* Durum ikonu */}
+                      {doc.scanStatus === 'scanning' && (
+                        <Loader2 className="h-4 w-4 text-indigo-400 animate-spin flex-shrink-0" />
+                      )}
+                      {doc.scanStatus === 'clean' && (
+                        <CheckCircle className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+                      )}
+                      {doc.scanStatus === 'infected' && (
+                        <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
+                      )}
+                      {doc.scanStatus === 'error' && (
+                        <AlertCircle className="h-4 w-4 text-yellow-400 flex-shrink-0" />
+                      )}
+
+                      <div className="min-w-0">
+                        <p className="text-white/90 truncate max-w-[200px]">{doc.name}</p>
+                        <p className={`text-xs truncate ${
+                          doc.scanStatus === 'infected' ? 'text-red-400' :
+                          doc.scanStatus === 'clean'    ? 'text-emerald-400' :
+                          doc.scanStatus === 'error'    ? 'text-yellow-400' :
+                          'text-white/40'
+                        }`}>
+                          {doc.scanMsg} · {(doc.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
                     </div>
+
                     <button
                       type="button"
                       onClick={() => setDocuments((prev) => prev.filter((d) => d.id !== doc.id))}
-                      className="rounded-lg p-2 text-red-300 hover:bg-red-500/15"
+                      className="rounded-lg p-2 text-red-300 hover:bg-red-500/15 flex-shrink-0"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Virüs uyarısı */}
+            {documents.some((d) => d.scanStatus === 'infected') && (
+              <div className="mt-3 flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3">
+                <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-red-400">Tehdit Tespit Edildi!</p>
+                  <p className="text-xs text-red-300/80 mt-0.5">
+                    Virüslü belgeler yükleme sırasında otomatik olarak engellenmiştir.
+                    Bu dosyaları listeden kaldırarak devam edebilirsiniz.
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -387,8 +540,14 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
             <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl bg-gray-800 border border-white/10 text-white/60 font-semibold hover:text-white transition">
               İptal
             </button>
-            <button type="submit" disabled={loading} className="flex-1 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold hover:shadow-lg hover:shadow-indigo-500/25 transition disabled:opacity-50">
-              {loading ? 'Yükleniyor...' : '🚀 Projeyi Yayınla'}
+            <button
+              type="submit"
+              disabled={loading || documents.some((d) => d.scanStatus === 'scanning')}
+              className="flex-1 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold hover:shadow-lg hover:shadow-indigo-500/25 transition disabled:opacity-50"
+            >
+              {loading ? 'Kaydediliyor...' :
+               documents.some((d) => d.scanStatus === 'scanning') ? '🔍 Taranıyor...' :
+               '🚀 Projeyi Yayınla'}
             </button>
           </div>
         </form>

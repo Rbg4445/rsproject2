@@ -39,7 +39,7 @@ interface FirebaseAuthContextType {
   refreshProfile: () => Promise<void>;
 }
 
-const FirebaseAuthContext = createContext<FirebaseAuthContextType | undefined>(undefined);
+const FirebaseAuthContext = createContext(undefined as FirebaseAuthContextType | undefined);
 
 // ─── localStorage helpers ─────────────────────────────────────────────────────
 const LS_USERS = 'pa_users';
@@ -87,7 +87,7 @@ function seedAdmin() {
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
-  const [userProfile, setUserProfile] = useState<FirestoreUser | null>(null);
+  const [userProfile, setUserProfile] = useState(null as FirestoreUser | null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -345,15 +345,26 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (data: { username: string; email: string; password: string; displayName: string }): Promise<{ success: boolean; error?: string }> => {
+    // ── Username format validation ──────────────────────────────────────────
+    const usernameClean = data.username.toLowerCase().trim();
+    if (!/^[a-z0-9_]{3,20}$/.test(usernameClean)) {
+      return { success: false, error: 'Kullanıcı adı 3-20 karakter olmalı, sadece harf, rakam ve _ içerebilir.' };
+    }
+
     if (isFirebaseConfigured) {
       try {
         const { registerWithEmail } = await import('../firebase/authService');
-        const { createUserProfile } = await import('../firebase/firestoreService');
+        const { createUserProfile, isUsernameTaken } = await import('../firebase/firestoreService');
+
+        // Firebase modunda da username benzersizlik kontrolü
+        const taken = await isUsernameTaken(usernameClean);
+        if (taken) return { success: false, error: 'Bu kullanıcı adı zaten alınmış. Lütfen farklı bir ad seçin.' };
+
         const result = await registerWithEmail(data.email, data.password);
         if (result.user) {
           const newProfile: FirestoreUser = {
             uid: result.user.uid,
-            username: data.username,
+            username: usernameClean,
             email: data.email,
             displayName: data.displayName,
             role: ADMIN_EMAILS.includes(data.email.toLowerCase()) ? 'admin' : 'user',
@@ -367,7 +378,7 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
       } catch (e: unknown) {
         const msg = (e as Error).message || '';
         if (msg.includes('email-already-in-use')) return { success: false, error: 'Bu e-posta zaten kullanımda.' };
-        if (msg.includes('weak-password')) return { success: false, error: 'Şifre çok zayıf.' };
+        if (msg.includes('weak-password')) return { success: false, error: 'Şifre çok zayıf (en az 6 karakter).' };
         return { success: false, error: 'Kayıt başarısız: ' + msg };
       }
     }
@@ -375,11 +386,11 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
     // localStorage register
     const users = getUsers();
     if (users.find(u => u.email === data.email)) return { success: false, error: 'Bu e-posta zaten kullanımda.' };
-    if (users.find(u => u.username === data.username)) return { success: false, error: 'Bu kullanıcı adı zaten alınmış.' };
+    if (users.find(u => u.username.toLowerCase() === usernameClean)) return { success: false, error: 'Bu kullanıcı adı zaten alınmış. Lütfen farklı bir ad seçin.' };
 
     const newUser: FirestoreUser = {
       uid: 'user_' + Date.now() + '_' + Math.random().toString(36).slice(2),
-      username: data.username,
+      username: usernameClean,
       email: data.email,
       displayName: data.displayName,
       role: 'user',
@@ -392,6 +403,7 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
     setUserProfile(newUser);
     return { success: true };
   };
+
 
   const logout = async () => {
     const ip = await getClientIp();

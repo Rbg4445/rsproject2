@@ -216,6 +216,24 @@ export async function getUserByUsername(username: string): Promise<FirestoreUser
   return users.find((u) => u.username === username) || null;
 }
 
+/**
+ * Kullanıcı adının başkası tarafından alınıp alınmadığını kontrol eder.
+ * excludeUid: güncelleme sırasında mevcut kullanıcının kendi adına şikayet etmemesi için.
+ */
+export async function isUsernameTaken(username: string, excludeUid?: string): Promise<boolean> {
+  const normalized = username.toLowerCase().trim();
+  if (canUseRemote && db) {
+    const q = query(collection(db, 'users'), where('username', '==', normalized));
+    const snap = await getDocs(q);
+    if (snap.empty) return false;
+    // Eğer bulunan tek kullanıcı excludeUid ise, bu kendi adı — sorun yok
+    return snap.docs.some((d) => d.data().uid !== excludeUid);
+  }
+  const users: FirestoreUser[] = getLS(USERS_KEY, []);
+  return users.some((u) => u.username.toLowerCase() === normalized && u.uid !== excludeUid);
+}
+
+
 export async function createUserProfile(profile: FirestoreUser): Promise<void> {
   if (canUseRemote && db) {
     await setDoc(doc(db, 'users', profile.uid), profile, { merge: true });
@@ -857,6 +875,113 @@ export async function updateRbgPageData(updates: Partial<RbgPageData>): Promise<
 export async function addLog(_log: { action: string; uid?: string; details?: string; success: boolean }): Promise<void> {
   // Firestore'a aktarılmıyor, sadece geriye dönük uyumluluk için bırakıldı.
 }
+
+// ─── Admin Başvuruları ──────────────────────────────────────────────────────────
+export interface AdminApplication {
+  id: string;
+  uid: string;
+  username: string;
+  displayName: string;
+  email: string;
+  fullName: string;          // Ad Soyad
+  profession: string;        // Meslek / Unvan
+  reason: string;            // Neden admin olmak istiyorsunuz?
+  linkedin?: string;
+  github?: string;
+  twitter?: string;
+  experience: string;        // Deneyim alanı
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  reviewNote?: string;
+}
+
+const APPLICATIONS_KEY = 'pa_admin_applications';
+
+export async function submitAdminApplication(
+  payload: Omit<AdminApplication, 'id' | 'createdAt' | 'status'>
+): Promise<void> {
+  const entry: AdminApplication = {
+    ...payload,
+    id: `app_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    createdAt: new Date().toISOString(),
+    status: 'pending',
+  };
+  if (canUseRemote && db) {
+    const ref = await addDoc(collection(db, 'adminApplications'), entry);
+    await updateDoc(ref, { id: ref.id });
+    return;
+  }
+  const list = getLS<AdminApplication[]>(APPLICATIONS_KEY, []);
+  list.unshift(entry);
+  setLS(APPLICATIONS_KEY, list);
+}
+
+export async function getAdminApplications(): Promise<AdminApplication[]> {
+  if (canUseRemote && db) {
+    const snap = await getDocs(collection(db, 'adminApplications'));
+    return snap.docs
+      .map((d) => ({ id: d.id, ...d.data() } as AdminApplication))
+      .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+  }
+  return getLS<AdminApplication[]>(APPLICATIONS_KEY, [])
+    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+}
+
+export async function getUserAdminApplication(uid: string): Promise<AdminApplication | null> {
+  if (canUseRemote && db) {
+    const q = query(collection(db, 'adminApplications'), where('uid', '==', uid));
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminApplication));
+    return docs.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))[0];
+  }
+  const list = getLS<AdminApplication[]>(APPLICATIONS_KEY, []);
+  const found = list.filter((a) => a.uid === uid)
+    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+  return found[0] || null;
+}
+
+export async function reviewAdminApplication(
+  id: string,
+  status: 'approved' | 'rejected',
+  reviewedBy: string,
+  reviewNote?: string
+): Promise<void> {
+  const now = new Date().toISOString();
+  if (canUseRemote && db) {
+    const q = query(collection(db, 'adminApplications'), where('id', '==', id));
+    const snap = await getDocs(q);
+    await Promise.all(snap.docs.map((d) =>
+      updateDoc(doc(db!, 'adminApplications', d.id), { status, reviewedAt: now, reviewedBy, reviewNote: reviewNote || '' })
+    ));
+    // Eğer onaylandıysa kullanıcının rolünü admin yap
+    if (status === 'approved') {
+      const appData = snap.docs[0]?.data() as AdminApplication | undefined;
+      if (appData?.uid) {
+        const userRef = doc(db!, 'users', appData.uid);
+        await updateDoc(userRef, { role: 'admin' });
+      }
+    }
+    return;
+  }
+  const list = getLS<AdminApplication[]>(APPLICATIONS_KEY, []);
+  const next = list.map((a) =>
+    a.id === id ? { ...a, status, reviewedAt: now, reviewedBy, reviewNote: reviewNote || '' } : a
+  );
+  setLS(APPLICATIONS_KEY, next);
+  // localStorage modunda da rolü güncelle
+  if (status === 'approved') {
+    const app = list.find((a) => a.id === id);
+    if (app) {
+      const users = getLS<FirestoreUser[]>(USERS_KEY, []);
+      const u = users.findIndex((u) => u.uid === app.uid);
+      if (u !== -1) { users[u] = { ...users[u], role: 'admin' }; setLS(USERS_KEY, users); }
+    }
+  }
+}
+
 
 // ─── Şikayet (Flag/Report) Sistemi ─────────────────────────────────────────────
 export interface ContentReport {

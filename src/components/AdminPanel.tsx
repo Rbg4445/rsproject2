@@ -6,6 +6,7 @@ import { useTheme, type ThemeMode } from '../store/ThemeContext';
 import DashboardTab from './AdminDashboardTab';
 import AdminReportsTab from './AdminReportsTab';
 import AdminModRulesTab from './AdminModRulesTab';
+import AdminApplicationsTab from './AdminApplicationsTab';
 import {
   type AccessLog,
   type BlockedIp,
@@ -47,19 +48,20 @@ interface AdminPanelProps {
   onBack: () => void;
 }
 
-type AdminTab = 'dashboard' | 'texts' | 'links' | 'appearance' | 'users' | 'content' | 'reports' | 'messages' | 'security' | 'modrules';
+type AdminTab = 'dashboard' | 'texts' | 'links' | 'appearance' | 'users' | 'content' | 'reports' | 'applications' | 'messages' | 'security' | 'modrules';
 
 const tabs: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
-  { id: 'dashboard', label: 'Özet', icon: <BarChart className="h-4 w-4" /> },
-  { id: 'texts', label: 'Yazilar', icon: <Type className="h-4 w-4" /> },
-  { id: 'links', label: 'Linkler', icon: <Link2 className="h-4 w-4" /> },
-  { id: 'appearance', label: 'Tema', icon: <Palette className="h-4 w-4" /> },
-  { id: 'users', label: 'Kullanicilar', icon: <Users className="h-4 w-4" /> },
-  { id: 'content', label: 'Icerik', icon: <FileText className="h-4 w-4" /> },
-  { id: 'reports', label: 'Şikayetler', icon: <Flag className="h-4 w-4" /> },
-  { id: 'messages', label: 'Mesajlar', icon: <Mail className="h-4 w-4" /> },
-  { id: 'security', label: 'Guvenlik', icon: <Shield className="h-4 w-4" /> },
-  { id: 'modrules', label: 'Oto-Mod', icon: <Settings className="h-4 w-4" /> },
+  { id: 'dashboard',    label: 'Özet',         icon: <BarChart className="h-4 w-4" /> },
+  { id: 'texts',        label: 'Yazılar',       icon: <Type className="h-4 w-4" /> },
+  { id: 'links',        label: 'Linkler',       icon: <Link2 className="h-4 w-4" /> },
+  { id: 'appearance',   label: 'Tema',          icon: <Palette className="h-4 w-4" /> },
+  { id: 'users',        label: 'Kullanıcılar',  icon: <Users className="h-4 w-4" /> },
+  { id: 'content',      label: 'İçerik',        icon: <FileText className="h-4 w-4" /> },
+  { id: 'reports',      label: 'Şikayetler',    icon: <Flag className="h-4 w-4" /> },
+  { id: 'applications', label: 'Başvurular',    icon: <Shield className="h-4 w-4" /> },
+  { id: 'messages',     label: 'Mesajlar',      icon: <Mail className="h-4 w-4" /> },
+  { id: 'security',     label: 'Güvenlik',      icon: <Shield className="h-4 w-4" /> },
+  { id: 'modrules',     label: 'Oto-Mod',       icon: <Settings className="h-4 w-4" /> },
 ];
 
 const iconUrls = {
@@ -817,6 +819,10 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
           {activeTab === 'reports' && (
             <AdminReportsTab userEmail={userProfile?.email || 'admin'} />
+          )}
+
+          {activeTab === 'applications' && (
+            <AdminApplicationsTab userEmail={userProfile?.email || 'admin'} />
           )}
 
           {activeTab === 'modrules' && (
