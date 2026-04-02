@@ -902,12 +902,18 @@ const APPLICATIONS_KEY = 'pa_admin_applications';
 export async function submitAdminApplication(
   payload: Omit<AdminApplication, 'id' | 'createdAt' | 'status'>
 ): Promise<void> {
+  // undefined alanları Firestore kabul etmez, temizle
+  const cleanPayload = Object.fromEntries(
+    Object.entries(payload).filter(([_, v]) => v !== undefined)
+  );
+
   const entry: AdminApplication = {
-    ...payload,
+    ...cleanPayload,
     id: `app_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     createdAt: new Date().toISOString(),
     status: 'pending',
-  };
+  } as AdminApplication;
+
   if (canUseRemote && db) {
     const ref = await addDoc(collection(db, 'adminApplications'), entry);
     await updateDoc(ref, { id: ref.id });

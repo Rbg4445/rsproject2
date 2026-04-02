@@ -56,7 +56,7 @@ async function checkFileHash(hash: string): Promise<VTScanResult | null> {
 
 /** Dosyayı VT'ye yükle ve tarama ID'sini al */
 async function uploadFileForScan(file: File): Promise<string> {
-  if (!VT_API_KEY) throw new Error('VirusTotal API key tanımlı değil.');
+  if (!VT_API_KEY) throw new Error('VirusTotal API key bulunamadı. Lütfen .env.local dosyasını kontrol edin.');
 
   const formData = new FormData();
   formData.append('file', file);
@@ -67,9 +67,13 @@ async function uploadFileForScan(file: File): Promise<string> {
     body: formData,
   });
 
+  if (res.status === 404) {
+    throw new Error('VirusTotal API ulaşılamıyor (404). Lütfen proxy ayarlarını (vercel.json veya vite.config.ts) kontrol edin.');
+  }
+
   if (!res.ok) {
     const errText = await res.text();
-    throw new Error(`VT upload hatası: ${res.status} - ${errText}`);
+    throw new Error(`VT tarama başlatılamadı: ${res.status} - ${errText}`);
   }
 
   const json = await res.json() as { data: { id: string } };
