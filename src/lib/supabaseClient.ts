@@ -59,3 +59,34 @@ export async function uploadFileToSupabase(path: string, file: File): Promise<st
 
   return publicUrlData.publicUrl;
 }
+
+/** 
+ * Verilen public URL'i analiz ederek dosyayı Supabase Storage'dan siler.
+ * Sadece projenin kullandığı bucket'a ait URL'ler üzerinde işlem yapar.
+ */
+export async function deleteFileFromSupabase(url: string): Promise<void> {
+  if (!supabase || !url) return;
+  
+  try {
+    // Sadece projenin kendi Supabase projesine ait olup olmadığını basitçe kontrol edelim
+    if (!url.includes(SUPABASE_URL || '')) return;
+
+    // URL'den path çıkarımı: .../storage/v1/object/public/bucketName/path
+    const searchPart = `/public/${SUPABASE_BUCKET}/`;
+    const idx = url.indexOf(searchPart);
+    if (idx === -1) {
+      console.warn('[Supabase Delete] URL bucket ile eslesmedi veya gecersiz:', url);
+      return;
+    }
+  
+    const filePath = decodeURIComponent(url.slice(idx + searchPart.length));
+    console.log('[Supabase] Dosya siliniyor:', filePath);
+    
+    const { error } = await supabase.storage.from(SUPABASE_BUCKET).remove([filePath]);
+    if (error) {
+      console.error('[Supabase Delete Error]:', error.message);
+    }
+  } catch (err) {
+    console.error('[Supabase Delete Fatal]:', err);
+  }
+}

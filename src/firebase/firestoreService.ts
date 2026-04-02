@@ -8,8 +8,10 @@ import {
   addDoc,
   setDoc,
   updateDoc,
+  deleteDoc,
 } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from './config';
+import { deleteFileFromSupabase } from '../lib/supabaseClient';
 
 // ─── Tipler ─────────────────────────────────────────────────────────────────────
 export interface FirestoreUser {
@@ -330,6 +332,10 @@ export async function getUserProjects(uid: string): Promise<FirestoreProject[]> 
 }
 
 export async function setProjectStatus(id: string, status: FirestoreProject['status']): Promise<void> {
+  if (status === 'removed') {
+    await deleteProject(id);
+    return;
+  }
   if (canUseRemote && db) {
     await updateDoc(doc(db, 'projects', id), { status });
     return;
@@ -343,7 +349,28 @@ export async function setProjectStatus(id: string, status: FirestoreProject['sta
 }
 
 export async function deleteProject(id: string): Promise<void> {
-  await setProjectStatus(id, 'removed');
+  if (canUseRemote && db) {
+    const ref = doc(db, 'projects', id);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      const data = snap.data() as FirestoreProject;
+      
+      // 1. Supabase belgelerini sil
+      if (data.documents) {
+        for (const d of data.documents) {
+          if (d.dataUrl) await deleteFileFromSupabase(d.dataUrl);
+        }
+      }
+      // 2. Kapak resmini sil (Eğer Supabase ise)
+      if (data.image) await deleteFileFromSupabase(data.image);
+
+      // 3. Firestore dokümanını tamamen sil
+      await deleteDoc(ref);
+    }
+    return;
+  }
+  const projects: FirestoreProject[] = getLS(PROJECTS_KEY, []);
+  setLS(PROJECTS_KEY, projects.filter((p) => p.id !== id));
 }
 
 export async function toggleProjectLike(id: string, uid: string): Promise<void> {
@@ -421,6 +448,10 @@ export async function getBlog(id: string): Promise<FirestoreBlog | null> {
 }
 
 export async function setBlogStatus(id: string, status: FirestoreBlog['status']): Promise<void> {
+  if (status === 'removed') {
+    await deleteBlog(id);
+    return;
+  }
   if (canUseRemote && db) {
     await updateDoc(doc(db, 'blogs', id), { status });
     return;
@@ -434,7 +465,20 @@ export async function setBlogStatus(id: string, status: FirestoreBlog['status'])
 }
 
 export async function deleteBlog(id: string): Promise<void> {
-  await setBlogStatus(id, 'removed');
+  if (canUseRemote && db) {
+    const ref = doc(db, 'blogs', id);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      const data = snap.data() as FirestoreBlog;
+      // Kapak resmini sil
+      if (data.coverImage) await deleteFileFromSupabase(data.coverImage);
+      // Dokümanı sil
+      await deleteDoc(ref);
+    }
+    return;
+  }
+  const blogs: FirestoreBlog[] = getLS(BLOGS_KEY, []);
+  setLS(BLOGS_KEY, blogs.filter((b) => b.id !== id));
 }
 
 export async function toggleBlogLike(id: string, uid: string): Promise<void> {
@@ -558,6 +602,10 @@ export async function incrementArticleViews(id: string): Promise<void> {
 }
 
 export async function setArticleStatus(id: string, status: FirestoreArticle['status']): Promise<void> {
+  if (status === 'removed') {
+    await deleteArticle(id);
+    return;
+  }
   if (canUseRemote && db) {
     await updateDoc(doc(db, 'articles', id), { status, updatedAt: new Date().toISOString() });
     return;
@@ -569,6 +617,21 @@ export async function setArticleStatus(id: string, status: FirestoreArticle['sta
     articles[idx].updatedAt = new Date().toISOString();
     setLS(ARTICLES_KEY, articles);
   }
+}
+
+export async function deleteArticle(id: string): Promise<void> {
+  if (canUseRemote && db) {
+    const ref = doc(db, 'articles', id);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      const data = snap.data() as FirestoreArticle;
+      if (data.coverImage) await deleteFileFromSupabase(data.coverImage);
+      await deleteDoc(ref);
+    }
+    return;
+  }
+  const articles: FirestoreArticle[] = getLS(ARTICLES_KEY, []);
+  setLS(ARTICLES_KEY, articles.filter((a) => a.id !== id));
 }
 
 // ─── Güvenlik ve loglar ────────────────────────────────────────────────────────
@@ -1134,9 +1197,9 @@ export async function addModerationRule(keyword: string, action: ModerationRule[
 
 export async function deleteModerationRule(id: string): Promise<void> {
   if (canUseRemote && db) {
-    const q = query(collection(db, 'moderationRules'), where('id', '==', id));
-    const snap = await getDocs(q);
-    await Promise.all(snap.docs.map((d) => updateDoc(doc(db!, 'moderationRules', d.id), { _deleted: true })));
+    // keyword query yerine artik direk doc id ile siliyoruz (daha guvenli)
+    const ref = doc(db, 'moderationRules', id);
+    await deleteDoc(ref);
     return;
   }
   const list = getLS<ModerationRule[]>(MOD_RULES_KEY, []);
