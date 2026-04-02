@@ -8,6 +8,7 @@ import {
   addComment,
   getCommentsForRef,
 } from '../firebase/firestoreService';
+import { notifyMentionedUsers, formatMentions } from '../lib/mentionService';
 
 interface CommentsSectionProps {
   refType: Comment['refType'];
@@ -38,13 +39,20 @@ export default function CommentsSection({ refType, refId }: CommentsSectionProps
     if (!userProfile || !content.trim()) return;
     setSubmitting(true);
     try {
+      // Metni etiketler için formatla (@ -> **@**, # -> *#*)
+      const formattedContent = formatMentions(content.trim());
+
       await addComment({
         refType,
         refId,
         uid: userProfile.uid,
         username: userProfile.username,
-        content: content.trim(),
+        content: formattedContent,
       });
+
+      // Etiketli kullanıcılara bildirim gönder
+      void notifyMentionedUsers(content.trim(), userProfile.username, refType, refId);
+
       setContent('');
       await loadComments();
     } finally {
