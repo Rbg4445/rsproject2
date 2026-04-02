@@ -99,15 +99,16 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
         difficulty: form.difficulty,
         duration: form.duration || '1 ay',
         tags: form.tags,
-        github: form.github,
-        demo: form.demo,
-        videoUrl: form.videoUrl || undefined,
+        ...(form.github  ? { github:   form.github  } : {}),
+        ...(form.demo    ? { demo:     form.demo    } : {}),
+        ...(form.videoUrl ? { videoUrl: form.videoUrl } : {}),
         image: form.customImage || form.image,
         documents,
         likes: [],
         status: 'pending', // admin onayi bekliyor
         createdAt: new Date().toISOString(),
       });
+
       onSuccess();
       onClose();
     } catch (err) {
