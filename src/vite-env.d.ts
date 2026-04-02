@@ -11,6 +11,7 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_ANON_KEY: string;
   readonly VITE_SUPABASE_BUCKET: string;
   readonly VITE_VIRUSTOTAL_API_KEY: string;
+  readonly VITE_NINJA_API_KEY: string;
 }
 
 interface ImportMeta {

@@ -25,6 +25,12 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api\/virustotal/, ''),
         secure: true,
       },
+      '/api/ninja': {
+        target: 'https://api.api-ninjas.com/v1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/ninja/, ''),
+        secure: true,
+      },
     },
   },
 });

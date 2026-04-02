@@ -4,6 +4,7 @@ import { addProject } from '../firebase/firestoreService';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import { uploadFileToSupabase } from '../lib/supabaseClient';
 import { scanFile } from '../lib/virusTotalService';
+import { checkMultipleTexts } from '../lib/moderationService';
 
 interface Props { onClose: () => void; onSuccess: () => void; }
 
@@ -175,6 +176,14 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
 
     setLoading(true);
     try {
+      // Moderasyon Kontrolü: Başlık ve Açıklamayı kontrol et
+      const isProfane = await checkMultipleTexts([form.title, form.description]);
+      if (isProfane) {
+        alert('Uyarı: Proje başlığı veya açıklamasında topluluk kurallarına aykırı (küfür/argo) içerik tespit edildi. Lütfen metni düzenleyin.');
+        setLoading(false);
+        return;
+      }
+
       // Sadece başarıyla yüklenen temiz belgeleri kaydet
       const cleanDocs = documents
         .filter((d) => d.scanStatus === 'clean' && d.url)

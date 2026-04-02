@@ -3,6 +3,10 @@
     {
       "source": "/api/virustotal/:path*",
       "destination": "https://www.virustotal.com/api/v3/:path*"
+    },
+    {
+      "source": "/api/ninja/:path*",
+      "destination": "https://api.api-ninjas.com/v1/:path*"
     }
   ]
 }
