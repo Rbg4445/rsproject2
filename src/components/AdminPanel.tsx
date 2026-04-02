@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Save, RotateCcw, Type, Link2, Palette, Shield, Users, FileText, Ban, Trash2, Undo2 } from 'lucide-react';
+import { ArrowLeft, Save, RotateCcw, Type, Link2, Palette, Shield, Users, FileText, Ban, Trash2, Undo2, Search, CheckCircle, XCircle, Clock, Eye, EyeOff, Video, Tag, BookOpen, Code, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import { useSiteSettings, type SiteSettings } from '../store/SiteSettingsContext';
 import { useTheme, type ThemeMode } from '../store/ThemeContext';
@@ -52,6 +52,291 @@ const iconUrls = {
   theme: 'https://cdn-icons-png.flaticon.com/128/869/869869.png',
   link: 'https://cdn-icons-png.flaticon.com/128/1006/1006771.png',
 };
+
+// ─── ContentManager bileşeni ─────────────────────────────────────────────────
+type ContentStatus = 'active' | 'pending' | 'removed';
+type ContentTab = 'projects' | 'blogs' | 'articles';
+
+function StatusBadge({ status }: { status: ContentStatus }) {
+  const map: Record<ContentStatus, { label: string; cls: string; icon: React.ReactNode }> = {
+    active:  { label: 'Aktif',    cls: 'bg-green-500/15 text-green-300 border-green-500/30',   icon: <CheckCircle className="h-3 w-3" /> },
+    pending: { label: 'Bekliyor', cls: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30', icon: <Clock className="h-3 w-3" /> },
+    removed: { label: 'Kaldirildi', cls: 'bg-red-500/15 text-red-300 border-red-500/30',       icon: <XCircle className="h-3 w-3" /> },
+  };
+  const { label, cls, icon } = map[status] ?? map.removed;
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold ${cls}`}>
+      {icon}{label}
+    </span>
+  );
+}
+
+function ContentManager({
+  projects, blogs, articles, onRefresh, userEmail,
+}: {
+  projects: FirestoreProject[];
+  blogs: FirestoreBlog[];
+  articles: FirestoreArticle[];
+  onRefresh: () => Promise<void>;
+  userEmail: string;
+}) {
+  const [tab, setTab] = useState<ContentTab>('projects');
+  const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState<ContentStatus | 'all'>('all');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const tabs: { id: ContentTab; label: string; icon: React.ReactNode; count: number }[] = [
+    { id: 'projects', label: 'Projeler',     icon: <Code className="h-4 w-4" />,     count: projects.length },
+    { id: 'blogs',    label: 'Bloglar',      icon: <FileText className="h-4 w-4" />, count: blogs.length },
+    { id: 'articles', label: 'Wiki/Makale',  icon: <BookOpen className="h-4 w-4" />, count: articles.length },
+  ];
+
+  const items: any[] = tab === 'projects' ? projects : tab === 'blogs' ? blogs : articles;
+
+  const filtered = items.filter((item) => {
+    const matchSearch =
+      !search ||
+      item.title?.toLowerCase().includes(search.toLowerCase()) ||
+      item.username?.toLowerCase().includes(search.toLowerCase()) ||
+      item.description?.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = filterStatus === 'all' || item.status === filterStatus;
+    return matchSearch && matchStatus;
+  });
+
+  const stats = {
+    total:   items.length,
+    active:  items.filter((i) => i.status === 'active').length,
+    pending: items.filter((i) => i.status === 'pending').length,
+    removed: items.filter((i) => i.status === 'removed').length,
+  };
+
+  const setStatus = async (id: string, newStatus: ContentStatus) => {
+    setBusy(id);
+    try {
+      if (tab === 'projects') await setProjectStatus(id, newStatus);
+      else if (tab === 'blogs') await setBlogStatus(id, newStatus);
+      else await setArticleStatus(id, newStatus);
+      await onRefresh();
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Sekme Seçici */}
+      <div className="flex flex-wrap gap-2">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => { setTab(t.id); setExpandedId(null); setSearch(''); }}
+            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold border transition ${
+              tab === t.id
+                ? 'bg-indigo-600 border-indigo-500 text-white'
+                : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
+            }`}
+          >
+            {t.icon}
+            {t.label}
+            <span className={`rounded-full px-1.5 py-0.5 text-xs ${
+              tab === t.id ? 'bg-white/20' : 'bg-white/10'
+            }`}>{t.count}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* İstatistik Kartları */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: 'Toplam',      value: stats.total,   color: 'text-white',        bg: 'bg-white/5',           border: 'border-white/10' },
+          { label: 'Aktif',       value: stats.active,  color: 'text-green-300',    bg: 'bg-green-500/8',       border: 'border-green-500/20' },
+          { label: 'Bekleyen',    value: stats.pending, color: 'text-yellow-300',   bg: 'bg-yellow-500/8',      border: 'border-yellow-500/20' },
+          { label: 'Kaldirilmis', value: stats.removed, color: 'text-red-300',      bg: 'bg-red-500/8',         border: 'border-red-500/20' },
+        ].map((s) => (
+          <div key={s.label} className={`rounded-xl border ${s.border} ${s.bg} p-3`}>
+            <p className="text-xs text-white/50">{s.label}</p>
+            <p className={`mt-1 text-2xl font-black ${s.color}`}>{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Arama + Filtre */}
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Başlık, kullanıcı veya açıklama ara..."
+            className="w-full rounded-xl border border-white/10 bg-white/5 py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-indigo-400"
+          />
+        </div>
+        <div className="flex gap-2">
+          {(['all', 'pending', 'active', 'removed'] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => setFilterStatus(s)}
+              className={`rounded-xl px-3 py-2 text-xs font-semibold border transition ${
+                filterStatus === s
+                  ? s === 'all'     ? 'bg-indigo-600 border-indigo-500 text-white'
+                  : s === 'active'  ? 'bg-green-600 border-green-500 text-white'
+                  : s === 'pending' ? 'bg-yellow-600 border-yellow-500 text-white'
+                                    : 'bg-red-600 border-red-500 text-white'
+                  : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+              }`}
+            >
+              {s === 'all' ? 'Tümü' : s === 'active' ? 'Aktif' : s === 'pending' ? 'Bekleyen' : 'Kaldırılan'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* İçerik Listesi */}
+      <div className="space-y-3">
+        {filtered.length === 0 && (
+          <div className="rounded-xl border border-white/10 bg-white/5 px-6 py-10 text-center">
+            <AlertTriangle className="mx-auto mb-2 h-8 w-8 text-white/20" />
+            <p className="text-sm text-white/40">Sonuç bulunamadı.</p>
+          </div>
+        )}
+        {filtered.map((item) => {
+          const isExpanded = expandedId === item.id;
+          const isBusy = busy === item.id;
+          return (
+            <div
+              key={item.id}
+              className={`rounded-2xl border transition-all ${
+                item.status === 'pending'
+                  ? 'border-yellow-500/30 bg-yellow-500/5'
+                  : item.status === 'removed'
+                  ? 'border-red-500/20 bg-red-500/5'
+                  : 'border-white/10 bg-white/5'
+              }`}
+            >
+              {/* Kart Başlığı */}
+              <div className="flex items-start gap-3 p-4">
+                {/* Kapak */}
+                {item.image && (
+                  <img src={item.image} alt="" className="h-14 w-20 flex-shrink-0 rounded-lg object-cover" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-bold text-white">{item.title}</p>
+                    <StatusBadge status={item.status} />
+                    {item.videoUrl && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-purple-500/30 bg-purple-500/10 px-2 py-0.5 text-xs text-purple-300">
+                        <Video className="h-3 w-3" /> Video
+                      </span>
+                    )}
+                    {tab === 'projects' && item.documents?.length > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-2 py-0.5 text-xs text-indigo-300">
+                        <FileText className="h-3 w-3" /> {item.documents.length} belge
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-white/50">
+                    <span>@{item.username}</span>
+                    {item.category && <span className="capitalize">{item.category}</span>}
+                    {item.difficulty && <span>{item.difficulty}</span>}
+                    {item.createdAt && (
+                      <span>{new Date(item.createdAt).toLocaleDateString('tr-TR')}</span>
+                    )}
+                    {item.likes !== undefined && (
+                      <span>❤️ {item.likes}</span>
+                    )}
+                  </div>
+                  {item.description && (
+                    <p className="mt-1.5 text-xs text-white/60 line-clamp-2">{item.description}</p>
+                  )}
+                  {/* Etiketler */}
+                  {item.tags?.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {item.tags.slice(0, 5).map((tag: string) => (
+                        <span key={tag} className="rounded-full bg-white/8 px-2 py-0.5 text-xs text-white/50">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Detay aç/kapat */}
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                  className="flex-shrink-0 rounded-lg border border-white/10 p-1.5 text-white/40 hover:bg-white/10"
+                >
+                  {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </button>
+              </div>
+
+              {/* Genişletilmiş Detay */}
+              {isExpanded && (
+                <div className="border-t border-white/10 px-4 pb-4 pt-3 space-y-3">
+                  {item.content && (
+                    <div>
+                      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/40">İçerik Önizleme</p>
+                      <p className="rounded-xl bg-black/20 px-3 py-2 text-xs text-white/70 line-clamp-6">{item.content}</p>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-2 text-xs text-white/60 sm:grid-cols-3">
+                    {item.github && <a href={item.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-indigo-300 hover:underline">🔗 GitHub</a>}
+                    {item.demo   && <a href={item.demo}   target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-indigo-300 hover:underline">🌐 Demo</a>}
+                    {item.videoUrl && <a href={item.videoUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-purple-300 hover:underline">🎬 Video</a>}
+                  </div>
+                </div>
+              )}
+
+              {/* Aksiyon Butonları */}
+              <div className="flex flex-wrap items-center gap-2 border-t border-white/8 px-4 py-3">
+                {item.status !== 'active' && (
+                  <button
+                    onClick={() => void setStatus(item.id, 'active')}
+                    disabled={isBusy}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-500 disabled:opacity-50"
+                  >
+                    <CheckCircle className="h-3.5 w-3.5" />
+                    Onayla / Yayınla
+                  </button>
+                )}
+                {item.status !== 'pending' && (
+                  <button
+                    onClick={() => void setStatus(item.id, 'pending')}
+                    disabled={isBusy}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-yellow-600/80 px-3 py-1.5 text-xs font-bold text-white hover:bg-yellow-500 disabled:opacity-50"
+                  >
+                    <Clock className="h-3.5 w-3.5" />
+                    Bekleyene Al
+                  </button>
+                )}
+                {item.status !== 'removed' && (
+                  <button
+                    onClick={() => void setStatus(item.id, 'removed')}
+                    disabled={isBusy}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-red-600/80 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-500 disabled:opacity-50"
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                    Kaldır
+                  </button>
+                )}
+                {item.status === 'removed' && (
+                  <button
+                    onClick={() => void setStatus(item.id, 'active')}
+                    disabled={isBusy}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/70 hover:bg-white/10 disabled:opacity-50"
+                  >
+                    <Undo2 className="h-3.5 w-3.5" />
+                    Geri Yükle
+                  </button>
+                )}
+                {isBusy && <span className="text-xs text-white/40">İşleniyor...</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function Field({
   label,
@@ -371,105 +656,16 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
             </div>
           )}
 
-          {activeTab === 'content' && (
-            <div className="grid gap-6 lg:grid-cols-3">
-              <div>
-                <h3 className="mb-3 font-bold">Projeler</h3>
-                <div className="max-h-[26rem] space-y-2 overflow-auto pr-1">
-                  {projects.map((p) => (
-                    <div key={p.id} className="rounded-xl border border-white/10 bg-white/5 p-3">
-                      <p className="text-sm font-semibold text-white">{p.title}</p>
-                      <p className="text-xs text-white/50">@{p.username}</p>
-                      <div className="mt-2 flex items-center gap-2">
-                        <span
-                          className={`rounded-full px-2 py-1 text-xs ${
-                            p.status === 'active'
-                              ? 'bg-green-500/15 text-green-300'
-                              : p.status === 'pending'
-                              ? 'bg-yellow-500/15 text-yellow-300'
-                              : 'bg-red-500/15 text-red-300'
-                          }`}
-                        >
-                          {p.status}
-                        </span>
-                        <button
-                          onClick={() => void toggleProjectVisibility(p)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-xs"
-                        >
-                          {p.status === 'active' ? <Trash2 className="h-3.5 w-3.5" /> : <Undo2 className="h-3.5 w-3.5" />}
-                          {p.status === 'active' ? 'Kaldir' : 'Geri Al'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="mb-3 font-bold">Bloglar</h3>
-                <div className="max-h-[26rem] space-y-2 overflow-auto pr-1">
-                  {blogs.map((b) => (
-                    <div key={b.id} className="rounded-xl border border-white/10 bg-white/5 p-3">
-                      <p className="text-sm font-semibold text-white">{b.title}</p>
-                      <p className="text-xs text-white/50">@{b.username}</p>
-                      <div className="mt-2 flex items-center gap-2">
-                        <span
-                          className={`rounded-full px-2 py-1 text-xs ${
-                            b.status === 'active'
-                              ? 'bg-green-500/15 text-green-300'
-                              : b.status === 'pending'
-                              ? 'bg-yellow-500/15 text-yellow-300'
-                              : 'bg-red-500/15 text-red-300'
-                          }`}
-                        >
-                          {b.status}
-                        </span>
-                        <button
-                          onClick={() => void toggleBlogVisibility(b)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-xs"
-                        >
-                          {b.status === 'active' ? <Trash2 className="h-3.5 w-3.5" /> : <Undo2 className="h-3.5 w-3.5" />}
-                          {b.status === 'active' ? 'Kaldir' : 'Geri Al'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="mb-3 font-bold">Wiki Makaleleri</h3>
-                <div className="max-h-[26rem] space-y-2 overflow-auto pr-1">
-                  {articles.map((a) => (
-                    <div key={a.id} className="rounded-xl border border-white/10 bg-white/5 p-3">
-                      <p className="text-sm font-semibold text-white">{a.title}</p>
-                      <p className="text-xs text-white/50">@{a.username}</p>
-                      <div className="mt-2 flex items-center gap-2">
-                        <span
-                          className={`rounded-full px-2 py-1 text-xs ${
-                            a.status === 'active'
-                              ? 'bg-green-500/15 text-green-300'
-                              : a.status === 'pending'
-                              ? 'bg-yellow-500/15 text-yellow-300'
-                              : 'bg-red-500/15 text-red-300'
-                          }`}
-                        >
-                          {a.status}
-                        </span>
-                        <button
-                          onClick={() => void setArticleStatus(a.id, a.status === 'active' ? 'removed' : 'active').then(refreshAdminData)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-xs"
-                        >
-                          {a.status === 'active' ? <Trash2 className="h-3.5 w-3.5" /> : <Undo2 className="h-3.5 w-3.5" />}
-                          {a.status === 'active' ? 'Kaldir' : 'Geri Al'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+          {activeTab === 'content' && (() => {
+            // ─── İçerik Yönetimi State ───────────────────────────────────────
+            return <ContentManager
+              projects={projects}
+              blogs={blogs}
+              articles={articles}
+              onRefresh={refreshAdminData}
+              userEmail={userProfile?.email || 'admin'}
+            />;
+          })()}
 
           {activeTab === 'security' && (
             <div className="space-y-6">
