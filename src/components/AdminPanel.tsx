@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Save, RotateCcw, Type, Link2, Palette, Shield, Users, FileText, Ban, Trash2, Undo2, Search, CheckCircle, XCircle, Clock, Eye, EyeOff, Video, Tag, BookOpen, Code, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Save, RotateCcw, Type, Link2, Palette, Shield, Users, FileText, Ban, Trash2, Undo2, Search, CheckCircle, XCircle, Clock, Eye, EyeOff, Video, Tag, BookOpen, Code, AlertTriangle, ChevronDown, ChevronUp, Flag, Mail, Settings, BarChart, MessageSquare, Zap, Plus, X } from 'lucide-react';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import { useSiteSettings, type SiteSettings } from '../store/SiteSettingsContext';
 import { useTheme, type ThemeMode } from '../store/ThemeContext';
+import DashboardTab from './AdminDashboardTab';
+import AdminReportsTab from './AdminReportsTab';
+import AdminModRulesTab from './AdminModRulesTab';
 import {
   type AccessLog,
   type BlockedIp,
@@ -11,6 +14,9 @@ import {
   type FirestoreProject,
   type FirestoreUser,
   type FirestoreArticle,
+  type ContentReport,
+  type AdminNote,
+  type ModerationRule,
   addAccessLog,
   blockIp,
   getAccessLogs,
@@ -27,22 +33,33 @@ import {
   setUserBan,
   setUserRole,
   unblockIp,
+  getReports,
+  updateReportStatus,
+  addAdminNote,
+  getAdminNotes,
+  getModerationRules,
+  addModerationRule,
+  deleteModerationRule,
+  approveAllPending,
 } from '../firebase/firestoreService';
 
 interface AdminPanelProps {
   onBack: () => void;
 }
 
-type AdminTab = 'texts' | 'links' | 'appearance' | 'users' | 'content' | 'messages' | 'security';
+type AdminTab = 'dashboard' | 'texts' | 'links' | 'appearance' | 'users' | 'content' | 'reports' | 'messages' | 'security' | 'modrules';
 
 const tabs: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
+  { id: 'dashboard', label: 'Özet', icon: <BarChart className="h-4 w-4" /> },
   { id: 'texts', label: 'Yazilar', icon: <Type className="h-4 w-4" /> },
   { id: 'links', label: 'Linkler', icon: <Link2 className="h-4 w-4" /> },
   { id: 'appearance', label: 'Tema', icon: <Palette className="h-4 w-4" /> },
   { id: 'users', label: 'Kullanicilar', icon: <Users className="h-4 w-4" /> },
   { id: 'content', label: 'Icerik', icon: <FileText className="h-4 w-4" /> },
-  { id: 'messages', label: 'Mesajlar', icon: <FileText className="h-4 w-4" /> },
+  { id: 'reports', label: 'Şikayetler', icon: <Flag className="h-4 w-4" /> },
+  { id: 'messages', label: 'Mesajlar', icon: <Mail className="h-4 w-4" /> },
   { id: 'security', label: 'Guvenlik', icon: <Shield className="h-4 w-4" /> },
+  { id: 'modrules', label: 'Oto-Mod', icon: <Settings className="h-4 w-4" /> },
 ];
 
 const iconUrls = {
@@ -80,12 +97,12 @@ function ContentManager({
   onRefresh: () => Promise<void>;
   userEmail: string;
 }) {
-  const [tab, setTab] = useState<ContentTab>('projects');
+  const [tab, setTab] = useState('projects' as ContentTab);
   const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState<ContentStatus | 'all'>('all');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [previewDoc, setPreviewDoc] = useState<{ name: string; dataUrl: string } | null>(null);
+  const [filterStatus, setFilterStatus] = useState('all' as ContentStatus | 'all');
+  const [expandedId, setExpandedId] = useState(null as string | null);
+  const [busy, setBusy] = useState(null as string | null);
+  const [previewDoc, setPreviewDoc] = useState(null as { name: string; dataUrl: string } | null);
 
   const tabs: { id: ContentTab; label: string; icon: React.ReactNode; count: number }[] = [
     { id: 'projects', label: 'Projeler',     icon: <Code className="h-4 w-4" />,     count: projects.length },
@@ -492,17 +509,17 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const { isAdmin, userProfile } = useFirebaseAuth();
   const { settings, updateSettings, resetSettings } = useSiteSettings();
   const { theme, setTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState<AdminTab>('texts');
-  const [draft, setDraft] = useState<SiteSettings>(settings);
+  const [activeTab, setActiveTab] = useState('texts' as AdminTab);
+  const [draft, setDraft] = useState(settings as SiteSettings);
   const [flash, setFlash] = useState('');
 
-  const [users, setUsers] = useState<FirestoreUser[]>([]);
-  const [projects, setProjects] = useState<FirestoreProject[]>([]);
-  const [blogs, setBlogs] = useState<FirestoreBlog[]>([]);
-  const [articles, setArticles] = useState<FirestoreArticle[]>([]);
-  const [accessLogs, setAccessLogs] = useState<AccessLog[]>([]);
-  const [blockedIps, setBlockedIps] = useState<BlockedIp[]>([]);
-  const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [users, setUsers] = useState([] as FirestoreUser[]);
+  const [projects, setProjects] = useState([] as FirestoreProject[]);
+  const [blogs, setBlogs] = useState([] as FirestoreBlog[]);
+  const [articles, setArticles] = useState([] as FirestoreArticle[]);
+  const [accessLogs, setAccessLogs] = useState([] as AccessLog[]);
+  const [blockedIps, setBlockedIps] = useState([] as BlockedIp[]);
+  const [messages, setMessages] = useState([] as ContactMessage[]);
   const [newIp, setNewIp] = useState('');
   const [newIpReason, setNewIpReason] = useState('Supheli trafik');
 
@@ -644,6 +661,19 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-gray-900/70 p-5 sm:p-6">
+          {/* ── Dashboard ── */}
+          {activeTab === 'dashboard' && (
+            <DashboardTab
+              users={users}
+              projects={projects}
+              blogs={blogs}
+              articles={articles}
+              messages={messages}
+              userEmail={userProfile?.email || ''}
+              onRefresh={refreshAdminData}
+            />
+          )}
+
           {activeTab === 'texts' && (
             <div>
               <div className="mb-4 flex items-center gap-2 text-sm text-white/60">
@@ -784,6 +814,14 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
               userEmail={userProfile?.email || 'admin'}
             />;
           })()}
+
+          {activeTab === 'reports' && (
+            <AdminReportsTab userEmail={userProfile?.email || 'admin'} />
+          )}
+
+          {activeTab === 'modrules' && (
+            <AdminModRulesTab userEmail={userProfile?.email || 'admin'} />
+          )}
 
           {activeTab === 'security' && (
             <div className="space-y-6">

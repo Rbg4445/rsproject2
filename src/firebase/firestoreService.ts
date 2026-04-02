@@ -857,3 +857,181 @@ export async function updateRbgPageData(updates: Partial<RbgPageData>): Promise<
 export async function addLog(_log: { action: string; uid?: string; details?: string; success: boolean }): Promise<void> {
   // Firestore'a aktarılmıyor, sadece geriye dönük uyumluluk için bırakıldı.
 }
+
+// ─── Şikayet (Flag/Report) Sistemi ─────────────────────────────────────────────
+export interface ContentReport {
+  id: string;
+  refType: 'project' | 'blog' | 'article' | 'comment';
+  refId: string;
+  refTitle: string;
+  reporterUid: string;
+  reporterUsername: string;
+  reason: string;
+  details?: string;
+  status: 'open' | 'resolved' | 'dismissed';
+  createdAt: string;
+  resolvedAt?: string;
+  resolvedBy?: string;
+}
+
+const REPORTS_KEY = 'pa_reports';
+
+export async function addReport(payload: Omit<ContentReport, 'id' | 'createdAt' | 'status'>): Promise<void> {
+  const entry: ContentReport = {
+    ...payload,
+    id: `rpt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    createdAt: new Date().toISOString(),
+    status: 'open',
+  };
+  if (canUseRemote && db) {
+    const ref = await addDoc(collection(db, 'reports'), entry);
+    await updateDoc(ref, { id: ref.id });
+    return;
+  }
+  const list = getLS<ContentReport[]>(REPORTS_KEY, []);
+  list.unshift(entry);
+  setLS(REPORTS_KEY, list);
+}
+
+export async function getReports(): Promise<ContentReport[]> {
+  if (canUseRemote && db) {
+    const snap = await getDocs(collection(db, 'reports'));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as ContentReport))
+      .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+  }
+  return getLS<ContentReport[]>(REPORTS_KEY, [])
+    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+}
+
+export async function updateReportStatus(id: string, status: ContentReport['status'], resolvedBy: string): Promise<void> {
+  if (canUseRemote && db) {
+    const q = query(collection(db, 'reports'), where('id', '==', id));
+    const snap = await getDocs(q);
+    await Promise.all(snap.docs.map((d) => updateDoc(doc(db!, 'reports', d.id), {
+      status, resolvedAt: new Date().toISOString(), resolvedBy
+    })));
+    return;
+  }
+  const list = getLS<ContentReport[]>(REPORTS_KEY, []);
+  const next = list.map((r) => r.id === id
+    ? { ...r, status, resolvedAt: new Date().toISOString(), resolvedBy }
+    : r
+  );
+  setLS(REPORTS_KEY, next);
+}
+
+// ─── Admin Notları ──────────────────────────────────────────────────────────────
+export interface AdminNote {
+  id: string;
+  refType: 'project' | 'blog' | 'article' | 'user';
+  refId: string;
+  authorEmail: string;
+  note: string;
+  createdAt: string;
+}
+
+const ADMIN_NOTES_KEY = 'pa_admin_notes';
+
+export async function addAdminNote(payload: Omit<AdminNote, 'id' | 'createdAt'>): Promise<void> {
+  const entry: AdminNote = {
+    ...payload,
+    id: `note_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    createdAt: new Date().toISOString(),
+  };
+  if (canUseRemote && db) {
+    const ref = await addDoc(collection(db, 'adminNotes'), entry);
+    await updateDoc(ref, { id: ref.id });
+    return;
+  }
+  const list = getLS<AdminNote[]>(ADMIN_NOTES_KEY, []);
+  list.unshift(entry);
+  setLS(ADMIN_NOTES_KEY, list);
+}
+
+export async function getAdminNotes(refType: AdminNote['refType'], refId: string): Promise<AdminNote[]> {
+  if (canUseRemote && db) {
+    const q = query(
+      collection(db, 'adminNotes'),
+      where('refType', '==', refType),
+      where('refId', '==', refId)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminNote))
+      .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+  }
+  return getLS<AdminNote[]>(ADMIN_NOTES_KEY, [])
+    .filter((n) => n.refType === refType && n.refId === refId)
+    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+}
+
+// ─── Otomatik Moderasyon Kuralları ──────────────────────────────────────────────
+export interface ModerationRule {
+  id: string;
+  keyword: string;
+  action: 'flag' | 'reject';
+  createdAt: string;
+  createdBy: string;
+}
+
+const MOD_RULES_KEY = 'pa_mod_rules';
+
+export async function getModerationRules(): Promise<ModerationRule[]> {
+  if (canUseRemote && db) {
+    const snap = await getDocs(collection(db, 'moderationRules'));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as ModerationRule));
+  }
+  return getLS<ModerationRule[]>(MOD_RULES_KEY, []);
+}
+
+export async function addModerationRule(keyword: string, action: ModerationRule['action'], createdBy: string): Promise<void> {
+  const entry: ModerationRule = {
+    id: `rule_${Date.now()}`,
+    keyword: keyword.toLowerCase().trim(),
+    action,
+    createdAt: new Date().toISOString(),
+    createdBy,
+  };
+  if (canUseRemote && db) {
+    const ref = await addDoc(collection(db, 'moderationRules'), entry);
+    await updateDoc(ref, { id: ref.id });
+    return;
+  }
+  const list = getLS<ModerationRule[]>(MOD_RULES_KEY, []);
+  list.push(entry);
+  setLS(MOD_RULES_KEY, list);
+}
+
+export async function deleteModerationRule(id: string): Promise<void> {
+  if (canUseRemote && db) {
+    const q = query(collection(db, 'moderationRules'), where('id', '==', id));
+    const snap = await getDocs(q);
+    await Promise.all(snap.docs.map((d) => updateDoc(doc(db!, 'moderationRules', d.id), { _deleted: true })));
+    return;
+  }
+  const list = getLS<ModerationRule[]>(MOD_RULES_KEY, []);
+  setLS(MOD_RULES_KEY, list.filter((r) => r.id !== id));
+}
+
+// ─── Toplu Aksiyon Fonksiyonları ────────────────────────────────────────────────
+export async function approveAllPending(): Promise<{ projects: number; blogs: number; articles: number }> {
+  const [projects, blogs, articles] = await Promise.all([
+    getProjectsAdmin(),
+    getBlogsAdmin(),
+    getArticles(),
+  ]);
+  const pendingProjects = projects.filter((p) => p.status === 'pending');
+  const pendingBlogs = blogs.filter((b) => b.status === 'pending');
+  const pendingArticles = articles.filter((a) => a.status === 'pending');
+
+  await Promise.all([
+    ...pendingProjects.map((p) => setProjectStatus(p.id, 'active')),
+    ...pendingBlogs.map((b) => setBlogStatus(b.id, 'active')),
+    ...pendingArticles.map((a) => setArticleStatus(a.id, 'active')),
+  ]);
+
+  return {
+    projects: pendingProjects.length,
+    blogs: pendingBlogs.length,
+    articles: pendingArticles.length,
+  };
+}
