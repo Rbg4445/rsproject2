@@ -12,10 +12,10 @@ interface BlogsPageProps {
 
 export default function BlogsPage({ onBack, onViewProfile }: BlogsPageProps) {
   const { user: currentUser } = useAuth();
-  const [blogs, setBlogs] = useState<BlogPost[]>([]);
-  const [users, setUsers] = useState<UserType[]>([]);
+  const [blogs, setBlogs] = useState([] as BlogPost[]);
+  const [users, setUsers] = useState([] as UserType[]);
   const [search, setSearch] = useState('');
-  const [viewingBlog, setViewingBlog] = useState<BlogPost | null>(null);
+  const [viewingBlog, setViewingBlog] = useState(null as BlogPost | null);
 
   useEffect(() => {
     loadData();
