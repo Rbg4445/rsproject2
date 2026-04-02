@@ -8,8 +8,19 @@ let supabase: SupabaseClient | null = null;
 
 if (SUPABASE_URL && SUPABASE_ANON_KEY) {
   supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} else {
-  console.warn('[Supabase] VITE_SUPABASE_URL veya VITE_SUPABASE_ANON_KEY tanimli degil. Supabase devre disi.');
+}
+
+/** Dosya adındaki boşlukları ve Türkçe karakterleri temizler */
+function sanitizeFilename(name: string): string {
+  const trMap: { [key: string]: string } = {
+    'ç': 'c', 'ğ': 'g', 'ı': 'i', 'i': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
+    'Ç': 'C', 'Ğ': 'G', 'İ': 'I', 'Ö': 'O', 'Ş': 'S', 'Ü': 'U'
+  };
+  
+  let cleanName = name.replace(/[çğışüöÇĞİŞÜÖ]/g, (match) => trMap[match] || match);
+  // Boşlukları tire yap, özel karakterleri temizle (nokta ve tire hariç)
+  cleanName = cleanName.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9.\-_]/g, '');
+  return cleanName;
 }
 
 export function getSupabaseClient(): SupabaseClient | null {
@@ -22,26 +33,29 @@ export function getSupabaseBucket() {
 
 export async function uploadFileToSupabase(path: string, file: File): Promise<string> {
   if (!supabase) {
-    throw new Error('Supabase yapılandırılmamış.');
+    throw new Error('Supabase yapılandırılmamış veya URL/Key eksik.');
   }
 
-  const filePath = `${path}/${Date.now()}-${file.name}`;
+  // Dosya adını temizleyerek yolu oluştur
+  const safeName = sanitizeFilename(file.name);
+  const filePath = `${path}/${Date.now()}-${safeName}`;
 
-  const { error } = await supabase.storage.from(SUPABASE_BUCKET).upload(filePath, file, {
+  console.log('[Supabase] Yükleme denemesi:', filePath);
+
+  const { data, error } = await supabase.storage.from(SUPABASE_BUCKET).upload(filePath, file, {
     cacheControl: '3600',
     upsert: false,
   });
 
   if (error) {
-    console.error('[Supabase] Upload hatası:', error.message);
-    throw new Error('Dosya yüklenemedi. Lütfen daha sonra tekrar deneyin.');
+    console.error('[Supabase Error Detail]:', error);
+    if (error.message.includes('row-level security')) {
+      throw new Error('Supabase Storage Politika Hatası: Lütfen SQL Editor ile "anon" erişim iznini tanımlayın.');
+    }
+    throw new Error(`Yükleme hatası: ${error.message}`);
   }
 
   const { data: publicUrlData } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(filePath);
-
-  if (!publicUrlData || !publicUrlData.publicUrl) {
-    throw new Error('Yükleme başarılı ama public URL alınamadı.');
-  }
 
   return publicUrlData.publicUrl;
 }
