@@ -85,6 +85,7 @@ function ContentManager({
   const [filterStatus, setFilterStatus] = useState<ContentStatus | 'all'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<{ name: string; dataUrl: string } | null>(null);
 
   const tabs: { id: ContentTab; label: string; icon: React.ReactNode; count: number }[] = [
     { id: 'projects', label: 'Projeler',     icon: <Code className="h-4 w-4" />,     count: projects.length },
@@ -272,6 +273,50 @@ function ContentManager({
               {/* Genişletilmiş Detay */}
               {isExpanded && (
                 <div className="border-t border-white/10 px-4 pb-4 pt-3 space-y-3">
+                  {/* Belgeler */}
+                  {tab === 'projects' && item.documents?.length > 0 && (
+                    <div>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/40 flex items-center gap-1.5">
+                        <FileText className="h-3.5 w-3.5" />
+                        Yüklenen Belgeler ({item.documents.length})
+                      </p>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {item.documents.map((doc: { id: string; name: string; dataUrl: string }) => {
+                          const ext = doc.name.split('.').pop()?.toLowerCase() ?? '';
+                          const isPdf = ext === 'pdf';
+                          const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
+                          return (
+                            <div key={doc.id} className="flex items-center gap-2 rounded-xl border border-indigo-500/20 bg-indigo-500/8 p-2.5">
+                              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-300">
+                                {isPdf ? '📄' : isImage ? '🖼️' : '📎'}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-xs font-semibold text-white/80">{doc.name}</p>
+                                <p className="text-[10px] text-white/40 uppercase">{ext}</p>
+                              </div>
+                              <div className="flex gap-1 flex-shrink-0">
+                                <button
+                                  onClick={() => setPreviewDoc({ name: doc.name, dataUrl: doc.dataUrl })}
+                                  className="rounded-lg bg-indigo-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-indigo-500"
+                                  title="Önizle"
+                                >
+                                  <Eye className="h-3 w-3" />
+                                </button>
+                                <a
+                                  href={doc.dataUrl}
+                                  download={doc.name}
+                                  className="rounded-lg bg-white/10 px-2 py-1 text-[10px] font-bold text-white hover:bg-white/20"
+                                  title="İndir"
+                                >
+                                  ⬇
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                   {item.content && (
                     <div>
                       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/40">İçerik Önizleme</p>
@@ -334,6 +379,79 @@ function ContentManager({
           );
         })}
       </div>
+
+      {/* Belge Önizleme Modali */}
+      {previewDoc && (
+        <div
+          className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          onClick={() => setPreviewDoc(null)}
+        >
+          <div
+            className="relative w-full max-w-4xl max-h-[90vh] bg-gray-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Başlık */}
+            <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-white/10 bg-gray-800/80">
+              <div className="flex items-center gap-2 min-w-0">
+                <FileText className="h-4 w-4 text-indigo-400 flex-shrink-0" />
+                <p className="text-sm font-semibold text-white truncate">{previewDoc.name}</p>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <a
+                  href={previewDoc.dataUrl}
+                  download={previewDoc.name}
+                  className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-500"
+                >
+                  ⬇ İndir
+                </a>
+                <button
+                  onClick={() => setPreviewDoc(null)}
+                  className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold text-white hover:bg-white/20"
+                >
+                  ✕ Kapat
+                </button>
+              </div>
+            </div>
+            {/* Modal İçerik */}
+            <div className="flex-1 overflow-auto">
+              {(() => {
+                const ext = previewDoc.name.split('.').pop()?.toLowerCase() ?? '';
+                const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
+                const isPdf  = ext === 'pdf';
+                if (isImage) {
+                  return (
+                    <div className="flex items-center justify-center p-4 min-h-[400px]">
+                      <img src={previewDoc.dataUrl} alt={previewDoc.name} className="max-w-full max-h-[70vh] rounded-lg object-contain" />
+                    </div>
+                  );
+                }
+                if (isPdf) {
+                  return (
+                    <iframe
+                      src={previewDoc.dataUrl}
+                      title={previewDoc.name}
+                      className="w-full min-h-[70vh]"
+                    />
+                  );
+                }
+                return (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="text-5xl mb-4">📂</div>
+                    <p className="text-white/60 text-sm mb-4">Bu dosya türü tarayıcıda görüntülenemiyor.</p>
+                    <a
+                      href={previewDoc.dataUrl}
+                      download={previewDoc.name}
+                      className="rounded-xl bg-indigo-600 px-5 py-2.5 font-semibold text-white hover:bg-indigo-500"
+                    >
+                      ⬇ Dosyayı İndir
+                    </a>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
