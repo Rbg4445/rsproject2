@@ -13,11 +13,13 @@
     "@types/react-google-recaptcha": "^2.1.9",
     "clsx": "2.1.1",
     "firebase": "^12.11.0",
-    "lucide-react": "^1.6.0",
+    "framer-motion": "latest",
+    "lucide-react": "latest",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-google-recaptcha": "^3.1.0",
     "react-google-recaptcha-v3": "^1.11.0",
+    "react-markdown": "latest",
     "tailwind-merge": "3.4.0"
   },
   "devDependencies": {
