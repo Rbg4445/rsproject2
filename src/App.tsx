@@ -138,7 +138,8 @@ function AppContent() {
   }
 
   // Maintenance Mode Check
-  if (settings.maintenanceMode && !isAdmin && currentPage !== 'admin') {
+  const isUnlocked = localStorage.getItem('pa_maintenance_unlocked') === 'true';
+  if (settings.maintenanceMode && !isAdmin && !isUnlocked && currentPage !== 'admin') {
     return (
       <div className="fixed inset-0 bg-[#0B1416] flex items-center justify-center z-[9999] p-6 text-center">
         <MouseTrailBackground />
@@ -156,6 +157,31 @@ function AppContent() {
              </div>
              <p className="text-sm font-bold text-white uppercase tracking-widest">RBG ProjeAkademi</p>
           </div>
+          <div className="mt-8 space-y-4 max-w-[280px] mx-auto">
+            <div className="relative group">
+              <input 
+                type="password"
+                id="maintenance-pwd"
+                placeholder="Erişim Şifresi..."
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-center text-white outline-none focus:border-cyan-500/50 transition-all placeholder:text-zinc-700 group-hover:border-zinc-700"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const val = (e.currentTarget as HTMLInputElement).value;
+                    if (val === '1453') {
+                      localStorage.setItem('pa_maintenance_unlocked', 'true');
+                      window.location.reload();
+                    } else {
+                      e.currentTarget.classList.add('animate-shake');
+                      setTimeout(() => e.currentTarget.classList.remove('animate-shake'), 500);
+                      e.currentTarget.value = '';
+                    }
+                  }
+                }}
+              />
+              <p className="mt-2 text-[10px] text-zinc-600 uppercase tracking-widest font-bold">Girmek için şifreyi yazıp Enter'a basın</p>
+            </div>
+          </div>
+
           <button 
              onClick={() => setShowAdminAuth(true)}
              className="mt-12 text-zinc-600 hover:text-white transition flex items-center gap-2 mx-auto text-xs uppercase tracking-widest font-bold"
