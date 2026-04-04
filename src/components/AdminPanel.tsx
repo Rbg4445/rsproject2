@@ -697,6 +697,19 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                     <p className="text-xs text-white/50">Eğer bu kapatılırsa kullanıcılar birbiriyle mesajlaşamaz, sadece Adminler yetkili kalır.</p>
                   </div>
                 </label>
+
+                <label className="flex items-center gap-3 p-4 rounded-xl border border-red-500/20 bg-red-500/5 cursor-pointer hover:bg-red-500/10 transition mt-4">
+                  <input 
+                    type="checkbox" 
+                    checked={draft.maintenanceMode} 
+                    onChange={(e) => setDraft(p => ({ ...p, maintenanceMode: e.target.checked }))} 
+                    className="w-5 h-5 accent-red-500 rounded border-white/20 bg-gray-800"
+                  />
+                  <div>
+                    <p className="font-semibold text-red-400">🚨 Siteyi Bakım Moduna Al</p>
+                    <p className="text-xs text-red-300/50">Bu seçenek aktif edildiğinde, Adminler hariç tüm kullanıcılar sitenin bakım modunda olduğunu belirten bir uyarı ekranı görür.</p>
+                  </div>
+                </label>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Marka Adi" value={draft.brandName} onChange={(v) => setDraft((p) => ({ ...p, brandName: v }))} />

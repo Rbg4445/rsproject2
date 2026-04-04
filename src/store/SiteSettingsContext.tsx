@@ -18,6 +18,7 @@ export interface SiteSettings {
   youtubeUrl: string;
   footerNote: string;
   chatEnabled: boolean;
+  maintenanceMode: boolean;
 }
 
 const defaultSettings: SiteSettings = {
@@ -40,6 +41,7 @@ const defaultSettings: SiteSettings = {
   youtubeUrl: '#',
   footerNote: 'ProjeAkademi, projelerini sergileyebileceğin ve geliştirebileceğin topluluk odaklı bir platformdur.',
   chatEnabled: true,
+  maintenanceMode: false,
 };
 
 interface SiteSettingsContextType {

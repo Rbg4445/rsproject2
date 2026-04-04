@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { FirebaseAuthProvider, useFirebaseAuth } from './store/FirebaseAuthContext';
 import { ThemeProvider } from './store/ThemeContext';
-import { SiteSettingsProvider } from './store/SiteSettingsContext';
+import { SiteSettingsProvider, useSiteSettings } from './store/SiteSettingsContext';
+import { Home, AlertTriangle, Shield } from 'lucide-react';
 import Layout from './components/Layout';
 import FirebaseHomeFeed from './components/FirebaseHomeFeed';
 import FirebaseAuthModal from './components/FirebaseAuthModal';
@@ -41,7 +42,8 @@ function PageRouter({ currentPage }: { currentPage: string }) {
 }
 
 function AppContent() {
-  const { loading } = useFirebaseAuth();
+  const { loading, isAdmin } = useFirebaseAuth();
+  const { settings } = useSiteSettings();
   const [currentPage, setCurrentPage] = useState(parseRouteFromHash());
   const [showAuth, setShowAuth] = useState(false);
   const [showAdminAuth, setShowAdminAuth] = useState(false);
@@ -129,6 +131,36 @@ function AppContent() {
             <img src="https://github.com/Rbg4445/rsproject2/blob/main/Proje%20akademi%20(1).png?raw=true" alt="Loading..." className="w-full h-full object-cover" />
           </div>
           <p className="text-[#818384] text-sm">Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Maintenance Mode Check
+  if (settings.maintenanceMode && !isAdmin && currentPage !== 'admin') {
+    return (
+      <div className="fixed inset-0 bg-[#0B1416] flex items-center justify-center z-[9999] p-6 text-center">
+        <MouseTrailBackground />
+        <div className="relative z-10 max-w-md w-full animate-fade-in">
+          <div className="w-24 h-24 bg-zinc-900 border border-zinc-700/50 rounded-3xl mx-auto mb-8 flex items-center justify-center shadow-2xl shadow-cyan-500/20">
+            <AlertTriangle className="w-12 h-12 text-cyan-400 animate-pulse" />
+          </div>
+          <h1 className="text-4xl font-extrabold text-white mb-4 tracking-tighter">Bakım Modu Aktif</h1>
+          <p className="text-zinc-400 text-lg mb-8 leading-relaxed">
+            Sitemiz şu an yeni özellikler yüklenmesi ve iyileştirmeler için bakımdadır. Kısa süre sonra tekrar görüşmek üzere.
+          </p>
+          <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl flex items-center gap-4 justify-center">
+             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-950 border border-zinc-800">
+                <img src="https://github.com/Rbg4445/rsproject2/blob/main/Proje%20akademi%20(1).png?raw=true" alt="RBG" className="w-6 h-6 object-cover" />
+             </div>
+             <p className="text-sm font-bold text-white uppercase tracking-widest">RBG ProjeAkademi</p>
+          </div>
+          <button 
+             onClick={() => setShowAdminAuth(true)}
+             className="mt-12 text-zinc-600 hover:text-white transition flex items-center gap-2 mx-auto text-xs uppercase tracking-widest font-bold"
+          >
+            <Shield className="w-3 h-3" /> Yönetici Girişi
+          </button>
         </div>
       </div>
     );
