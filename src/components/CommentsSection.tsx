@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { MessageSquare, Send, Terminal } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import {
@@ -76,13 +75,8 @@ export default function CommentsSection({ refType, refId }: CommentsSectionProps
         <p className="text-xs text-white/50 text-center py-4">Henuz yorum yok. Ilk yorumu sen yaz.</p>
       ) : (
         <ul className="space-y-3 mb-4">
-          <AnimatePresence>
-            {comments.map((c, idx) => (
-              <motion.li
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ delay: idx * 0.05 }}
+            {comments.map((c) => (
+              <li
                 key={c.id}
                 className={`rounded-xl border px-4 py-3 text-sm ${
                   c.status === 'pending'
@@ -113,9 +107,8 @@ export default function CommentsSection({ refType, refId }: CommentsSectionProps
                     ⚠️ Bu yorum admin onayindan sonra diger kullanicilara gorunecek.
                   </p>
                 )}
-              </motion.li>
+              </li>
             ))}
-          </AnimatePresence>
         </ul>
       )}
 

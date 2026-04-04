@@ -63,6 +63,7 @@ function AppContent() {
   const [showBetaNotice, setShowBetaNotice] = useState(true);
   const [authTab, setAuthTab] = useState('login' as 'login' | 'register');
   const [showSplash, setShowSplash] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => { setShowSplash(false); }, 2200);
@@ -71,8 +72,12 @@ function AppContent() {
 
   useEffect(() => {
     const handleHashChange = () => {
-      setCurrentPage(parseRouteFromHash());
+      setIsTransitioning(true);
       window.scrollTo({ top: 0, behavior: 'auto' });
+      setTimeout(() => {
+        setCurrentPage(parseRouteFromHash());
+        setTimeout(() => setIsTransitioning(false), 400); // 400ms loading effect
+      }, 50); // slight delay to allow loader to paint
     };
 
     window.addEventListener('hashchange', handleHashChange);
@@ -100,14 +105,27 @@ function AppContent() {
 
   if (showSplash) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-purple-900 via-fuchsia-800 to-slate-950 flex items-center justify-center z-[999] overflow-hidden">
-        <div className="text-center">
-          <div className="beta-splash-card w-52 h-52 md:w-72 md:h-72 bg-gradient-to-br from-purple-500 via-fuchsia-500 to-pink-500 rounded-3xl flex items-center justify-center mb-6 mx-auto shadow-2xl shadow-fuchsia-500/50 border border-white/20">
-            <span className="text-4xl md:text-5xl font-black tracking-tight text-white drop-shadow-lg">
+      <div className="fixed inset-0 bg-white flex items-center justify-center z-[999] overflow-hidden">
+        {/* Dekoratif Arka Plan Daireleri */}
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-100/50 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-orange-100/50 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+        
+        <div className="text-center relative z-10">
+          <div className="beta-splash-card w-56 h-56 md:w-80 md:h-80 bg-gradient-to-br from-blue-600 via-indigo-600 to-teal-500 rounded-[2.5rem] flex flex-col items-center justify-center mb-8 mx-auto shadow-2xl shadow-blue-500/30 border border-white p-6 relative overflow-hidden">
+            {/* Kart içi parlama efekti */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent"></div>
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-orange-400 rounded-full blur-2xl opacity-40"></div>
+            
+            <span className="text-5xl md:text-7xl font-black tracking-tighter text-white drop-shadow-md mb-2 relative z-10">
               BETA
             </span>
+            <div className="w-12 h-1 bg-orange-400 rounded-full mb-3 relative z-10"></div>
+            <span className="text-blue-50 text-xs md:text-sm font-semibold tracking-widest uppercase relative z-10">
+              ProjeAkademi
+            </span>
           </div>
-          <p className="text-white/60 text-xs md:text-sm tracking-wide uppercase">ProjeAkademi Proje Platformu</p>
+          <h2 className="text-gray-900 text-xl font-bold tracking-tight mb-2 animate-fade-in">Platform Yükleniyor</h2>
+          <p className="text-gray-500 text-sm tracking-wide animate-pulse">Sizin için hazırlanıyor...</p>
         </div>
       </div>
     );
@@ -131,6 +149,15 @@ function AppContent() {
       <div key="admin" className="min-h-screen bg-slate-950/80">
         <AdminPanel onBack={() => navigate('home')} />
         <CookieConsent />
+      </div>
+    );
+  }
+
+  if (isTransitioning) {
+    return (
+      <div className="fixed inset-0 bg-gray-950 flex flex-col items-center justify-center z-[998]">
+        <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
+        <p className="text-white/60 text-sm font-medium tracking-wide animate-pulse">Sayfa Yükleniyor...</p>
       </div>
     );
   }
