@@ -69,11 +69,11 @@ export default function CommentsSection({ refType, refId }: CommentsSectionProps
   };
 
   return (
-    <section className="mt-10 rounded-2xl border border-white/10 bg-black/20 p-4">
-      <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-white/70">
+    <section className="mt-10 rounded-2xl border border-zinc-800/60 bg-zinc-900 p-4 shadow-sm">
+      <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-300">
         <MessageSquare className="h-4 w-4 text-cyan-400" />
         Yorumlar
-        <span className="ml-1 text-xs font-normal text-white/40">({comments.length})</span>
+        <span className="ml-1 text-xs font-normal text-zinc-500">({comments.length})</span>
       </div>
 
       {loading ? (
@@ -81,7 +81,7 @@ export default function CommentsSection({ refType, refId }: CommentsSectionProps
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent"></div>
         </div>
       ) : comments.length === 0 ? (
-        <p className="text-xs text-white/50 text-center py-4">Henuz yorum yok. Ilk yorumu sen yaz.</p>
+        <p className="text-xs text-zinc-500 text-center py-4">Henuz yorum yok. Ilk yorumu sen yaz.</p>
       ) : (
         <ul className="space-y-3 mb-4">
             {comments.map((c) => (
@@ -90,24 +90,24 @@ export default function CommentsSection({ refType, refId }: CommentsSectionProps
                 className={`rounded-xl border px-4 py-3 text-sm ${
                   c.status === 'pending'
                     ? 'border-yellow-500/40 bg-yellow-500/5 text-yellow-100'
-                    : 'border-white/10 bg-black/40 text-white/80'
+                    : 'border-zinc-800/60 bg-zinc-950/50 text-zinc-300'
                 }`}
               >
-                <div className="mb-2 flex items-center justify-between gap-2 border-b border-white/5 pb-2">
+                <div className="mb-3 flex items-center justify-between gap-2 border-b border-zinc-800 pb-2">
                   <div className="flex items-center gap-2">
                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-[10px] font-bold text-white shadow-inner">
                       {c.username.substring(0, 2).toUpperCase()}
                     </div>
-                    <span className="font-bold text-xs text-white/80">{c.username}</span>
+                    <span className="font-bold text-xs text-zinc-300">{c.username}</span>
                   </div>
-                  <span className="text-[10px] text-white/40">
+                  <span className="text-[10px] text-zinc-500">
                     {new Date(c.createdAt).toLocaleString('tr-TR', {
                       day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit',
                     })}
                   </span>
                 </div>
                 
-                <div className="prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-gray-900 prose-pre:border prose-pre:border-white/10">
+                <div className="prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-800">
                   <ReactMarkdown>{c.content}</ReactMarkdown>
                 </div>
                 
@@ -124,9 +124,9 @@ export default function CommentsSection({ refType, refId }: CommentsSectionProps
                 onChange={(e) => setContent(e.target.value)}
                 rows={4}
                 placeholder="Yorumunuzu buraya yazın... (Markdown kodları desteklenmektedir, örneğin: **kalın** veya `kod`)"
-                className="w-full rounded-xl border border-white/10 bg-gray-900/80 px-4 py-3 text-sm text-white placeholder-white/30 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 transition-all font-mono"
+                className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-zinc-300 placeholder-zinc-600 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 transition-all font-mono"
               />
-              <div className="absolute top-3 right-3 text-white/20">
+              <div className="absolute top-3 right-3 text-zinc-600">
                 <Terminal className="w-4 h-4" />
               </div>
             </div>
@@ -138,7 +138,7 @@ export default function CommentsSection({ refType, refId }: CommentsSectionProps
                   key={emoji}
                   type="button"
                   onClick={() => setContent(prev => prev + emoji)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-base transition-colors border border-white/5 hover:scale-110 active:scale-95"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-zinc-800/60 hover:bg-zinc-700 text-base transition-colors border border-zinc-800 hover:scale-110 active:scale-95"
                 >
                   {emoji}
                 </button>
