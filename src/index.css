@@ -156,7 +156,7 @@ html[data-theme='light'] [class*='from-indigo-500'][class*='to-purple-600'] {
   }
 }
 
-/* BETA açılış animasyonu */
+/* BETua açılış animasyonu */
 .beta-splash-card {
   animation: betaSplash 2.2s ease-in-out forwards;
 }
