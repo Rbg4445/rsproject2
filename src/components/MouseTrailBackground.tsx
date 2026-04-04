@@ -25,12 +25,10 @@ interface FloatingShape {
 }
 
 const COLORS = [
-  'rgba(99, 102, 241,',   // indigo
-  'rgba(139, 92, 246,',   // violet
-  'rgba(168, 85, 247,',   // purple
-  'rgba(236, 72, 153,',   // pink
-  'rgba(59, 130, 246,',   // blue
-  'rgba(6, 182, 212,',    // cyan
+  'rgba(255, 255, 255,',   // white
+  'rgba(200, 200, 200,',   // light gray
+  'rgba(150, 150, 150,',   // gray
+  'rgba(100, 100, 100,',   // dark gray
 ];
 
 export default function MouseTrailBackground() {
@@ -157,9 +155,7 @@ export default function MouseTrailBackground() {
         const currentAlpha = shape.alpha * (mx > 0 && dist < maxDist ? 1.5 : 1);
 
         ctx.fillStyle = `${shape.color} ${currentAlpha})`;
-        ctx.beginPath();
-        ctx.arc(shape.x, shape.y, currentSize, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillRect(shape.x - currentSize, shape.y - currentSize, currentSize * 2, currentSize * 2);
       });
 
       // 2. Mouse hareket izi (particles)
@@ -175,23 +171,18 @@ export default function MouseTrailBackground() {
 
         if (currentAlpha > 0.01) {
           ctx.fillStyle = `${p.color} ${currentAlpha})`;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, currentSize, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.fillRect(p.x - currentSize, p.y - currentSize, currentSize * 2, currentSize * 2);
         }
       });
 
       particlesRef.current = particlesRef.current.filter(p => p.life < p.maxLife);
 
-      // 3. Basit mouse ışığı (glow)
       if (mx > 0) {
         const gradient = ctx.createRadialGradient(mx, my, 0, mx, my, 80);
-        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.06)');
-        gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.03)');
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
         ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(mx, my, 80, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillRect(mx - 80, my - 80, 160, 160);
       }
 
       animationRef.current = requestAnimationFrame(animate);

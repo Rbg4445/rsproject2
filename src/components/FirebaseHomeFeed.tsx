@@ -84,7 +84,9 @@ export default function FirebaseHomeFeed({ feedFilter = 'all' }: FirebaseHomeFee
         feedFilter === 'all' || feedFilter === 'article' ? getArticles() : Promise.resolve<FirestoreArticle[]>([])
       ]);
 
-      const mappedProjects: FeedItem[] = projectsList.map(p => ({
+      const { getCommentsForRef } = await import('../firebase/firestoreService');
+
+      const mappedProjects = await Promise.all(projectsList.map(async p => ({
         id: p.id,
         type: 'project',
         title: p.title,
@@ -95,11 +97,11 @@ export default function FirebaseHomeFeed({ feedFilter = 'all' }: FirebaseHomeFee
         imageUrl: p.image,
         tags: p.tags || [],
         likes: p.likes || [],
-        commentsCount: 0,
+        commentsCount: (await getCommentsForRef('project', p.id)).length,
         originalData: p
-      }));
+      })));
 
-      const mappedBlogs: FeedItem[] = blogsList.map(b => ({
+      const mappedBlogs = await Promise.all(blogsList.map(async b => ({
         id: b.id,
         type: 'blog',
         title: b.title,
@@ -110,11 +112,11 @@ export default function FirebaseHomeFeed({ feedFilter = 'all' }: FirebaseHomeFee
         imageUrl: b.coverImage,
         tags: b.tags || [],
         likes: b.likes || [],
-        commentsCount: 0,
+        commentsCount: (await getCommentsForRef('blog', b.id)).length,
         originalData: b
-      }));
+      })));
 
-      const mappedArticles: FeedItem[] = articlesList.map(a => ({
+      const mappedArticles = await Promise.all(articlesList.map(async a => ({
         id: a.id,
         type: 'article',
         title: a.title,
@@ -125,9 +127,9 @@ export default function FirebaseHomeFeed({ feedFilter = 'all' }: FirebaseHomeFee
         imageUrl: a.coverImage,
         tags: a.tags || [],
         likes: a.likes || [],
-        commentsCount: 0,
+        commentsCount: (await getCommentsForRef('article', a.id)).length,
         originalData: a
-      }));
+      })));
 
       const combined = [...mappedProjects, ...mappedBlogs, ...mappedArticles].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setItems(combined);
@@ -278,7 +280,7 @@ export default function FirebaseHomeFeed({ feedFilter = 'all' }: FirebaseHomeFee
                       <MessageSquare className="w-4 h-4" />
                       {item.commentsCount} Yorum
                     </div>
-                    <button onClick={(e) => { e.stopPropagation(); }} className="flex items-center gap-1.5 hover:bg-white/10 transition rounded px-2 py-1.5 text-xs font-bold text-[#818384]">
+                    <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(window.location.href); alert('Baglanti kopyalandi!'); }} className="flex items-center gap-1.5 hover:bg-white/10 transition rounded px-2 py-1.5 text-xs font-bold text-[#818384]">
                       <Share2 className="w-4 h-4" /> Paylaş
                     </button>
                   </div>
