@@ -269,8 +269,8 @@ export default function FirebaseMessagesPage() {
                           )}
                         </div>
                         <p className={`text-xs truncate ${unreadCount > 0 ? 'text-indigo-300 font-medium' : 'text-white/40'}`}>
-                          {chat.lastMessageSenderId === userProfile.uid ? "Sen: " : ""}
-                          {chat.lastMessage || "Sohbet başladı."}
+                          {chat.lastMessageSenderId === userProfile.uid && <span>Sen: </span>}
+                          <span>{chat.lastMessage || "Sohbet başladı."}</span>
                         </p>
                       </div>
                       
