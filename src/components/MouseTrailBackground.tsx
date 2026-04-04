@@ -34,12 +34,12 @@ const COLORS = [
 ];
 
 export default function MouseTrailBackground() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef(null as HTMLCanvasElement | null);
   const mouseRef = useRef({ x: -1000, y: -1000 });
   const prevMouseRef = useRef({ x: -1000, y: -1000 });
-  const particlesRef = useRef<Particle[]>([]);
-  const floatingShapesRef = useRef<FloatingShape[]>([]);
-  const animationRef = useRef<number>(0);
+  const particlesRef = useRef([] as Particle[]);
+  const floatingShapesRef = useRef([] as FloatingShape[]);
+  const animationRef = useRef(0 as number);
   const timeRef = useRef(0);
 
   const initFloatingShapes = useCallback((width: number, height: number) => {

@@ -13,6 +13,7 @@ import FirebaseAuthModal from './components/FirebaseAuthModal';
 import FirebaseUserProfile from './components/FirebaseUserProfile';
 import FirebaseExplorePage from './components/FirebaseExplorePage';
 import FirebaseBlogsPage from './components/FirebaseBlogsPage';
+import FirebaseMessagesPage from './components/FirebaseMessagesPage';
 import FirebaseWikiPage from './components/FirebaseWikiPage';
 import AdminPanel from './components/AdminPanel';
 import MouseTrailBackground from './components/MouseTrailBackground';
@@ -34,7 +35,7 @@ function AppContent() {
   const [showAuth, setShowAuth] = useState(false);
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [showBetaNotice, setShowBetaNotice] = useState(true);
-  const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
+  const [authTab, setAuthTab] = useState('login' as 'login' | 'register');
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
@@ -189,6 +190,24 @@ function AppContent() {
         />
         <div className="relative z-10">
           <FirebaseUserProfile username={username} />
+        </div>
+        {renderOverlayModals()}
+        <CookieConsent />
+      </div>
+    );
+  }
+
+  if (currentPage.startsWith('messages')) {
+    return (
+      <div className="min-h-screen bg-transparent">
+        <Navbar
+          onOpenAuth={() => openAuth('login')}
+          onOpenAdminLogin={() => setShowAdminAuth(true)}
+          onNavigate={navigate}
+          currentPage={currentPage}
+        />
+        <div className="relative z-10">
+          <FirebaseMessagesPage />
         </div>
         {renderOverlayModals()}
         <CookieConsent />

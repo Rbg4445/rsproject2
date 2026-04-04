@@ -15,7 +15,7 @@ export default function AdminLoginModal({ onClose, onSuccess }: AdminLoginModalP
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState(null as string | null);
   const [showCaptcha, setShowCaptcha] = useState(false);
 
   useEffect(() => {

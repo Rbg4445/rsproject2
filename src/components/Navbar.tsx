@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, LogIn, LogOut, User, Compass, ChevronDown, BookOpen, BookText, Shield, Moon, Sun, Gamepad2, Bell, Trophy } from 'lucide-react';
+import { Menu, X, LogIn, LogOut, User, Compass, ChevronDown, BookOpen, FileText, Shield, Star, Play, Bell, Trophy, MessageSquare } from 'lucide-react';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import { useTheme } from '../store/ThemeContext';
 import { useSiteSettings } from '../store/SiteSettingsContext';
@@ -133,7 +133,7 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
                   : 'text-white/60 hover:text-white hover:bg-white/10'
               }`}
             >
-              <BookText className="w-4 h-4" />
+              <FileText className="w-4 h-4" />
               Wiki
             </button>
 
@@ -145,7 +145,7 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
                   : 'text-white/60 hover:text-white hover:bg-white/10'
               }`}
             >
-              <Gamepad2 className="w-4 h-4" />
+              <Play className="w-4 h-4" />
               RBG
             </button>
 
@@ -182,7 +182,7 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
               className="ml-2 rounded-lg border border-white/10 bg-white/5 p-2 text-white/70 transition hover:bg-white/10 hover:text-white"
               title={theme === 'dark' ? 'Aydinlik moda gec' : 'Karanlik moda gec'}
             >
-              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {theme === 'dark' ? <Star className="h-4 w-4" /> : <Compass className="h-4 w-4" />}
             </button>
 
             {/* Auth */}
@@ -209,8 +209,20 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
                     />
                   )}
                 </div>
+
+                <button 
+                  onClick={() => onNavigate('messages')}
+                  className={`p-2 rounded-xl border transition ${
+                    currentPage.startsWith('messages')
+                      ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400'
+                      : 'bg-white/5 border-white/10 text-white/70 hover:text-white hover:bg-white/10'
+                  }`}
+                  title="Mesajlar"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                </button>
                 
-                <div className="relative">
+                <div className="relative ml-2">
                   <button
                     onClick={(e) => { e.stopPropagation(); setShowUserMenu(!showUserMenu); setShowNotifs(false); }}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-lg hover:shadow-indigo-500/30 transition-all"
@@ -333,14 +345,14 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
             onClick={() => { onNavigate('wiki'); setIsOpen(false); }}
             className="w-full text-left px-4 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/10 font-medium transition flex items-center gap-2"
           >
-            <BookText className="w-4 h-4" />
+            <FileText className="w-4 h-4" />
             Wiki
           </button>
           <button
             onClick={() => { onNavigate('rbg'); setIsOpen(false); }}
             className="w-full text-left px-4 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/10 font-medium transition flex items-center gap-2"
           >
-            <Gamepad2 className="w-4 h-4" />
+            <Play className="w-4 h-4" />
             RBG
           </button>
           <button
@@ -354,12 +366,19 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
             onClick={() => { toggleTheme(); setIsOpen(false); }}
             className="w-full text-left px-4 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/10 font-medium transition flex items-center gap-2"
           >
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {theme === 'dark' ? <Star className="w-4 h-4" /> : <Compass className="w-4 h-4" />}
             {theme === 'dark' ? 'Aydinlik Mod' : 'Karanlik Mod'}
           </button>
 
           {userProfile ? (
             <>
+              <button
+                onClick={() => { onNavigate('messages'); setIsOpen(false); }}
+                className="w-full text-left px-4 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/10 font-medium transition flex items-center gap-2"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Mesajlar
+              </button>
               <button
                 onClick={() => { onNavigate(`profile:${userProfile.username}`); setIsOpen(false); }}
                 className="w-full text-left px-4 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/10 font-medium transition flex items-center gap-2"

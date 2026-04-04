@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, Folder, Edit2, Trash2, Download, FileText, User, Shield, BarChart, Activity } from 'lucide-react';
+import { BookOpen, Folder, Edit2, Trash2, Download, FileText, User, Shield, BarChart, Activity, MessageSquare } from 'lucide-react';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import {
   type FirestoreBlog,
@@ -127,6 +127,17 @@ export default function FirebaseUserProfile({ username }: Props) {
                   className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-500 transition"
                 >
                   <Edit2 className="h-4 w-4" /> Blog Yaz
+                </button>
+              </div>
+            )}
+            
+            {!isOwner && userProfile && (
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => { window.location.hash = `#messages:${profile.username}`; }}
+                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 transition shadow-lg shadow-indigo-500/20"
+                >
+                  <MessageSquare className="h-4 w-4" /> Mesaj Gönder
                 </button>
               </div>
             )}
