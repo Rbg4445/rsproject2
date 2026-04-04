@@ -112,8 +112,7 @@ export function subscribeToInbox(uid: string, callback: (chats: ChatRoom[]) => v
 
   const q = query(
     collection(db, 'chats'),
-    where('participants', 'array-contains', uid),
-    orderBy('lastMessageTime', 'desc')
+    where('participants', 'array-contains', uid)
   );
 
   return onSnapshot(q, (snapshot) => {
@@ -121,6 +120,8 @@ export function subscribeToInbox(uid: string, callback: (chats: ChatRoom[]) => v
     snapshot.forEach((docSnap) => {
       chats.push({ id: docSnap.id, ...docSnap.data() } as ChatRoom);
     });
+    // Firestore rules/indexes bypass: Sort locally in memory
+    chats.sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
     callback(chats);
   });
 }

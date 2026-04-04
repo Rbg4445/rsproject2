@@ -177,13 +177,7 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
               </button>
             )}
 
-            <button
-              onClick={toggleTheme}
-              className="ml-2 rounded-lg border border-white/10 bg-white/5 p-2 text-white/70 transition hover:bg-white/10 hover:text-white"
-              title={theme === 'dark' ? 'Aydinlik moda gec' : 'Karanlik moda gec'}
-            >
-              {theme === 'dark' ? <Star className="h-4 w-4" /> : <Compass className="h-4 w-4" />}
-            </button>
+
 
             {/* Auth */}
             {userProfile ? (
@@ -362,13 +356,7 @@ export default function Navbar({ onOpenAuth, onOpenAdminLogin, onNavigate, curre
             <Trophy className="w-4 h-4" />
             Liderlik
           </button>
-          <button
-            onClick={() => { toggleTheme(); setIsOpen(false); }}
-            className="w-full text-left px-4 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/10 font-medium transition flex items-center gap-2"
-          >
-            {theme === 'dark' ? <Star className="w-4 h-4" /> : <Compass className="w-4 h-4" />}
-            {theme === 'dark' ? 'Aydinlik Mod' : 'Karanlik Mod'}
-          </button>
+
 
           {userProfile ? (
             <>

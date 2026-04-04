@@ -131,7 +131,7 @@ function AppContent() {
 
   if (currentPage === 'admin') {
     return (
-      <div className="min-h-screen bg-slate-950/80">
+      <div key="admin" className="min-h-screen bg-slate-950/80">
         {/* Admin sayfası: sade koyu arka plan, animasyonsuz */}
         <AdminPanel onBack={() => navigate('home')} />
         {renderOverlayModals(false)}
@@ -142,7 +142,7 @@ function AppContent() {
 
   if (currentPage === 'rbg') {
     return (
-      <div className="min-h-screen bg-transparent">
+      <div key="rbg" className="min-h-screen bg-transparent">
         <Navbar
           onOpenAuth={() => openAuth('login')}
           onOpenAdminLogin={() => setShowAdminAuth(true)}
@@ -160,7 +160,7 @@ function AppContent() {
 
   if (currentPage === 'leaderboard') {
     return (
-      <div className="min-h-screen bg-transparent">
+      <div key="leaderboard" className="min-h-screen bg-transparent">
         <MouseTrailBackground />
         <Navbar
           onOpenAuth={() => openAuth('login')}
@@ -180,7 +180,7 @@ function AppContent() {
   if (currentPage.startsWith('profile:')) {
     const username = currentPage.split(':')[1];
     return (
-      <div className="min-h-screen bg-transparent">
+      <div key={`profile-${username}`} className="min-h-screen bg-transparent">
         <MouseTrailBackground />
         <Navbar
           onOpenAuth={() => openAuth('login')}
@@ -199,7 +199,7 @@ function AppContent() {
 
   if (currentPage.startsWith('messages')) {
     return (
-      <div className="min-h-screen bg-transparent">
+      <div key="messages" className="min-h-screen bg-transparent">
         <Navbar
           onOpenAuth={() => openAuth('login')}
           onOpenAdminLogin={() => setShowAdminAuth(true)}
@@ -217,7 +217,7 @@ function AppContent() {
 
   if (currentPage === 'explore') {
     return (
-      <div className="min-h-screen bg-transparent">
+      <div key="explore" className="min-h-screen bg-transparent">
         {/* MouseTrailBackground kaldırıldı: keşfet sayfası için performans optimizasyonu */}
         <Navbar
           onOpenAuth={() => openAuth('login')}
@@ -236,7 +236,7 @@ function AppContent() {
 
   if (currentPage === 'blogs') {
     return (
-      <div className="min-h-screen bg-transparent">
+      <div key="blogs" className="min-h-screen bg-transparent">
         <MouseTrailBackground />
         <Navbar
           onOpenAuth={() => openAuth('login')}
@@ -255,7 +255,7 @@ function AppContent() {
 
   if (currentPage === 'wiki') {
     return (
-      <div className="min-h-screen bg-transparent">
+      <div key="wiki" className="min-h-screen bg-transparent">
         <MouseTrailBackground />
         <Navbar
           onOpenAuth={() => openAuth('login')}
@@ -273,7 +273,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div key="home" className="min-h-screen bg-transparent">
       <MouseTrailBackground />
       <Navbar
         onOpenAuth={() => openAuth('login')}
