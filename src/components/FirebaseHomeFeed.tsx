@@ -319,39 +319,17 @@ export default function FirebaseHomeFeed({ feedFilter = 'all' }: FirebaseHomeFee
                         </div>
                     </div>
                     
-                    <button onClick={() => setShowTypeSelect(true)} className="w-full bg-cyan-500 hover:bg-cyan-400 text-white font-bold py-2.5 rounded-full transition shadow-lg shadow-cyan-500/20">
-                        Gönderi Paylaş
-                    </button>
+                    <div className="space-y-2">
+                        <button onClick={() => setShowTypeSelect(true)} className="w-full bg-cyan-500 hover:bg-cyan-400 text-white font-bold py-2.5 rounded-full transition shadow-lg shadow-cyan-500/20">
+                            Gönderi Paylaş
+                        </button>
+                        <button onClick={() => window.location.hash = 'leaderboard'} className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-2.5 rounded-full transition border border-zinc-700/50 flex items-center justify-center gap-2">
+                            🏆 Liderlik Tablosu
+                        </button>
+                    </div>
                 </div>
              </div>
 
-             {/* Rules Widget */}
-             <div className="bg-zinc-900 border border-zinc-800/60 rounded-xl p-4 shadow-sm">
-                <h4 className="text-xs font-bold text-zinc-500 uppercase mb-3 px-1">Topluluk Kuralları</h4>
-                <div className="space-y-3">
-                    {[
-                        "Nezaket ve saygı esastır.",
-                        "Spam ve reklam yasaktır.",
-                        "Kaynak belirtilmesi önerilir.",
-                        "Yalnızca teknoloji ve gelişim odaklıdır."
-                    ].map((rule, i) => (
-                        <div key={i} className="text-sm text-zinc-400 flex gap-2">
-                            <span className="text-zinc-600 font-mono">{i+1}.</span>
-                            <span>{rule}</span>
-                        </div>
-                    ))}
-                </div>
-             </div>
-             
-             {/* Footer Links */}
-             <div className="text-[11px] text-zinc-500 px-2 space-y-2">
-                <div className="flex flex-wrap gap-x-3 gap-y-1">
-                   <a href="#" className="hover:text-white transition">Gizlilik Politikası</a>
-                   <a href="#" className="hover:text-white transition">Kullanıcı Sözleşmesi</a>
-                   <a href="#" className="hover:text-white transition">Yardım</a>
-                </div>
-                <p>RBG ProjeAkademi © 2026. <br/>Geleceğin dünyasını inşa edenler için.</p>
-             </div>
           </div>
         </div>
 

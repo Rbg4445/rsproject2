@@ -42,10 +42,6 @@ export default function Layout({ children, currentPage, onNavigate, onOpenAuth, 
 
   const navLinks = [
     { id: 'home', label: 'r/Popüler', icon: Home },
-    { id: 'explore', label: 'r/Projeler', icon: Compass },
-    { id: 'blogs', label: 'r/Bloglar', icon: BookOpen },
-    { id: 'wiki', label: 'r/Wiki', icon: FileText },
-    { id: 'leaderboard', label: 'Liderlik', icon: Trophy },
     { id: 'rbg', label: 'RBG Studio', icon: Play },
   ];
 
@@ -130,6 +126,18 @@ export default function Layout({ children, currentPage, onNavigate, onOpenAuth, 
                 </div>
               )}
             </button>
+          )}
+
+          {/* Footer inside Left Sidebar */}
+          {!isCollapsed && (
+             <div className="mt-2 text-[10px] text-zinc-600 px-2 space-y-1">
+                <div className="flex flex-wrap gap-x-2 gap-y-1">
+                   <a href="#" className="hover:text-zinc-400 transition">Gizlilik</a>
+                   <a href="#" className="hover:text-zinc-400 transition">Sözleşme</a>
+                   <a href="#" className="hover:text-zinc-400 transition">Yardım</a>
+                </div>
+                <p>RBG ProjeAkademi © 2026.</p>
+             </div>
           )}
         </div>
       </aside>
