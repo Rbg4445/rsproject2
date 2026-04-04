@@ -26,9 +26,9 @@ function parseRouteFromHash() {
 }
 
 function PageRouter({ currentPage }: { currentPage: string }) {
-  if (currentPage === 'explore') return <FirebaseExplorePage />;
-  if (currentPage === 'blogs') return <FirebaseBlogsPage />;
-  if (currentPage === 'wiki') return <FirebaseWikiPage />;
+  if (currentPage === 'explore') return <><FirebaseHomeFeed feedFilter="project" /><Footer /></>;
+  if (currentPage === 'blogs') return <><FirebaseHomeFeed feedFilter="blog" /><Footer /></>;
+  if (currentPage === 'wiki') return <><FirebaseHomeFeed feedFilter="article" /><Footer /></>;
   if (currentPage === 'rbg') return <RbgPage />;
   if (currentPage === 'leaderboard') return <LeaderboardPage />;
   
@@ -99,27 +99,19 @@ function AppContent() {
 
   if (showSplash) {
     return (
-      <div className="fixed inset-0 bg-white flex items-center justify-center z-[999] overflow-hidden">
-        {/* Dekoratif Arka Plan Daireleri */}
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-100/50 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-orange-100/50 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+      <div className="fixed inset-0 bg-[#0B1416] flex items-center justify-center z-[999] overflow-hidden">
+        {/* Dekoratif Arka Plan (RBG Logo renklerine uygun ışıklar) */}
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#60a5fa]/10 rounded-full blur-[80px] -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[#38bdf8]/5 rounded-full blur-[80px] translate-x-1/2 translate-y-1/2"></div>
         
-        <div className="text-center relative z-10">
-          <div className="beta-splash-card w-56 h-56 md:w-80 md:h-80 bg-gradient-to-br from-blue-600 via-indigo-600 to-teal-500 rounded-[2.5rem] flex flex-col items-center justify-center mb-8 mx-auto shadow-2xl shadow-blue-500/30 border border-white p-6 relative overflow-hidden">
-            {/* Kart içi parlama efekti */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent"></div>
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-orange-400 rounded-full blur-2xl opacity-40"></div>
-            
-            <span className="text-5xl md:text-7xl font-black tracking-tighter text-white drop-shadow-md mb-2 relative z-10">
-              BETA
-            </span>
-            <div className="w-12 h-1 bg-orange-400 rounded-full mb-3 relative z-10"></div>
-            <span className="text-blue-50 text-xs md:text-sm font-semibold tracking-widest uppercase relative z-10">
-              ProjeAkademi
-            </span>
+        <div className="text-center relative z-10 animate-fade-in flex flex-col items-center">
+          {/* Logo */}
+          <div className="w-32 h-32 md:w-48 md:h-48 rounded-3xl bg-black border border-[#27383F] flex items-center justify-center mb-8 mx-auto shadow-[0_0_50px_rgba(56,189,248,0.2)] overflow-hidden">
+             <img src="https://github.com/Rbg4445/rsproject2/blob/main/Proje%20akademi%20(1).png?raw=true" alt="RBG Projects" className="w-full h-full object-cover scale-110" />
           </div>
-          <h2 className="text-gray-900 text-xl font-bold tracking-tight mb-2 animate-fade-in">Platform Yükleniyor</h2>
-          <p className="text-gray-500 text-sm tracking-wide animate-pulse">Sizin için hazırlanıyor...</p>
+          
+          <h2 className="text-white text-xl md:text-2xl font-bold tracking-tight mb-2">RBG ProjeAkademi</h2>
+          <p className="text-[#818384] text-sm tracking-wide animate-pulse">Kuruluyor...</p>
         </div>
       </div>
     );
@@ -127,12 +119,12 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-gray-950 flex items-center justify-center z-[998]">
+      <div className="fixed inset-0 bg-[#0B1416] flex items-center justify-center z-[998]">
         <div className="text-center">
-          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-3 mx-auto animate-pulse">
-            <div className="h-6 w-6 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+          <div className="w-14 h-14 bg-black rounded-xl overflow-hidden border border-[#27383F] flex items-center justify-center mb-4 mx-auto animate-pulse">
+            <img src="https://github.com/Rbg4445/rsproject2/blob/main/Proje%20akademi%20(1).png?raw=true" alt="Loading..." className="w-full h-full object-cover" />
           </div>
-          <p className="text-white/40 text-sm">Yükleniyor...</p>
+          <p className="text-[#818384] text-sm">Yükleniyor...</p>
         </div>
       </div>
     );

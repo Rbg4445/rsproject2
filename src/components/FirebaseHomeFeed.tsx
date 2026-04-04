@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { MessageSquare, Share2, Image as ImageIcon, Send, Link as LinkIcon, BookOpen, ArrowUp, Zap } from 'lucide-react';
-import { getProjects, getBlogs, FirestoreProject, toggleProjectLike, toggleBlogLike, FirestoreBlog } from '../firebase/firestoreService';
+import { MessageSquare, Share2, Image as ImageIcon, Send, Link as LinkIcon, BookOpen, ArrowUp, Zap, FileText } from 'lucide-react';
+import { getProjects, getBlogs, getArticles, toggleProjectLike, toggleBlogLike, toggleArticleLike } from '../firebase/firestoreService';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 
 interface FeedItem {
   id: string;
-  type: 'project' | 'blog';
+  type: 'project' | 'blog' | 'article';
   title: string;
   description: string;
   authorId: string;
@@ -32,21 +32,26 @@ function timeAgo(dateString: string) {
   return `${Math.floor(diffInDays / 30)} ay önce`;
 }
 
-export default function FirebaseHomeFeed() {
+interface FirebaseHomeFeedProps {
+  feedFilter?: 'all' | 'project' | 'blog' | 'article';
+}
+
+export default function FirebaseHomeFeed({ feedFilter = 'all' }: FirebaseHomeFeedProps) {
   const { userProfile } = useFirebaseAuth();
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadFeed();
-  }, []);
+  }, [feedFilter]);
 
   async function loadFeed() {
     setLoading(true);
     try {
-      const [projectsList, blogsList] = await Promise.all([
-        getProjects(),
-        getBlogs()
+      const [projectsList, blogsList, articlesList] = await Promise.all([
+        feedFilter === 'all' || feedFilter === 'project' ? getProjects() : Promise.resolve([]),
+        feedFilter === 'all' || feedFilter === 'blog' ? getBlogs() : Promise.resolve([]),
+        feedFilter === 'all' || feedFilter === 'article' ? getArticles() : Promise.resolve([])
       ]);
 
       const mappedProjects: FeedItem[] = projectsList.map(p => ({
@@ -77,7 +82,21 @@ export default function FirebaseHomeFeed() {
         commentsCount: 0
       }));
 
-      const combined = [...mappedProjects, ...mappedBlogs].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const mappedArticles: FeedItem[] = articlesList.map(a => ({
+        id: a.id,
+        type: 'article',
+        title: a.title,
+        description: a.summary || a.content.substring(0, 200) + '...',
+        authorId: a.uid,
+        authorName: a.displayName || 'Anonim',
+        createdAt: a.createdAt || new Date().toISOString(),
+        imageUrl: a.coverImage,
+        tags: a.tags || [],
+        likes: a.likes || [],
+        commentsCount: 0
+      }));
+
+      const combined = [...mappedProjects, ...mappedBlogs, ...mappedArticles].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setItems(combined);
     } catch (e) {
       console.error(e);
@@ -98,8 +117,10 @@ export default function FirebaseHomeFeed() {
 
     if (item.type === 'project') {
       await toggleProjectLike(item.id, userProfile.uid);
-    } else {
+    } else if (item.type === 'blog') {
       await toggleBlogLike(item.id, userProfile.uid);
+    } else if (item.type === 'article') {
+      await toggleArticleLike(item.id, userProfile.uid);
     }
   };
 
@@ -165,10 +186,12 @@ export default function FirebaseHomeFeed() {
                   {/* Post Header */}
                   <div className="px-2 pt-2 flex items-center gap-1.5 text-xs">
                     <div className="w-4 h-4 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
-                      {item.type === 'project' ? <Send className="w-2.5 h-2.5 text-indigo-400" /> : <BookOpen className="w-2.5 h-2.5 text-green-400" />}
+                      {item.type === 'project' ? <Send className="w-2.5 h-2.5 text-indigo-400" /> : 
+                       item.type === 'blog' ? <BookOpen className="w-2.5 h-2.5 text-green-400" /> : 
+                       <FileText className="w-2.5 h-2.5 text-[#38bdf8]" />}
                     </div>
                     <span className="font-bold text-white hover:underline cursor-pointer">
-                      {item.type === 'project' ? 'r/Projeler' : 'r/Bloglar'}
+                      {item.type === 'project' ? 'r/Projeler' : item.type === 'blog' ? 'r/Bloglar' : 'r/Wiki'}
                     </span>
                     <span className="text-gray-500">•</span>
                     <span className="text-[#818384]">Pasted by u/{item.authorName}</span>
@@ -249,9 +272,9 @@ export default function FirebaseHomeFeed() {
                      <div key={`recent-${i.id}`} className="flex flex-col gap-1 cursor-pointer group pb-3 border-b border-[#27383F] last:border-0 last:pb-0">
                         <div className="flex items-center gap-2 text-xs">
                            <div className="w-4 h-4 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                             <Send className="w-2.5 h-2.5 text-indigo-400" />
+                             <Send className="w-2.5 h-2.5 text-[#38bdf8]" />
                            </div>
-                           <span className="text-gray-400">r/{i.type === 'project' ? 'Projeler' : 'Bloglar'}</span>
+                           <span className="text-gray-400">r/{i.type === 'project' ? 'Projeler' : i.type === 'blog' ? 'Bloglar' : 'Wiki'}</span>
                         </div>
                         <p className="text-sm font-medium text-white group-hover:text-blue-400 transition leading-snug">{i.title}</p>
                         <p className="text-xs text-[#818384]">{i.likes.length} upvote • {i.commentsCount} yorum</p>

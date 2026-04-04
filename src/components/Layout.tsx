@@ -52,13 +52,13 @@ export default function Layout({ children, currentPage, onNavigate, onOpenAuth, 
   const initials = userProfile?.displayName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
 
   return (
-    <div className="flex min-h-screen bg-slate-950">
+    <div className="flex min-h-screen bg-[#0B1416]">
       {/* Sidebar (Desktop) */}
-      <aside className={`hidden md:flex flex-col fixed inset-y-0 left-0 bg-gray-950/80 backdrop-blur-2xl border-r border-white/5 z-50 transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
+      <aside className={`hidden md:flex flex-col fixed inset-y-0 left-0 bg-[#1A282D] border-r border-[#27383F] z-50 transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
         <div className="h-20 flex items-center justify-between px-6 overflow-hidden">
           <button onClick={() => onNavigate('home')} className="flex items-center gap-3 group shrink-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 shadow-lg shadow-sky-500/40 border border-white/10 group-hover:-translate-y-0.5 transition-transform">
-              <span className="text-xs font-black text-white">RBG</span>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-black border border-[#27383F] overflow-hidden group-hover:-translate-y-0.5 transition-transform shadow-lg shadow-sky-500/20">
+              <img src="https://github.com/Rbg4445/rsproject2/blob/main/Proje%20akademi%20(1).png?raw=true" alt="RBG" className="w-full h-full object-cover" />
             </div>
             {!isCollapsed && <span className="text-lg font-bold text-white tracking-tight shrink-0">{settings.brandName || 'ProjeAkademi'}</span>}
           </button>
@@ -135,10 +135,10 @@ export default function Layout({ children, currentPage, onNavigate, onOpenAuth, 
       </aside>
 
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-gray-950/90 backdrop-blur-xl border-b border-white/5 z-50 flex items-center justify-between px-4">
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#1A282D] border-b border-[#27383F] z-50 flex items-center justify-between px-4 shadow-md">
         <button onClick={() => onNavigate('home')} className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-sky-500 to-indigo-600">
-            <span className="text-[10px] font-black text-white">RBG</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black border border-[#27383F] overflow-hidden">
+            <img src="https://github.com/Rbg4445/rsproject2/blob/main/Proje%20akademi%20(1).png?raw=true" alt="RBG" className="w-full h-full object-cover" />
           </div>
           <span className="font-bold text-white tracking-tight">{settings.brandName || 'ProjeAkademi'}</span>
         </button>
