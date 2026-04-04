@@ -64,6 +64,19 @@ function AppContent() {
     return () => window.clearTimeout(timer);
   }, []);
 
+  // Online Heartbeat
+  const { userProfile } = useFirebaseAuth();
+  useEffect(() => {
+    if (!userProfile) return;
+    const interval = setInterval(async () => {
+      try {
+        const { updateLastLogin: update } = await import('./firebase/firestoreService');
+        await update(userProfile.uid);
+      } catch (e) { console.error("Heartbeat error:", e); }
+    }, 1000 * 60 * 5); // 5 dakikada bir update
+    return () => clearInterval(interval);
+  }, [userProfile?.uid]);
+
   useEffect(() => {
     const handleHashChange = () => {
       setIsTransitioning(true);

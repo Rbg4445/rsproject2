@@ -300,6 +300,19 @@ export async function updateLastLogin(uid: string): Promise<void> {
   await updateUserProfile(uid, { lastLogin: now });
 }
 
+export async function getOnlineUserCount(): Promise<number> {
+  if (canUseRemote && db) {
+    const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const q = query(collection(db, 'users'), where('lastLogin', '>=', fifteenMinsAgo));
+    const snap = await getDocs(q);
+    return snap.size;
+  }
+  const users: FirestoreUser[] = getLS(USERS_KEY, []);
+  if (users.length === 0) return 0;
+  const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000);
+  return users.filter(u => u.lastLogin && new Date(u.lastLogin) >= fifteenMinsAgo).length;
+}
+
 export async function getAllUsers(): Promise<FirestoreUser[]> {
   if (canUseRemote && db) {
     const snap = await getDocs(collection(db, 'users'));

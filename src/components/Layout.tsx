@@ -41,12 +41,12 @@ export default function Layout({ children, currentPage, onNavigate, onOpenAuth, 
   }, [showUserMenu]);
 
   const navLinks = [
-    { id: 'home', label: 'Ana Sayfa', icon: Home },
-    { id: 'explore', label: 'Keşfet', icon: Compass },
-    { id: 'blogs', label: 'Bloglar', icon: BookOpen },
-    { id: 'wiki', label: 'Wiki', icon: FileText },
+    { id: 'home', label: 'r/Popüler', icon: Home },
+    { id: 'explore', label: 'r/Projeler', icon: Compass },
+    { id: 'blogs', label: 'r/Bloglar', icon: BookOpen },
+    { id: 'wiki', label: 'r/Wiki', icon: FileText },
     { id: 'leaderboard', label: 'Liderlik', icon: Trophy },
-    { id: 'rbg', label: 'RBG', icon: Play },
+    { id: 'rbg', label: 'RBG Studio', icon: Play },
   ];
 
   const initials = userProfile?.displayName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
