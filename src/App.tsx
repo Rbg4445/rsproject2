@@ -3,11 +3,8 @@ import { FirebaseAuthProvider, useFirebaseAuth } from './store/FirebaseAuthConte
 import { ThemeProvider } from './store/ThemeContext';
 import { SiteSettingsProvider } from './store/SiteSettingsContext';
 import Layout from './components/Layout';
-import Hero from './components/Hero';
-import Projects from './components/Projects';
-import About from './components/About';
-import Contact from './components/Contact';
 import Footer from './components/Footer';
+import FirebaseHomeFeed from './components/FirebaseHomeFeed';
 import FirebaseAuthModal from './components/FirebaseAuthModal';
 import FirebaseUserProfile from './components/FirebaseUserProfile';
 import FirebaseExplorePage from './components/FirebaseExplorePage';
@@ -46,10 +43,7 @@ function PageRouter({ currentPage }: { currentPage: string }) {
   
   return (
     <>
-      <Hero />
-      <Projects />
-      <About />
-      <Contact />
+      <FirebaseHomeFeed />
       <Footer />
     </>
   );
