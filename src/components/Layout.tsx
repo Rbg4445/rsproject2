@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, Home, Compass, BookOpen, FileText, Trophy, Shield, User, Bell, LogIn, LogOut, MessageSquare, Play, ChevronDown } from 'lucide-react';
+import { Menu, X, Home, Compass, BookOpen, FileText, Trophy, Shield, User, Bell, LogIn, LogOut, MessageSquare, Play, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import { useSiteSettings } from '../store/SiteSettingsContext';
 import NotificationsDropdown from './NotificationsDropdown';
@@ -20,6 +20,7 @@ export default function Layout({ children, currentPage, onNavigate, onOpenAuth, 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     if (userProfile?.uid) {
@@ -53,13 +54,13 @@ export default function Layout({ children, currentPage, onNavigate, onOpenAuth, 
   return (
     <div className="flex min-h-screen bg-slate-950">
       {/* Sidebar (Desktop) */}
-      <aside className="hidden md:flex flex-col w-64 fixed inset-y-0 left-0 bg-gray-950/80 backdrop-blur-2xl border-r border-white/5 z-50">
-        <div className="h-20 flex items-center px-6">
-          <button onClick={() => onNavigate('home')} className="flex items-center gap-3 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 shadow-lg shadow-sky-500/40 border border-white/10 group-hover:-translate-y-0.5 transition-transform">
+      <aside className={`hidden md:flex flex-col fixed inset-y-0 left-0 bg-gray-950/80 backdrop-blur-2xl border-r border-white/5 z-50 transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
+        <div className="h-20 flex items-center justify-between px-6 overflow-hidden">
+          <button onClick={() => onNavigate('home')} className="flex items-center gap-3 group shrink-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 shadow-lg shadow-sky-500/40 border border-white/10 group-hover:-translate-y-0.5 transition-transform">
               <span className="text-xs font-black text-white">RBG</span>
             </div>
-            <span className="text-lg font-bold text-white tracking-tight">{settings.brandName || 'ProjeAkademi'}</span>
+            {!isCollapsed && <span className="text-lg font-bold text-white tracking-tight shrink-0">{settings.brandName || 'ProjeAkademi'}</span>}
           </button>
         </div>
 
@@ -71,14 +72,15 @@ export default function Layout({ children, currentPage, onNavigate, onOpenAuth, 
               <button
                 key={link.id}
                 onClick={() => onNavigate(link.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+                className={`w-full flex items-center gap-3 py-3 rounded-xl transition-all font-medium ${isCollapsed ? 'justify-center px-0' : 'px-4'} ${
                   isActive
                     ? 'bg-gradient-to-r from-indigo-500/20 to-purple-500/10 text-indigo-300 border border-indigo-500/20 shadow-lg shadow-indigo-500/10'
                     : 'text-white/50 hover:bg-white/5 hover:text-white'
                 }`}
+                title={isCollapsed ? link.label : undefined}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-400' : ''}`} />
-                {link.label}
+                <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-indigo-400' : ''}`} />
+                {!isCollapsed && <span>{link.label}</span>}
               </button>
             );
           })}
@@ -87,36 +89,49 @@ export default function Layout({ children, currentPage, onNavigate, onOpenAuth, 
             <div className="pt-6 mt-6 border-t border-white/5">
               <button
                 onClick={() => onNavigate('admin')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+                className={`w-full flex items-center gap-3 py-3 rounded-xl transition-all font-medium ${isCollapsed ? 'justify-center px-0' : 'px-4'} ${
                   currentPage === 'admin'
                     ? 'bg-red-500/20 text-red-400 border border-red-500/20'
                     : 'text-red-400/70 hover:bg-red-500/10 hover:text-red-400'
                 }`}
+                title={isCollapsed ? 'Admin Panel' : undefined}
               >
-                <Shield className="w-5 h-5" />
-                Admin Panel
+                <Shield className="w-5 h-5 shrink-0" />
+                {!isCollapsed && <span>Admin Panel</span>}
               </button>
             </div>
           )}
         </nav>
         
-        {/* Sidebar Bottom (User Summary) */}
-        {userProfile && (
-          <div className="p-4 border-t border-white/5">
+        {/* Sidebar Bottom */}
+        <div className="p-4 border-t border-white/5 flex flex-col gap-2">
+          <button 
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className={`flex items-center text-white/50 hover:text-white transition-colors p-2 rounded-xl hover:bg-white/5 ${isCollapsed ? 'justify-center' : 'justify-start gap-3'}`}
+            title="Paneli Daralt/Genişlet"
+          >
+            {isCollapsed ? <ChevronRight className="w-5 h-5 shrink-0" /> : <ChevronLeft className="w-5 h-5 shrink-0" />}
+            {!isCollapsed && <span className="text-sm font-medium">Paneli Daralt</span>}
+          </button>
+          
+          {userProfile && (
             <button 
               onClick={() => onNavigate(`profile:${userProfile.username}`)}
-              className="flex items-center gap-3 w-full p-2 rounded-xl hover:bg-white/5 transition-colors text-left"
+              className={`flex items-center w-full p-2 rounded-xl hover:bg-white/5 transition-colors text-left ${isCollapsed ? 'justify-center' : 'gap-3'}`}
+              title={isCollapsed ? "Profilim" : undefined}
             >
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+              <div className="w-10 h-10 shrink-0 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
                 {initials}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white truncate">{userProfile.displayName}</p>
-                <p className="text-xs text-white/50 truncate">@{userProfile.username}</p>
-              </div>
+              {!isCollapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white truncate">{userProfile.displayName}</p>
+                  <p className="text-xs text-white/50 truncate">@{userProfile.username}</p>
+                </div>
+              )}
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </aside>
 
       {/* Mobile Header */}
@@ -163,7 +178,7 @@ export default function Layout({ children, currentPage, onNavigate, onOpenAuth, 
       )}
 
       {/* Main Content Wrapper */}
-      <main className="flex-1 flex flex-col md:pl-64 min-h-screen relative overflow-x-hidden">
+      <main className={`flex-1 flex flex-col min-h-screen relative overflow-x-hidden transition-all duration-300 ${isCollapsed ? 'md:pl-20' : 'md:pl-64'}`}>
         
         {/* Topbar */}
         <header className="sticky top-0 z-40 hidden md:flex items-center justify-end h-20 px-8 bg-transparent pointer-events-none">
@@ -186,16 +201,19 @@ export default function Layout({ children, currentPage, onNavigate, onOpenAuth, 
                   )}
                 </div>
 
-                <button 
-                  onClick={() => onNavigate('messages')}
-                  className={`p-2.5 rounded-xl transition ${
-                    currentPage.startsWith('messages')
-                      ? 'bg-indigo-500/20 text-indigo-400'
-                      : 'bg-white/5 text-white/70 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  <MessageSquare className="w-4 h-4" />
-                </button>
+                {(settings.chatEnabled || isAdmin) && (
+                  <button 
+                    onClick={() => onNavigate('messages')}
+                    className={`p-2.5 rounded-xl transition ${
+                      currentPage.startsWith('messages')
+                        ? 'bg-indigo-500/20 text-indigo-400'
+                        : 'bg-white/5 text-white/70 hover:text-white hover:bg-white/10'
+                    }`}
+                    title="Mesajlar"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                  </button>
+                )}
 
                 <div className="h-6 w-px bg-white/10 mx-1"></div>
 

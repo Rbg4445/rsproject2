@@ -4,6 +4,7 @@ import { getProjects, toggleProjectLike, FirestoreProject } from '../firebase/fi
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import { GithubIcon } from './icons';
 import FirebaseAddProjectModal from './FirebaseAddProjectModal';
+import CommentsSection from './CommentsSection';
 
 // ─── Video embed yardımcı fonksiyonu ──────────────────────────────────────────
 function getVideoEmbed(url: string): { type: 'youtube' | 'vimeo' | 'direct'; src: string } | null {
@@ -238,6 +239,11 @@ export default function FirebaseExplorePage() {
                 <Heart className={`h-4 w-4 ${liked ? 'fill-red-400' : ''}`} />
                 Begen ({(selectedProject.likes || []).length})
               </button>
+            </div>
+
+            {/* Yorumlar */}
+            <div className="border-t border-white/10 pt-4 mt-6">
+              <CommentsSection refType="project" refId={selectedProject.id} />
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BookText, Search, Eye, Heart, Plus, ArrowLeft } from 'lucide-react';
+import { BookOpen, Search, Eye, Heart, Plus, ArrowLeft } from 'lucide-react';
 import {
   FirestoreArticle,
   getArticles,
@@ -8,6 +8,7 @@ import {
 } from '../firebase/firestoreService';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import FirebaseArticleEditor from './FirebaseArticleEditor';
+import CommentsSection from './CommentsSection';
 
 export default function FirebaseWikiPage() {
   const { userProfile } = useFirebaseAuth();
@@ -96,7 +97,7 @@ export default function FirebaseWikiPage() {
           <>
             <div className="mb-10 text-center">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/15 px-4 py-2 text-sm font-medium text-cyan-300">
-                <BookText className="h-4 w-4" />
+                <BookOpen className="h-4 w-4" />
                 ProjeAkademi Wiki
               </div>
               <h1 className="mb-3 text-4xl font-extrabold text-white">
@@ -214,7 +215,7 @@ export default function FirebaseWikiPage() {
               </div>
             ) : filtered.length === 0 ? (
               <div className="rounded-2xl border border-white/10 bg-gray-900/60 py-16 text-center">
-                <BookText className="mx-auto mb-3 h-10 w-10 text-white/25" />
+                <BookOpen className="mx-auto mb-3 h-10 w-10 text-white/25" />
                 <p className="font-semibold text-white">Makale bulunamadi</p>
                 <p className="mt-1 text-sm text-white/50">Ilk makaleyi olusturup wikiyi baslatabilirsin.</p>
               </div>
@@ -347,6 +348,10 @@ function ArticleDetail({
             .concat('</p>'),
         }}
       />
+
+      <div className="mt-10 border-t border-white/10 pt-6">
+        <CommentsSection refType="article" refId={article.id} />
+      </div>
     </div>
   );
 }

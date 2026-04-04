@@ -17,6 +17,7 @@ export interface SiteSettings {
   linkedinUrl: string;
   youtubeUrl: string;
   footerNote: string;
+  chatEnabled: boolean;
 }
 
 const defaultSettings: SiteSettings = {
@@ -38,6 +39,7 @@ const defaultSettings: SiteSettings = {
   linkedinUrl: '#',
   youtubeUrl: '#',
   footerNote: 'ProjeAkademi, projelerini sergileyebileceğin ve geliştirebileceğin topluluk odaklı bir platformdur.',
+  chatEnabled: true,
 };
 
 interface SiteSettingsContextType {
@@ -67,6 +69,7 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
         aboutTitle: sanitize(merged.aboutTitle, defaultSettings.aboutTitle),
         contactEmail: sanitize(merged.contactEmail, defaultSettings.contactEmail),
         footerNote: sanitize(merged.footerNote, defaultSettings.footerNote),
+        chatEnabled: merged.chatEnabled ?? defaultSettings.chatEnabled,
       };
     } catch {
       return defaultSettings;

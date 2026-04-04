@@ -682,6 +682,20 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                 <img src={iconUrls.content} alt="content" className="h-5 w-5 rounded-sm" />
                 Site yazi alanlarini buradan yonet.
               </div>
+              <div className="mb-6">
+                <label className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10 transition">
+                  <input 
+                    type="checkbox" 
+                    checked={draft.chatEnabled} 
+                    onChange={(e) => setDraft(p => ({ ...p, chatEnabled: e.target.checked }))} 
+                    className="w-5 h-5 accent-indigo-500 rounded border-white/20 bg-gray-800"
+                  />
+                  <div>
+                    <p className="font-semibold text-white">Sistemsel Sohbet (Mesajlaşma) Açık</p>
+                    <p className="text-xs text-white/50">Eğer bu kapatılırsa kullanıcılar birbiriyle mesajlaşamaz, sadece Adminler yetkili kalır.</p>
+                  </div>
+                </label>
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Marka Adi" value={draft.brandName} onChange={(v) => setDraft((p) => ({ ...p, brandName: v }))} />
                 <Field label="Marka Alt Basligi" value={draft.brandSubline} onChange={(v) => setDraft((p) => ({ ...p, brandSubline: v }))} />

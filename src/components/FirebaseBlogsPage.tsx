@@ -3,6 +3,7 @@ import { Search, Heart, Eye, BookOpen, Tag, Plus } from 'lucide-react';
 import { getBlogs, toggleBlogLike, FirestoreBlog } from '../firebase/firestoreService';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import FirebaseBlogEditor from './FirebaseBlogEditor';
+import CommentsSection from './CommentsSection';
 
 export default function FirebaseBlogsPage() {
   const { userProfile } = useFirebaseAuth();
@@ -275,6 +276,10 @@ function BlogDetail({ blog, onBack, currentUid, onLike, onTagClick }: {
               #{tag}
             </button>
           ))}
+        </div>
+
+        <div className="mt-8 pt-4">
+          <CommentsSection refType="blog" refId={blog.id} />
         </div>
       </div>
     </div>

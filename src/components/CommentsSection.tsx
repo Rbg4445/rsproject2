@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MessageCircle, Send, Terminal } from 'lucide-react';
+import { MessageSquare, Send, Terminal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
@@ -63,7 +63,7 @@ export default function CommentsSection({ refType, refId }: CommentsSectionProps
   return (
     <section className="mt-10 rounded-2xl border border-white/10 bg-black/20 p-4">
       <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-white/70">
-        <MessageCircle className="h-4 w-4 text-cyan-400" />
+        <MessageSquare className="h-4 w-4 text-cyan-400" />
         Yorumlar
         <span className="ml-1 text-xs font-normal text-white/40">({comments.length})</span>
       </div>
@@ -133,7 +133,21 @@ export default function CommentsSection({ refType, refId }: CommentsSectionProps
                 <Terminal className="w-4 h-4" />
               </div>
             </div>
-          <div className="flex items-center justify-between">
+
+            {/* Emojis */}
+            <div className="flex flex-wrap gap-2 mt-1">
+              {['👍', '❤️', '🔥', '🚀', '😂', '👏', '🎉', '💡', '🤔', '👀'].map(emoji => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => setContent(prev => prev + emoji)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-base transition-colors border border-white/5 hover:scale-110 active:scale-95"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          <div className="flex items-center justify-between mt-1">
             <p className="text-[10px] text-white/35">
               Yorumlar once admin onayina gonderilir. Uygun olmayan icerikler silinir.
             </p>

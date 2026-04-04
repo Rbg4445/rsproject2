@@ -10,10 +10,12 @@ import {
   markChatAsRead
 } from '../firebase/chatService';
 import { getUserProfile, getUserByUsername, FirestoreUser } from '../firebase/firestoreService';
-import { Send, Search, MessageSquare, ArrowLeft, Loader2, Check, CheckCircle } from 'lucide-react';
+import { Send, Search, MessageSquare, ArrowLeft, Loader2, Check, CheckCircle, Ban } from 'lucide-react';
+import { useSiteSettings } from '../store/SiteSettingsContext';
 
 export default function FirebaseMessagesPage() {
-  const { userProfile } = useFirebaseAuth();
+  const { userProfile, isAdmin } = useFirebaseAuth();
+  const { settings } = useSiteSettings();
   const [inbox, setInbox] = useState([] as ChatRoom[]);
   const [activeRoomId, setActiveRoomId] = useState(null as string | null);
   const [messages, setMessages] = useState([] as ChatMessage[]);
@@ -167,7 +169,13 @@ export default function FirebaseMessagesPage() {
         <p className="text-white/50 text-sm">Topluluk üyeleriyle özel olarak mesajlaşın.</p>
       </div>
 
-      {!userProfile ? (
+      {!settings.chatEnabled && !isAdmin ? (
+        <div className="flex-1 flex flex-col items-center justify-center bg-gray-900/50 rounded-3xl border border-white/10 p-8 text-center backdrop-blur-xl">
+          <Ban className="w-16 h-16 text-red-500/50 mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Mesajlaşma Devre Dışı</h2>
+          <p className="text-white/60">Sistemsel sohbet özelliği şu an yöneticiler tarafından kapalı tutulmaktadır.</p>
+        </div>
+      ) : !userProfile ? (
         <div className="flex-1 flex flex-col items-center justify-center bg-gray-900/50 rounded-3xl border border-white/10 p-8 text-center backdrop-blur-xl">
           <MessageSquare className="w-16 h-16 text-white/20 mb-4" />
           <p className="text-white">Mesaj atabilmek için giriş yapmalısınız.</p>
