@@ -42,9 +42,10 @@ function PageRouter({ currentPage }: { currentPage: string }) {
 }
 
 function AppContent() {
-  const { loading, isAdmin } = useFirebaseAuth();
-  const { settings } = useSiteSettings();
+  const { loading: authLoading, isAdmin } = useFirebaseAuth();
+  const { settings, isLoaded: settingsLoaded } = useSiteSettings();
   const [currentPage, setCurrentPage] = useState(parseRouteFromHash());
+  const loading = authLoading || !settingsLoaded;
   const [showAuth, setShowAuth] = useState(false);
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [showBetaNotice, setShowBetaNotice] = useState(true);

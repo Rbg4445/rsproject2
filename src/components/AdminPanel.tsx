@@ -8,6 +8,7 @@ import AdminReportsTab from './AdminReportsTab';
 import AdminModRulesTab from './AdminModRulesTab';
 import AdminApplicationsTab from './AdminApplicationsTab';
 import NetworkBackground from './NetworkBackground';
+import { isFirebaseConfigured } from '../firebase/config';
 import {
   type AccessLog,
   type BlockedIp,
@@ -684,6 +685,13 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                 <img src={iconUrls.content} alt="content" className="h-5 w-5 rounded-sm" />
                 Site yazi alanlarini buradan yonet.
               </div>
+
+              {!isFirebaseConfigured && (
+                <div className="mb-6 p-4 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400 text-sm flex gap-3 items-center">
+                  <AlertTriangle className="w-5 h-5 shrink-0" />
+                  <p><b>Dikkat:</b> Firebase yapılandırılmamış. Ayarlar sadece bu tarayıcıda (LocalStorage) tutulur. Bakım modunun herkes için çalışması için .env.local yapılandırması gereklidir.</p>
+                </div>
+              )}
               <div className="mb-6">
                 <label className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10 transition">
                   <input 
