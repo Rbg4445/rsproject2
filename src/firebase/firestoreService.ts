@@ -1394,3 +1394,27 @@ export async function updateAppealStatus(id: string, status: Appeal['status'], r
   }
 }
 
+export async function getGlobalSettings(): Promise<any> {
+    if (isFirebaseConfigured && db) {
+      try {
+        const d = await getDoc(doc(db, 'system', 'settings'));
+        return d.exists() ? d.data() : null;
+      } catch (e) {
+        console.error(e);
+        return null;
+      }
+    }
+    return JSON.parse(localStorage.getItem('pa_site_settings') || 'null');
+  }
+  
+  export async function updateGlobalSettings(settings: any): Promise<void> {
+    if (isFirebaseConfigured && db) {
+      try {
+        await setDoc(doc(db, 'system', 'settings'), settings, { merge: true });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    localStorage.setItem('pa_site_settings', JSON.stringify(settings));
+  }
+

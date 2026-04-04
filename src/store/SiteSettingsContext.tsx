@@ -1,4 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db, isFirebaseConfigured } from '../firebase/config';
+import { getGlobalSettings, updateGlobalSettings as updateFS } from '../firebase/firestoreService';
 
 export interface SiteSettings {
   brandName: string;
@@ -79,14 +82,37 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    localStorage.setItem(LS_SETTINGS_KEY, JSON.stringify(settings));
-  }, [settings]);
+    if (!isFirebaseConfigured || !db) return;
+    
+    // Real-time sync from Firestore
+    console.log("Setting up real-time settings sync...");
+    const unsubscribe = onSnapshot(doc(db, 'system', 'settings'), (snapshot) => {
+      if (snapshot.exists()) {
+         const data = snapshot.data() as SiteSettings;
+         console.log("Global settings updated from Firestore:", data);
+         setSettings(prev => ({ ...prev, ...data }));
+      }
+    }, (error) => {
+      console.error("Settings sync error:", error);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const value = useMemo(
     () => ({
       settings,
-      updateSettings: (updates: Partial<SiteSettings>) => setSettings((prev) => ({ ...prev, ...updates })),
-      resetSettings: () => setSettings(defaultSettings),
+      updateSettings: (updates: Partial<SiteSettings>) => {
+        setSettings((prev) => {
+          const next = { ...prev, ...updates };
+          updateFS(next);
+          return next;
+        });
+      },
+      resetSettings: () => {
+        setSettings(defaultSettings);
+        updateFS(defaultSettings);
+      },
     }),
     [settings]
   );
