@@ -139,7 +139,9 @@ function AppContent() {
 
   // Maintenance Mode Check
   const isUnlocked = localStorage.getItem('pa_maintenance_unlocked') === 'true';
-  if (settings.maintenanceMode && !isAdmin && !isUnlocked && currentPage !== 'admin') {
+  const isMaintenanceActive = settings.maintenanceMode || localStorage.getItem('pa_maintenance_mode') === 'true';
+  
+  if (isMaintenanceActive && !isAdmin && !isUnlocked && currentPage !== 'admin') {
     return (
       <div className="fixed inset-0 bg-[#0B1416] flex items-center justify-center z-[9999] p-6 text-center">
         <MouseTrailBackground />
