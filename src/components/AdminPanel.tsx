@@ -7,6 +7,7 @@ import DashboardTab from './AdminDashboardTab';
 import AdminReportsTab from './AdminReportsTab';
 import AdminModRulesTab from './AdminModRulesTab';
 import AdminApplicationsTab from './AdminApplicationsTab';
+import NetworkBackground from './NetworkBackground';
 import {
   type AccessLog,
   type BlockedIp,
@@ -629,8 +630,9 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <div className="mx-auto max-w-7xl px-4 pb-14 pt-24 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-950 text-white relative">
+      <NetworkBackground />
+      <div className="mx-auto max-w-7xl px-4 pb-14 pt-24 sm:px-6 lg:px-8 relative z-10">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-black">Admin Panel</h1>

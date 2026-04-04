@@ -3,7 +3,7 @@ import { MessageSquare, Share2, Image as ImageIcon, Send, Link as LinkIcon, Book
 import { 
   getProjects, getBlogs, getArticles, 
   toggleProjectLike, toggleBlogLike, toggleArticleLike, 
-  getOnlineUserCount, 
+  getOnlineUserCount, getAllUsers,
   FirestoreProject, FirestoreBlog, FirestoreArticle 
 } from '../firebase/firestoreService';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
@@ -55,6 +55,7 @@ export default function FirebaseHomeFeed({ feedFilter = 'all' }: FirebaseHomeFee
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [onlineCount, setOnlineCount] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
   
   // Selection/Detail State
   const [selectedItem, setSelectedItem] = useState<FeedItem | null>(null);
@@ -71,8 +72,16 @@ export default function FirebaseHomeFeed({ feedFilter = 'all' }: FirebaseHomeFee
   }, [feedFilter]);
 
   async function loadStats() {
-    const count = await getOnlineUserCount();
-    setOnlineCount(count);
+    try {
+      const [count, users] = await Promise.all([
+        getOnlineUserCount(),
+        getAllUsers()
+      ]);
+      setOnlineCount(count);
+      setTotalUsers(users.length);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async function loadFeed() {
@@ -193,16 +202,16 @@ export default function FirebaseHomeFeed({ feedFilter = 'all' }: FirebaseHomeFee
 
           {/* Feed Filter Sort Header */}
           <div className="flex items-center gap-4 mb-4 pb-2 border-b border-zinc-800/60">
-             <button className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition ${feedFilter === 'all' ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5'}`}>
-               <Zap className={`w-4 h-4 ${feedFilter === 'all' ? 'text-orange-400' : ''}`} /> Tümü
+             <button onClick={() => window.location.hash = 'home'} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition ${feedFilter === 'all' ? 'bg-white/10 text-white' : 'text-zinc-500 hover:bg-white/5'}`}>
+               <Zap className={`w-4 h-4 ${feedFilter === 'all' ? 'text-cyan-400' : ''}`} /> Tümü
              </button>
-             <button onClick={() => window.location.hash = 'explore'} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition ${feedFilter === 'project' ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5'}`}>
+             <button onClick={() => window.location.hash = 'explore'} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition ${feedFilter === 'project' ? 'bg-white/10 text-white' : 'text-zinc-500 hover:bg-white/5'}`}>
                <Send className="w-4 h-4" /> Projeler
              </button>
-             <button onClick={() => window.location.hash = 'blogs'} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition ${feedFilter === 'blog' ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5'}`}>
+             <button onClick={() => window.location.hash = 'blogs'} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition ${feedFilter === 'blog' ? 'bg-white/10 text-white' : 'text-zinc-500 hover:bg-white/5'}`}>
                <BookOpen className="w-4 h-4" /> Bloglar
              </button>
-             <button onClick={() => window.location.hash = 'wiki'} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition ${feedFilter === 'article' ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5'}`}>
+             <button onClick={() => window.location.hash = 'wiki'} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition ${feedFilter === 'article' ? 'bg-white/10 text-white' : 'text-zinc-500 hover:bg-white/5'}`}>
                <FileText className="w-4 h-4" /> Wiki
              </button>
           </div>
@@ -313,11 +322,11 @@ export default function FirebaseHomeFeed({ feedFilter = 'all' }: FirebaseHomeFee
                     
                     <div className="grid grid-cols-2 gap-4 border-y border-zinc-800/60 py-4 mb-4">
                         <div>
-                            <div className="text-white font-bold">1,250</div>
+                            <div className="text-white font-bold">{totalUsers > 0 ? totalUsers.toLocaleString() : '...'}</div>
                             <div className="text-[10px] text-zinc-500 uppercase font-bold">Üyeler</div>
                         </div>
                         <div>
-                            <div className="text-white font-bold flex items-center gap-1.5"><div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div> {onlineCount}</div>
+                            <div className="text-white font-bold flex items-center gap-1.5"><div className={`w-2 h-2 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)] ${onlineCount > 0 ? 'bg-green-500 animate-pulse' : 'bg-zinc-600'}`}></div> {onlineCount}</div>
                             <div className="text-[10px] text-zinc-500 uppercase font-bold">Aktif Kullanıcı</div>
                         </div>
                     </div>
