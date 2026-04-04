@@ -1,4 +1,4 @@
-import { ArrowDown, Sparkles, BookOpen, Terminal } from 'lucide-react';
+import { ArrowDown, Star, BookOpen, Terminal } from 'lucide-react';
 import { stats } from '../data/projects';
 import { useSiteSettings } from '../store/SiteSettingsContext';
 
@@ -7,12 +7,12 @@ export default function Hero() {
 
   return (
     <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
-      {/* Dark background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-slate-900 to-indigo-950" />
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-purple-600 rounded-full mix-blend-multiply filter blur-xl animate-float" />
-        <div className="absolute top-40 right-10 w-72 h-72 bg-indigo-600 rounded-full mix-blend-multiply filter blur-xl animate-float-delayed" />
-        <div className="absolute bottom-20 left-1/3 w-72 h-72 bg-pink-600 rounded-full mix-blend-multiply filter blur-xl animate-float" />
+      {/* Arka plan ışıkları (Vibrant) */}
+      <div className="absolute inset-0 bg-transparent" />
+      <div className="absolute inset-0 opacity-60">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl animate-float opacity-40" />
+        <div className="absolute top-40 right-10 w-96 h-96 bg-orange-400 rounded-full mix-blend-multiply filter blur-3xl animate-float-delayed opacity-40" />
+        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl animate-float opacity-30" />
       </div>
       {/* Grid pattern */}
       <div className="absolute inset-0 opacity-[0.04]" style={{
@@ -26,49 +26,49 @@ export default function Hero() {
           <div className="space-y-8 animate-fade-in">
             {/* Beta Banner */}
             <div className="inline-flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 shadow-sm backdrop-blur-sm">
-                <span className="text-sm font-semibold text-white/70">Bu bir</span>
-                <span className="text-sm font-black bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">BETA</span>
-                <span className="text-sm font-semibold text-white/70">{settings.betaLine}</span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-black/5 shadow-sm backdrop-blur-md">
+                <span className="text-sm font-semibold text-gray-600">Bu bir</span>
+                <span className="text-sm font-black bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">BETA</span>
+                <span className="text-sm font-semibold text-gray-600">{settings.betaLine}</span>
               </div>
             </div>
 
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/20 border border-indigo-500/30">
-              <Sparkles className="w-4 h-4 text-indigo-400" />
-              <span className="text-sm font-medium text-indigo-300">{settings.heroBadge}</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20">
+              <Star className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-bold text-blue-700">{settings.heroBadge}</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight">
-              <span className="text-white">{settings.heroTitle}</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-tight">
+              <span className="text-gray-900 tracking-tight">{settings.heroTitle}</span>
             </h1>
 
-            <p className="text-lg text-white/60 max-w-xl leading-relaxed">
+            <p className="text-lg text-gray-600 max-w-xl leading-relaxed font-medium">
               {settings.heroSubtitle}
             </p>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 pt-2">
               <a
                 href="#projects"
-                className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-2xl hover:shadow-lg hover:shadow-indigo-500/25 hover:-translate-y-1 transition-all duration-300 flex items-center gap-2"
+                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold rounded-2xl shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-300 flex items-center gap-2"
               >
                 <Terminal className="w-5 h-5" />
                 Projeleri Gör
               </a>
               <a
                 href="#about"
-                className="px-8 py-4 bg-white/10 border border-white/20 text-white font-semibold rounded-2xl hover:bg-white/20 hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 backdrop-blur-sm"
+                className="px-8 py-4 bg-white border border-gray-200 text-gray-800 font-bold rounded-2xl hover:bg-gray-50 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 flex items-center gap-2"
               >
-                <BookOpen className="w-5 h-5" />
+                <BookOpen className="w-5 h-5 text-orange-500" />
                 Hakkımda
               </a>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6">
               {stats.map((stat) => (
-                <div key={stat.label} className="text-center p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                  <div className="text-2xl font-black text-white">{stat.value}</div>
-                  <div className="text-xs text-white/50 font-medium mt-1">{stat.label}</div>
+                <div key={stat.label} className="text-center p-4 rounded-2xl bg-white shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="text-3xl font-black bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">{stat.value}</div>
+                  <div className="text-xs text-gray-500 font-bold uppercase tracking-wide mt-1">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -77,32 +77,34 @@ export default function Hero() {
           {/* Right Content */}
           <div className="relative hidden lg:block">
             <div className="relative w-full aspect-square max-w-lg mx-auto">
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-600/20 rounded-3xl backdrop-blur-sm border border-white/10" />
-              <div className="absolute inset-4 bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-2xl border border-white/5 flex flex-col p-6 font-mono text-sm">
+              {/* Vibrant shadow backdrop */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-orange-400 rounded-3xl blur-2xl opacity-30 animate-pulse-slow" />
+              <div className="absolute inset-4 bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl flex flex-col p-6 font-mono text-sm overflow-hidden">
+                {/* Minimal Header */}
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-3 h-3 rounded-full bg-red-500" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500" />
                   <div className="w-3 h-3 rounded-full bg-green-500" />
-                  <span className="ml-2 text-white/30 text-xs">proje-akademi.tsx</span>
+                  <span className="ml-2 text-gray-500 text-xs">proje-akademi.config.ts</span>
                 </div>
                 <div className="space-y-2 text-xs">
-                  <div><span className="text-purple-400">const</span> <span className="text-blue-300">platform</span> <span className="text-white/60">= {'{'}</span></div>
-                  <div className="pl-4"><span className="text-green-300">name</span><span className="text-white/60">:</span> <span className="text-amber-300">'{settings.brandName}'</span><span className="text-white/60">,</span></div>
-                  <div className="pl-4"><span className="text-green-300">features</span><span className="text-white/60">: [</span></div>
-                  <div className="pl-8 flex items-center gap-2"><img src="https://cdn-icons-png.flaticon.com/128/2436/2436874.png" alt="egitim" className="h-3.5 w-3.5" /><span className="text-amber-300">'Egitim'</span><span className="text-white/60">,</span></div>
-                  <div className="pl-8 flex items-center gap-2"><img src="https://cdn-icons-png.flaticon.com/128/1006/1006363.png" alt="kodlama" className="h-3.5 w-3.5" /><span className="text-amber-300">'Kodlama'</span><span className="text-white/60">,</span></div>
-                  <div className="pl-8 flex items-center gap-2"><img src="https://cdn-icons-png.flaticon.com/128/3135/3135755.png" alt="akademi" className="h-3.5 w-3.5" /><span className="text-amber-300">'Akademi'</span><span className="text-white/60">,</span></div>
-                  <div className="pl-8 flex items-center gap-2"><img src="https://cdn-icons-png.flaticon.com/128/1828/1828919.png" alt="topluluk" className="h-3.5 w-3.5" /><span className="text-amber-300">'Topluluk'</span></div>
-                  <div className="pl-4"><span className="text-white/60">],</span></div>
-                  <div className="pl-4"><span className="text-green-300">author</span><span className="text-white/60">:</span> <span className="text-amber-300">'{settings.footerNote}'</span><span className="text-white/60">,</span></div>
-                  <div className="pl-4"><span className="text-green-300">version</span><span className="text-white/60">:</span> <span className="text-amber-300">'BETA'</span></div>
-                  <div><span className="text-white/60">{'}'}</span></div>
+                  <div><span className="text-pink-400">const</span> <span className="text-blue-400">platform</span> <span className="text-gray-300">= {'{'}</span></div>
+                  <div className="pl-4"><span className="text-teal-300">name</span><span className="text-gray-300">:</span> <span className="text-amber-300">'{settings.brandName}'</span><span className="text-gray-300">,</span></div>
+                  <div className="pl-4"><span className="text-teal-300">features</span><span className="text-gray-300">: [</span></div>
+                  <div className="pl-8 flex items-center gap-2"><span className="text-amber-300">'🚀 İnovasyon'</span><span className="text-gray-300">,</span></div>
+                  <div className="pl-8 flex items-center gap-2"><span className="text-amber-300">'💻 Kodlama'</span><span className="text-gray-300">,</span></div>
+                  <div className="pl-8 flex items-center gap-2"><span className="text-amber-300">'🤝 Topluluk'</span><span className="text-gray-300">,</span></div>
+                  <div className="pl-8 flex items-center gap-2"><span className="text-amber-300">'🎓 Akademi'</span></div>
+                  <div className="pl-4"><span className="text-gray-300">],</span></div>
+                  <div className="pl-4"><span className="text-teal-300">author</span><span className="text-gray-300">:</span> <span className="text-amber-300">'{settings.footerNote}'</span><span className="text-gray-300">,</span></div>
+                  <div className="pl-4"><span className="text-teal-300">status</span><span className="text-gray-300">:</span> <span className="text-green-400">'ONLINE'</span></div>
+                  <div><span className="text-gray-300">{'}'}</span></div>
                   <div className="mt-4">
-                    <span className="text-purple-400">export default</span> <span className="text-blue-300">platform</span><span className="text-white/60">;</span>
+                    <span className="text-pink-400">export default</span> <span className="text-blue-400">platform</span><span className="text-gray-400">;</span>
                   </div>
                   <div className="mt-2 flex items-center gap-1">
-                    <span className="text-white/30">▶</span>
-                    <span className="text-green-400 animate-pulse">|</span>
+                    <span className="text-gray-500">~</span>
+                    <span className="text-green-400 animate-pulse">█</span>
                   </div>
                 </div>
               </div>
@@ -111,9 +113,9 @@ export default function Hero() {
         </div>
 
         {/* Scroll down */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/30">
-          <span className="text-xs font-medium">Keşfet</span>
-          <ArrowDown className="w-4 h-4 animate-bounce" />
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-gray-400">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Aşağı Kaydır</span>
+          <ArrowDown className="w-5 h-5 animate-bounce text-orange-500" />
         </div>
       </div>
     </section>
