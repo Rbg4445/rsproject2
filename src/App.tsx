@@ -60,7 +60,7 @@ function AppContent() {
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => { setShowSplash(false); }, 2200);
+    const timer = window.setTimeout(() => { setShowSplash(false); }, 100);
     return () => window.clearTimeout(timer);
   }, []);
 

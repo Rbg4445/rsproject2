@@ -8,6 +8,7 @@ import {
   getCommentsForRef,
 } from '../firebase/firestoreService';
 import { notifyMentionedUsers, formatMentions } from '../lib/mentionService';
+import { checkMultipleTexts } from '../lib/moderationService';
 
 interface CommentsSectionProps {
   refType: Comment['refType'];
@@ -38,6 +39,14 @@ export default function CommentsSection({ refType, refId }: CommentsSectionProps
     if (!userProfile || !content.trim()) return;
     setSubmitting(true);
     try {
+      // API Ninja Profanity Check
+      const hasProfaneWords = await checkMultipleTexts([content.trim()]);
+      if (hasProfaneWords) {
+        alert('Yorumunuz uygunsuz / argolu kelimeler içerdiği sistem tarafindan filtrelendi.');
+        setSubmitting(false);
+        return;
+      }
+
       // Metni etiketler için formatla (@ -> **@**, # -> *#*)
       const formattedContent = formatMentions(content.trim());
 
@@ -102,11 +111,6 @@ export default function CommentsSection({ refType, refId }: CommentsSectionProps
                   <ReactMarkdown>{c.content}</ReactMarkdown>
                 </div>
                 
-                {c.status === 'pending' && (
-                  <p className="mt-2 text-[10px] text-yellow-500 font-medium">
-                    ⚠️ Bu yorum admin onayindan sonra diger kullanicilara gorunecek.
-                  </p>
-                )}
               </li>
             ))}
         </ul>
@@ -142,7 +146,7 @@ export default function CommentsSection({ refType, refId }: CommentsSectionProps
             </div>
           <div className="flex items-center justify-between mt-1">
             <p className="text-[10px] text-white/35">
-              Yorumlar once admin onayina gonderilir. Uygun olmayan icerikler silinir.
+              Yorumlar otomatik sistem (Ninja API) tarafindan kontrol edilir, küfür/argo içerikler otomatik engellenir.
             </p>
             <button
               type="submit"

@@ -818,7 +818,7 @@ export async function addComment(
     ...payload,
     id: `cmt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     createdAt: new Date().toISOString(),
-    status: 'pending',
+    status: 'active',
   };
 
   if (canUseRemote && db) {
