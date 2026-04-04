@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, Home, Compass, BookOpen, FileText, Trophy, Shield, User, Bell, LogIn, LogOut, MessageSquare, Play, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Menu, X, Home, Compass, BookOpen, FileText, Trophy, Shield, User, Bell, LogIn, LogOut, MessageSquare, Play, ChevronDown, ChevronLeft, ChevronRight, Monitor, Database, Zap, Palette, Hash } from 'lucide-react';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import { useSiteSettings } from '../store/SiteSettingsContext';
 import NotificationsDropdown from './NotificationsDropdown';
@@ -80,6 +80,42 @@ export default function Layout({ children, currentPage, onNavigate, onOpenAuth, 
               </button>
             );
           })}
+
+          <div className="pt-4 mt-2 border-t border-zinc-800/60">
+            {!isCollapsed && <p className="px-4 text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2">Kategoriler / Konular</p>}
+            {[
+              { id: 'cat-frontend', label: 'Frontend', icon: Monitor },
+              { id: 'cat-backend', label: 'Backend', icon: Database },
+              { id: 'cat-ai', label: 'Yapay Zeka', icon: Zap },
+              { id: 'cat-security', label: 'Siber Güvenlik', icon: Shield },
+              { id: 'cat-design', label: 'UI/UX Tasarım', icon: Palette },
+            ].map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => alert(`Kategori sistemi entegre ediliyor. Seçilen: ${cat.label}`)}
+                className={`w-full flex items-center gap-3 py-2.5 rounded-xl transition-all font-medium ${isCollapsed ? 'justify-center px-0' : 'px-4'} text-zinc-400 hover:bg-zinc-800/50 hover:text-white group`}
+                title={isCollapsed ? cat.label : undefined}
+              >
+                <cat.icon className="w-4 h-4 shrink-0 text-zinc-500 group-hover:text-cyan-400 transition" />
+                {!isCollapsed && <span className="text-sm">{cat.label}</span>}
+              </button>
+            ))}
+          </div>
+
+          <div className="pt-4 mt-2 border-t border-zinc-800/60">
+            {!isCollapsed && <p className="px-4 text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2">Trend Etiketler</p>}
+            {['react', 'typescript', 'yapay-zeka', 'hackathon'].map(tag => (
+              <button
+                key={tag}
+                onClick={() => alert(`Etikete git: #${tag}`)}
+                className={`w-full flex items-center gap-3 py-2 rounded-xl transition-all font-medium ${isCollapsed ? 'justify-center px-0' : 'px-4'} text-zinc-500 hover:bg-zinc-800/30 hover:text-cyan-400 group`}
+                title={isCollapsed ? `#${tag}` : undefined}
+              >
+                <Hash className="w-4 h-4 shrink-0 opacity-50" />
+                {!isCollapsed && <span className="text-sm truncate">{tag}</span>}
+              </button>
+            ))}
+          </div>
 
           {isAdmin && (
             <div className="pt-6 mt-6 border-t border-zinc-800/60">

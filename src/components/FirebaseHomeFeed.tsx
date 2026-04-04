@@ -296,15 +296,18 @@ export default function FirebaseHomeFeed({ feedFilter = 'all' }: FirebaseHomeFee
              
              {/* Community Info Widget */}
              <div className="bg-zinc-900 border border-zinc-800/60 rounded-xl overflow-hidden shadow-sm">
-                <div className="h-10 bg-gradient-to-r from-cyan-600 to-blue-600 px-4 flex items-center">
-                    <span className="text-white text-sm font-bold uppercase tracking-wider">Topluluk Bilgisi</span>
+                <div className="h-24 bg-cover bg-center px-4 flex flex-col justify-end pb-3 relative" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=600)' }}>
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/60 to-transparent"></div>
+                    <span className="text-white text-sm font-black uppercase tracking-wider relative z-10 drop-shadow-md">Topluluk Bilgisi</span>
                 </div>
                 <div className="p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 bg-zinc-950 rounded-lg border border-zinc-800 overflow-hidden flex shrink-0">
-                            <img src="https://github.com/Rbg4445/rsproject2/blob/main/Proje%20akademi%20(1).png?raw=true" className="w-full h-full object-cover" />
+                    <div className="flex items-center gap-3 mb-3 -mt-8 relative z-10">
+                        <div className="w-16 h-16 bg-zinc-950 rounded-xl border-4 border-zinc-900 overflow-hidden flex shrink-0 shadow-xl">
+                            <img src="https://github.com/Rbg4445/rsproject2/blob/main/Proje%20akademi%20(1).png?raw=true" className="w-full h-full object-cover p-1 bg-black" />
                         </div>
-                        <h3 className="font-bold text-white">r/ProjeAkademi</h3>
+                        <div className="mt-6">
+                            <h3 className="font-bold text-white text-lg leading-tight">r/ProjeAkademi</h3>
+                        </div>
                     </div>
                     <p className="text-sm text-zinc-400 mb-4">Geleceği kodlayanların platformuna hoş geldiniz. Projelerini sergile, topluluğun bir parçası ol.</p>
                     
