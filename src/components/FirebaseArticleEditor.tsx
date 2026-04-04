@@ -23,7 +23,8 @@ export default function FirebaseArticleEditor({ onClose, onSuccess }: Props) {
   const set = (key: string, value: unknown) => setForm((prev) => ({ ...prev, [key]: value }));
 
   const addTag = () => {
-    const normalized = tagInput.trim().toLowerCase().replace(/\s+/g, '-');
+    const raw = tagInput.trim().replace(/^#+/, ''); // Başındaki # simgelerini kaldır
+    const normalized = raw.toLowerCase().replace(/\s+/g, '-');
     if (!normalized || form.tags.includes(normalized) || form.tags.length >= 10) return;
     set('tags', [...form.tags, normalized]);
     setTagInput('');

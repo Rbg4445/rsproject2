@@ -11,7 +11,7 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from './config';
-import { deleteFileFromSupabase } from '../lib/supabaseClient';
+import { deleteFileFromStorage } from '../lib/storageService';
 
 // ─── Tipler ─────────────────────────────────────────────────────────────────────
 export interface FirestoreUser {
@@ -358,11 +358,11 @@ export async function deleteProject(id: string): Promise<void> {
       // 1. Supabase belgelerini sil
       if (data.documents) {
         for (const d of data.documents) {
-          if (d.dataUrl) await deleteFileFromSupabase(d.dataUrl);
+          if (d.dataUrl) await deleteFileFromStorage(d.dataUrl);
         }
       }
       // 2. Kapak resmini sil (Eğer Supabase ise)
-      if (data.image) await deleteFileFromSupabase(data.image);
+      if (data.image) await deleteFileFromStorage(data.image);
 
       // 3. Firestore dokümanını tamamen sil
       await deleteDoc(ref);
@@ -471,7 +471,7 @@ export async function deleteBlog(id: string): Promise<void> {
     if (snap.exists()) {
       const data = snap.data() as FirestoreBlog;
       // Kapak resmini sil
-      if (data.coverImage) await deleteFileFromSupabase(data.coverImage);
+      if (data.coverImage) await deleteFileFromStorage(data.coverImage);
       // Dokümanı sil
       await deleteDoc(ref);
     }
@@ -625,7 +625,7 @@ export async function deleteArticle(id: string): Promise<void> {
     const snap = await getDoc(ref);
     if (snap.exists()) {
       const data = snap.data() as FirestoreArticle;
-      if (data.coverImage) await deleteFileFromSupabase(data.coverImage);
+      if (data.coverImage) await deleteFileFromStorage(data.coverImage);
       await deleteDoc(ref);
     }
     return;

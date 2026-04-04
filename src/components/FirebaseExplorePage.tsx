@@ -48,6 +48,7 @@ export default function FirebaseExplorePage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
+  const [activeTag, setActiveTag] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<FirestoreProject | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -62,11 +63,15 @@ export default function FirebaseExplorePage() {
     setLoading(false);
   }
 
+  // Tüm projelerdeki benzersiz tagleri topla
+  const allTags = [...new Set(projects.flatMap(p => p.tags || []))];
+
   const filtered = projects.filter(p => {
     const matchCat = category === 'all' || p.category === category;
+    const matchTag = !activeTag || (p.tags || []).some(t => t.toLowerCase() === activeTag.toLowerCase());
     const q = search.toLowerCase();
     const matchSearch = !q || p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q) || p.tags.some(t => t.toLowerCase().includes(q));
-    return matchCat && matchSearch;
+    return matchCat && matchTag && matchSearch;
   });
 
   const handleLike = async (id: string) => {
@@ -115,7 +120,13 @@ export default function FirebaseExplorePage() {
           <div className="p-6 space-y-6">
             <div className="flex flex-wrap gap-2">
               {selectedProject.tags.map((tag) => (
-                <span key={tag} className="px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs">#{tag}</span>
+                <button
+                  key={tag}
+                  onClick={() => { setActiveTag(tag); setSelectedProject(null); }}
+                  className="px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs hover:bg-indigo-500/25 hover:border-indigo-400/40 transition-all cursor-pointer"
+                >
+                  #{tag}
+                </button>
               ))}
             </div>
 
@@ -282,13 +293,41 @@ export default function FirebaseExplorePage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
             <input
               type="text"
-              placeholder="Proje ara..."
+              placeholder="Proje veya etiket ara..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-gray-800/50 text-white placeholder-white/30 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
             />
           </div>
         </div>
+
+        {/* Popüler Etiketler */}
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-6">
+            <span className="text-xs font-semibold uppercase tracking-wide text-white/50 mr-1">Etiketler:</span>
+            {allTags.slice(0, 12).map(tag => (
+              <button
+                key={tag}
+                onClick={() => setActiveTag(prev => prev === tag ? null : tag)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                  activeTag === tag
+                    ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-400/50'
+                    : 'bg-gray-800/60 text-white/50 border border-white/10 hover:border-indigo-500/30 hover:text-indigo-400'
+                }`}
+              >
+                #{tag}
+              </button>
+            ))}
+            {activeTag && (
+              <button
+                onClick={() => setActiveTag(null)}
+                className="ml-1 text-xs text-indigo-400 underline underline-offset-4 hover:text-indigo-300"
+              >
+                Filtreyi temizle
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Grid */}
         {loading ? (
@@ -385,8 +424,8 @@ function ProjectCard({ project, currentUid, onLike, onOpen }: {
         <p className="text-white/50 text-sm line-clamp-2 mb-3">{project.description}</p>
         <div className="flex flex-wrap gap-1 mb-3">
           {project.tags.slice(0, 3).map(tag => (
-            <span key={tag} className="px-2 py-0.5 text-xs bg-gray-700/50 text-white/50 rounded-lg flex items-center gap-1">
-              <Tag className="w-2.5 h-2.5" />{tag}
+            <span key={tag} className="px-2 py-0.5 text-xs bg-gray-700/50 text-white/50 rounded-lg flex items-center gap-1 hover:bg-indigo-500/15 hover:text-indigo-300 transition-colors">
+              <Tag className="w-2.5 h-2.5" />#{tag}
             </span>
           ))}
         </div>

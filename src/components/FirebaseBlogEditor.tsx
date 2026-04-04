@@ -30,7 +30,8 @@ export default function FirebaseBlogEditor({ onClose, onSuccess }: Props) {
   const set = (k: string, v: unknown) => setForm(f => ({ ...f, [k]: v }));
 
   const addTag = () => {
-    const tag = tagInput.trim().replace(/\s+/g, '-').toLowerCase();
+    const raw = tagInput.trim().replace(/^#+/, ''); // Başındaki # simgelerini kaldır
+    const tag = raw.replace(/\s+/g, '-').toLowerCase();
     if (tag && !form.tags.includes(tag) && form.tags.length < 8) {
       set('tags', [...form.tags, tag]);
       setTagInput('');

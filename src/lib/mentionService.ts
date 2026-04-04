@@ -1,11 +1,16 @@
 import { addNotification, getUserByUsername } from '../firebase/firestoreService';
 
+// Türkçe karakterler ve tire desteği için Unicode-uyumlu regex desenleri
+const MENTION_REGEX = /@([\w\u00C0-\u024F-]+)/g;
+const HASHTAG_REGEX = /#([\w\u00C0-\u024F-]+)/g;
+
 /**
  * Metin içindeki @kullaniciadlarını ve #hashtagleri ayıklar.
+ * Türkçe karakterleri (ş, ğ, ü, ö, ç, İ vb.) ve tireleri destekler.
  */
 export function parseMentionsAndHashtags(text: string) {
-  const mentions = text.match(/@(\w+)/g)?.map(m => m.substring(1)) || [];
-  const hashtags = text.match(/#(\w+)/g)?.map(h => h.substring(1)) || [];
+  const mentions = text.match(MENTION_REGEX)?.map(m => m.substring(1)) || [];
+  const hashtags = text.match(HASHTAG_REGEX)?.map(h => h.substring(1)) || [];
   
   return {
     mentions: Array.from(new Set(mentions)), // Benzersiz kullanıcı adları
@@ -56,10 +61,10 @@ export function formatMentions(text: string): string {
   let formatted = text;
   
   // @Mentions -> **@username** (Markdown formatında kalın yapma)
-  formatted = formatted.replace(/@(\w+)/g, '**@$1**');
+  formatted = formatted.replace(MENTION_REGEX, '**@$1**');
   
   // #Hashtags -> *#hashtag* (Markdown formatında italik yapma)
-  formatted = formatted.replace(/#(\w+)/g, '*#$1*');
+  formatted = formatted.replace(HASHTAG_REGEX, '*#$1*');
   
   return formatted;
 }

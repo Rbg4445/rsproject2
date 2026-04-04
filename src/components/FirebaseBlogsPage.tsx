@@ -9,6 +9,7 @@ export default function FirebaseBlogsPage() {
   const [blogs, setBlogs] = useState<FirestoreBlog[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [activeTag, setActiveTag] = useState<string | null>(null);
   const [selected, setSelected] = useState<FirestoreBlog | null>(null);
   const [showEditor, setShowEditor] = useState(false);
 
@@ -23,9 +24,14 @@ export default function FirebaseBlogsPage() {
     setLoading(false);
   }
 
+  // Tüm bloglardaki benzersiz tagleri topla
+  const allTags = [...new Set(blogs.flatMap(b => b.tags || []))];
+
   const filtered = blogs.filter(b => {
+    const matchTag = !activeTag || (b.tags || []).some(t => t.toLowerCase() === activeTag.toLowerCase());
     const q = search.toLowerCase();
-    return !q || b.title.toLowerCase().includes(q) || b.summary.toLowerCase().includes(q) || b.tags.some(t => t.toLowerCase().includes(q));
+    const matchSearch = !q || b.title.toLowerCase().includes(q) || b.summary.toLowerCase().includes(q) || b.tags.some(t => t.toLowerCase().includes(q));
+    return matchTag && matchSearch;
   });
 
   const handleLike = async (id: string) => {
@@ -44,7 +50,7 @@ export default function FirebaseBlogsPage() {
   };
 
   if (selected) {
-    return <BlogDetail blog={selected} onBack={() => setSelected(null)} currentUid={userProfile?.uid} onLike={handleLike} />;
+    return <BlogDetail blog={selected} onBack={() => setSelected(null)} currentUid={userProfile?.uid} onLike={handleLike} onTagClick={(tag) => { setActiveTag(tag); setSelected(null); }} />;
   }
 
   return (
@@ -85,6 +91,34 @@ export default function FirebaseBlogsPage() {
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-gray-800/50 text-white placeholder-white/30 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
           />
         </div>
+
+        {/* Popüler Etiketler */}
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-8">
+            <span className="text-xs font-semibold uppercase tracking-wide text-white/50 mr-1">Etiketler:</span>
+            {allTags.slice(0, 10).map(tag => (
+              <button
+                key={tag}
+                onClick={() => setActiveTag(prev => prev === tag ? null : tag)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                  activeTag === tag
+                    ? 'bg-purple-500/25 text-purple-300 border border-purple-400/50'
+                    : 'bg-gray-800/60 text-white/50 border border-white/10 hover:border-purple-500/30 hover:text-purple-400'
+                }`}
+              >
+                #{tag}
+              </button>
+            ))}
+            {activeTag && (
+              <button
+                onClick={() => setActiveTag(null)}
+                className="ml-1 text-xs text-purple-400 underline underline-offset-4 hover:text-purple-300"
+              >
+                Filtreyi temizle
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Grid */}
         {loading ? (
@@ -149,8 +183,8 @@ function BlogCard({ blog, currentUid, onLike, onClick }: {
         <p className="text-white/50 text-sm line-clamp-2 mb-3">{blog.summary}</p>
         <div className="flex flex-wrap gap-1 mb-3">
           {blog.tags.slice(0, 3).map(tag => (
-            <span key={tag} className="px-2 py-0.5 text-xs bg-gray-700/50 text-white/50 rounded-lg flex items-center gap-1">
-              <Tag className="w-2.5 h-2.5" />{tag}
+            <span key={tag} className="px-2 py-0.5 text-xs bg-gray-700/50 text-white/50 rounded-lg flex items-center gap-1 hover:bg-purple-500/15 hover:text-purple-300 transition-colors">
+              <Tag className="w-2.5 h-2.5" />#{tag}
             </span>
           ))}
         </div>
@@ -179,11 +213,12 @@ function BlogCard({ blog, currentUid, onLike, onClick }: {
   );
 }
 
-function BlogDetail({ blog, onBack, currentUid, onLike }: {
+function BlogDetail({ blog, onBack, currentUid, onLike, onTagClick }: {
   blog: FirestoreBlog;
   onBack: () => void;
   currentUid?: string;
   onLike: (id: string) => void;
+  onTagClick?: (tag: string) => void;
 }) {
   const liked = currentUid ? (blog.likes || []).includes(currentUid) : false;
   const initials = blog.displayName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
@@ -232,9 +267,13 @@ function BlogDetail({ blog, onBack, currentUid, onLike }: {
 
         <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-white/10">
           {blog.tags.map(tag => (
-            <span key={tag} className="px-3 py-1 text-sm bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20">
+            <button
+              key={tag}
+              onClick={() => onTagClick?.(tag)}
+              className="px-3 py-1 text-sm bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20 hover:bg-indigo-500/20 hover:border-indigo-400/40 transition-all cursor-pointer"
+            >
               #{tag}
-            </span>
+            </button>
           ))}
         </div>
       </div>

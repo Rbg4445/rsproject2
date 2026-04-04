@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Plus, Trash2, Upload, FileText, Video, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { addProject } from '../firebase/firestoreService';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
-import { uploadFileToSupabase } from '../lib/supabaseClient';
+import { uploadFile } from '../lib/storageService';
 import { scanFile } from '../lib/virusTotalService';
 import { checkMultipleTexts } from '../lib/moderationService';
 
@@ -63,7 +63,8 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
   const set = (k: string, v: unknown) => setForm(f => ({ ...f, [k]: v }));
 
   const addTag = () => {
-    const tag = tagInput.trim().replace(/\s+/g, '-').toLowerCase();
+    const raw = tagInput.trim().replace(/^#+/, ''); // Başındaki # simgelerini kaldır
+    const tag = raw.replace(/\s+/g, '-').toLowerCase();
     if (tag && !form.tags.includes(tag) && form.tags.length < 8) {
       set('tags', [...form.tags, tag]);
       setTagInput('');
@@ -127,12 +128,12 @@ export default function FirebaseAddProjectModal({ onClose, onSuccess }: Props) {
           continue; // Sonraki dosyaya geç
         }
 
-        // Adım 2: Temizse Supabase Storage'a yükle
+        // Adım 2: Temizse Storage'a yükle
         setDocuments((prev) =>
-          prev.map((d) => (d.id === tempId ? { ...d, scanMsg: 'Supabase\'e yükleniyor...' } : d))
+          prev.map((d) => (d.id === tempId ? { ...d, scanMsg: 'Buluta yükleniyor...' } : d))
         );
 
-        const publicUrl = await uploadFileToSupabase(`projects/${userProfile.uid}`, file);
+        const publicUrl = await uploadFile(`projects/${userProfile.uid}`, file);
 
         setDocuments((prev) =>
           prev.map((d) =>
