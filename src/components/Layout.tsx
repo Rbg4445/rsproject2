@@ -181,8 +181,8 @@ export default function Layout({ children, currentPage, onNavigate, onOpenAuth, 
       <main className={`flex-1 flex flex-col min-h-screen relative overflow-x-hidden transition-all duration-300 ${isCollapsed ? 'md:pl-20' : 'md:pl-64'}`}>
         
         {/* Topbar */}
-        <header className="sticky top-0 z-40 hidden md:flex items-center justify-end h-20 px-8 bg-transparent pointer-events-none">
-          <div className="flex items-center gap-4 bg-gray-950/60 backdrop-blur-xl border border-white/5 rounded-2xl px-4 py-2 pointer-events-auto shadow-2xl">
+        <header className="sticky top-0 z-40 hidden md:flex items-center justify-end h-16 px-8 bg-[#1A282D] border-b border-[#27383F]">
+          <div className="flex items-center gap-4">
             {userProfile ? (
               <>
                 <div className="relative">

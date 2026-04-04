@@ -3,14 +3,10 @@ import { FirebaseAuthProvider, useFirebaseAuth } from './store/FirebaseAuthConte
 import { ThemeProvider } from './store/ThemeContext';
 import { SiteSettingsProvider } from './store/SiteSettingsContext';
 import Layout from './components/Layout';
-import Footer from './components/Footer';
 import FirebaseHomeFeed from './components/FirebaseHomeFeed';
 import FirebaseAuthModal from './components/FirebaseAuthModal';
 import FirebaseUserProfile from './components/FirebaseUserProfile';
-import FirebaseExplorePage from './components/FirebaseExplorePage';
-import FirebaseBlogsPage from './components/FirebaseBlogsPage';
 import FirebaseMessagesPage from './components/FirebaseMessagesPage';
-import FirebaseWikiPage from './components/FirebaseWikiPage';
 import AdminPanel from './components/AdminPanel';
 import MouseTrailBackground from './components/MouseTrailBackground';
 import AdminLoginModal from './components/AdminLoginModal';
@@ -26,9 +22,9 @@ function parseRouteFromHash() {
 }
 
 function PageRouter({ currentPage }: { currentPage: string }) {
-  if (currentPage === 'explore') return <><FirebaseHomeFeed feedFilter="project" /><Footer /></>;
-  if (currentPage === 'blogs') return <><FirebaseHomeFeed feedFilter="blog" /><Footer /></>;
-  if (currentPage === 'wiki') return <><FirebaseHomeFeed feedFilter="article" /><Footer /></>;
+  if (currentPage === 'explore') return <FirebaseHomeFeed feedFilter="project" />;
+  if (currentPage === 'blogs') return <FirebaseHomeFeed feedFilter="blog" />;
+  if (currentPage === 'wiki') return <FirebaseHomeFeed feedFilter="article" />;
   if (currentPage === 'rbg') return <RbgPage />;
   if (currentPage === 'leaderboard') return <LeaderboardPage />;
   
@@ -41,12 +37,7 @@ function PageRouter({ currentPage }: { currentPage: string }) {
     return <FirebaseMessagesPage />;
   }
   
-  return (
-    <>
-      <FirebaseHomeFeed />
-      <Footer />
-    </>
-  );
+  return <FirebaseHomeFeed />;
 }
 
 function AppContent() {

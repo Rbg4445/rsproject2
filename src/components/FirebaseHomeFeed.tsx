@@ -161,7 +161,7 @@ export default function FirebaseHomeFeed({ feedFilter = 'all' }: FirebaseHomeFee
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1416] text-[#D7DADC]">
+    <div className="w-full text-[#D7DADC]">
       <div className="max-w-[1200px] mx-auto px-4 lg:px-12 py-6 flex justify-center lg:justify-start xl:justify-center gap-6">
         
         {/* Ana Akış (Feed) */}
@@ -169,8 +169,8 @@ export default function FirebaseHomeFeed({ feedFilter = 'all' }: FirebaseHomeFee
           
           {/* Post Creation Modal / Menu */}
           {userProfile && (
-            <div className="bg-[#1A282D] border border-white/5 rounded-md p-3 flex gap-3 mb-6 items-center shadow-sm">
-                <div className="w-9 h-9 rounded-full bg-black border border-[#27383F] overflow-hidden flex shrink-0 items-center justify-center font-bold">
+            <div className="bg-[#1A282D] border border-white/5 rounded-md p-3 flex gap-3 mb-6 items-center">
+                <div className="w-10 h-10 rounded-full bg-black border border-[#27383F] overflow-hidden flex shrink-0 items-center justify-center font-bold text-white">
                     {userProfile.avatar 
                         ? <img src={userProfile.avatar} className="w-full h-full object-cover" /> 
                         : userProfile.displayName?.charAt(0).toUpperCase()
@@ -178,13 +178,13 @@ export default function FirebaseHomeFeed({ feedFilter = 'all' }: FirebaseHomeFee
                 </div>
                 <button 
                   onClick={() => setShowTypeSelect(true)}
-                  className="flex-1 bg-[#27383F] hover:bg-[#2b3d45] border border-transparent hover:border-gray-500 rounded px-4 py-2 text-sm text-gray-400 text-left transition"
+                  className="flex-1 bg-black/40 hover:bg-black/60 border border-white/10 rounded-md px-4 py-2.5 text-sm text-gray-400 text-left transition"
                 >
-                  Yeni bir proje, blog veya wiki paylaş...
+                  Yeni Gönderi Oluştur
                 </button>
-                <div className="flex gap-2">
-                    <button onClick={() => setActiveModal('project')} className="p-2 hover:bg-white/5 rounded text-gray-400 transition" title="Proje Paylaş"><ImageIcon className="w-5 h-5" /></button>
-                    <button onClick={() => setActiveModal('blog')} className="p-2 hover:bg-white/5 rounded text-gray-400 transition" title="Blog Yaz"><BookOpen className="w-5 h-5" /></button>
+                <div className="flex gap-1.5 hidden sm:flex">
+                    <button onClick={() => setActiveModal('project')} className="p-2.5 hover:bg-white/5 rounded-md text-gray-400 transition" title="Proje Paylaş"><ImageIcon className="w-5 h-5" /></button>
+                    <button onClick={() => setActiveModal('blog')} className="p-2.5 hover:bg-white/5 rounded-md text-gray-400 transition" title="Blog Yaz"><LinkIcon className="w-5 h-5" /></button>
                 </div>
             </div>
           )}
