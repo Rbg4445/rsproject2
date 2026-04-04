@@ -14,6 +14,31 @@ import { db, isFirebaseConfigured } from './config';
 import { deleteFileFromStorage } from '../lib/storageService';
 
 // ─── Tipler ─────────────────────────────────────────────────────────────────────
+export interface Bookmark {
+  refType: 'project' | 'blog' | 'article';
+  refId: string;
+  savedAt: string;
+}
+
+export interface DevlogEntry {
+  id: string;
+  version: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface Appeal {
+  id: string;
+  uid: string;
+  refType: 'project' | 'blog' | 'article';
+  refId: string;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  resolvedAt?: string;
+  resolvedBy?: string;
+}
+
 export interface FirestoreUser {
   uid: string;
   username: string;
@@ -34,6 +59,12 @@ export interface FirestoreUser {
   projectCount?: number;
   blogCount?: number;
   lastProfileUpdateAt?: string; // profil en son ne zaman guncellendi
+  followers?: string[];
+  following?: string[];
+  bookmarks?: Bookmark[];
+  badges?: string[];
+  xp?: number;
+  level?: string;
 }
 
 export interface FirestoreProject {
@@ -56,6 +87,9 @@ export interface FirestoreProject {
   likes: string[];
   status: 'pending' | 'active' | 'removed';
   createdAt: string;
+  collaborators?: string[];
+  devlogs?: DevlogEntry[];
+  feedbackRequested?: boolean;
 }
 
 export interface ProjectDocument {
@@ -1229,3 +1263,121 @@ export async function approveAllPending(): Promise<{ projects: number; blogs: nu
     articles: pendingArticles.length,
   };
 }
+
+// ─── Gamification & Community ───────────────────────────────────────────────────
+
+export async function toggleFollowUser(currentUid: string, targetUid: string): Promise<void> {
+  const currentUser = await getUserProfile(currentUid);
+  const targetUser = await getUserProfile(targetUid);
+  if (!currentUser || !targetUser) return;
+
+  const following = currentUser.following || [];
+  const followers = targetUser.followers || [];
+
+  const isFollowing = following.includes(targetUid);
+
+  const nextFollowing = isFollowing ? following.filter((id) => id !== targetUid) : [...following, targetUid];
+  const nextFollowers = isFollowing ? followers.filter((id) => id !== currentUid) : [...followers, currentUid];
+
+  await updateUserProfile(currentUid, { following: nextFollowing });
+  await updateUserProfile(targetUid, { followers: nextFollowers });
+}
+
+export async function toggleBookmark(uid: string, refType: Bookmark['refType'], refId: string): Promise<void> {
+  const user = await getUserProfile(uid);
+  if (!user) return;
+  
+  const bookmarks = user.bookmarks || [];
+  const isBookmarked = bookmarks.some((b) => b.refType === refType && b.refId === refId);
+  
+  const nextBookmarks = isBookmarked 
+    ? bookmarks.filter((b) => !(b.refType === refType && b.refId === refId))
+    : [...bookmarks, { refType, refId, savedAt: new Date().toISOString() }];
+    
+  await updateUserProfile(uid, { bookmarks: nextBookmarks });
+}
+
+export async function updateXpAndLevel(uid: string, xpToAdd: number): Promise<void> {
+  const user = await getUserProfile(uid);
+  if (!user) return;
+  
+  const currentXp = user.xp || 0;
+  const newXp = currentXp + xpToAdd;
+  
+  let newLevel = 'Çaylak';
+  if (newXp >= 100) newLevel = 'Geliştirici';
+  if (newXp >= 500) newLevel = 'Kıdemli';
+  if (newXp >= 1000) newLevel = 'Usta';
+  
+  await updateUserProfile(uid, { xp: newXp, level: newLevel });
+}
+
+export async function addDevlog(projectId: string, version: string, content: string): Promise<void> {
+  const entry: DevlogEntry = {
+    id: `devlog_${Date.now()}`,
+    version,
+    content,
+    createdAt: new Date().toISOString()
+  };
+  
+  if (canUseRemote && db) {
+    const ref = doc(db, 'projects', projectId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return;
+    const project = snap.data() as FirestoreProject;
+    const devlogs = project.devlogs || [];
+    await updateDoc(ref, { devlogs: [entry, ...devlogs] });
+    return;
+  }
+  
+  const projects = getLS<FirestoreProject[]>('pa_projects', []);
+  const idx = projects.findIndex((p) => p.id === projectId);
+  if (idx !== -1) {
+    const devlogs = projects[idx].devlogs || [];
+    projects[idx].devlogs = [entry, ...devlogs];
+    setLS('pa_projects', projects);
+  }
+}
+
+export async function createAppeal(payload: Omit<Appeal, 'id' | 'createdAt' | 'status'>): Promise<void> {
+  const entry: Appeal = {
+    ...payload,
+    id: `appeal_${Date.now()}`,
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  };
+  
+  if (canUseRemote && db) {
+    const ref = await addDoc(collection(db, 'appeals'), entry);
+    await updateDoc(ref, { id: ref.id });
+    return;
+  }
+  
+  const list = getLS<Appeal[]>('pa_appeals', []);
+  list.unshift(entry);
+  setLS('pa_appeals', list);
+}
+
+export async function getAppeals(): Promise<Appeal[]> {
+  if (canUseRemote && db) {
+    const snap = await getDocs(collection(db, 'appeals'));
+    return snap.docs.map((d) => d.data() as Appeal).sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+  }
+  return getLS<Appeal[]>('pa_appeals', []);
+}
+
+export async function updateAppealStatus(id: string, status: Appeal['status'], resolvedBy: string): Promise<void> {
+  const updateData = { status, resolvedAt: new Date().toISOString(), resolvedBy };
+  if (canUseRemote && db) {
+    await updateDoc(doc(db, 'appeals', id), updateData);
+    return;
+  }
+  
+  const list = getLS<Appeal[]>('pa_appeals', []);
+  const idx = list.findIndex((a) => a.id === id);
+  if (idx !== -1) {
+    list[idx] = { ...list[idx], ...updateData };
+    setLS('pa_appeals', list);
+  }
+}
+

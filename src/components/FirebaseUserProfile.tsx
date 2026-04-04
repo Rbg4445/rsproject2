@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, Folder, Edit2, Trash2, Download, FileText, User, Shield, BarChart, Activity, MessageSquare } from 'lucide-react';
+import { BookOpen, Folder, Edit2, Trash2, Download, FileText, User, Shield, BarChart, Activity, MessageSquare, Star, Award, Check, X } from 'lucide-react';
 import { useFirebaseAuth } from '../store/FirebaseAuthContext';
 import {
   type FirestoreBlog,
@@ -10,6 +10,7 @@ import {
   getUserBlogs,
   getUserByUsername,
   getUserProjects,
+  toggleFollowUser,
 } from '../firebase/firestoreService';
 import FirebaseAddProjectModal from './FirebaseAddProjectModal';
 import FirebaseBlogEditor from './FirebaseBlogEditor';
@@ -28,7 +29,7 @@ export default function FirebaseUserProfile({ username }: Props) {
   const [showBlogModal, setShowBlogModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showAdminApply, setShowAdminApply] = useState(false);
-  const [activeTab, setActiveTab] = useState('projects' as 'projects' | 'blogs' | 'analytics');
+  const [activeTab, setActiveTab] = useState('projects' as 'projects' | 'blogs' | 'analytics' | 'bookmarks');
 
   const isOwner = !!userProfile && userProfile.username === username;
   const isRbgProfile = useMemo(() => {
@@ -50,6 +51,14 @@ export default function FirebaseUserProfile({ username }: Props) {
     }
     setLoading(false);
   }
+
+  async function handleToggleFollow() {
+    if (!userProfile || !profile) return;
+    await toggleFollowUser(userProfile.uid, profile.uid);
+    await loadProfileData();
+  }
+
+  const amIFollowing = profile?.followers?.includes(userProfile?.uid || '');
 
   if (loading) {
     return <div className="min-h-screen px-4 pt-28 text-center text-white/60">Profil yukleniyor...</div>;
@@ -88,6 +97,34 @@ export default function FirebaseUserProfile({ username }: Props) {
                 </div>
                 <p className="text-sm text-white/50">@{profile.username}</p>
                 <p className="mt-1 text-sm text-white/70">{profile.bio || 'Kisa bir biyografi henuz eklenmedi.'}</p>
+                {/* Followers & Level & XP */}
+                <div className="mt-3 flex items-center gap-4 text-xs font-semibold text-white/60">
+                  <div className="flex items-center gap-1">
+                    <User className="h-3.5 w-3.5 text-white/40" />
+                    <span className="text-white">{profile.followers?.length || 0}</span> Takipçi
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-white">{profile.following?.length || 0}</span> Takip
+                  </div>
+                  <div className="flex items-center gap-1 text-yellow-400">
+                    <Star className="h-3.5 w-3.5" />
+                    <span>Lvl {Math.floor((profile.xp || 0) / 100) + 1} ({profile.level || 'Çaylak'})</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-emerald-400">
+                    <Activity className="h-3.5 w-3.5" />
+                    <span>{profile.xp || 0} XP</span>
+                  </div>
+                </div>
+                {/* Rozetler */}
+                {profile.badges && profile.badges.length > 0 && (
+                  <div className="mt-2 flex gap-2">
+                    {profile.badges.map(badge => (
+                       <span key={badge} className="inline-flex items-center gap-1 bg-white/5 border border-white/10 px-2 py-0.5 rounded-md text-[10px] text-white/80">
+                         <Award className="w-3 h-3 text-yellow-500" /> {badge}
+                       </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -134,6 +171,15 @@ export default function FirebaseUserProfile({ username }: Props) {
             {!isOwner && userProfile && (
               <div className="flex flex-wrap gap-2">
                 <button
+                  onClick={handleToggleFollow}
+                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition shadow-lg ${
+                    amIFollowing ? 'bg-gray-800 text-white/80 hover:bg-gray-700' : 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-500/20'
+                  }`}
+                >
+                  {amIFollowing ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+                  {amIFollowing ? 'Takipten Çık' : 'Takip Et'}
+                </button>
+                <button
                   onClick={() => { window.location.hash = `#messages:${profile.username}`; }}
                   className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 transition shadow-lg shadow-indigo-500/20"
                 >
@@ -161,6 +207,14 @@ export default function FirebaseUserProfile({ username }: Props) {
             }`}
           >
             <BookOpen className="w-4 h-4" /> Bloglar ({blogs.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('bookmarks')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === 'bookmarks' ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' : 'text-white/60 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <Star className="w-4 h-4" /> Kaydedilenler ({profile?.bookmarks?.length || 0})
           </button>
           <button
             onClick={() => setActiveTab('analytics')}
@@ -274,6 +328,16 @@ export default function FirebaseUserProfile({ username }: Props) {
                   <BarRow label="Aktif Bloglar"  value={blogs.filter(b => b.status === 'active').length}    total={blogs.length}    color="bg-purple-500" />
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'bookmarks' && (
+            <div className="rounded-2xl border border-white/10 bg-gray-900/50 p-8 text-center">
+              <Star className="w-12 h-12 text-pink-500/50 mx-auto mb-3" />
+              <h3 className="text-xl font-bold text-white mb-2">Kaydedilen İçerikler</h3>
+              <p className="text-white/50 mb-6 max-w-md mx-auto">
+                {isOwner ? 'Henüz hiçbir içeriği kaydetmediniz. Beğendiğiniz projeleri ve blogları kaydederek buradan kolayca erişebilirsiniz.' : `${profile.displayName} henüz hiçbir içeriği kaydetmedi.`}
+              </p>
             </div>
           )}
         </div>

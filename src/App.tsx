@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react';
 import { FirebaseAuthProvider, useFirebaseAuth } from './store/FirebaseAuthContext';
 import { ThemeProvider } from './store/ThemeContext';
 import { SiteSettingsProvider } from './store/SiteSettingsContext';
-import Navbar from './components/Navbar';
+import Layout from './components/Layout';
 import Hero from './components/Hero';
 import Projects from './components/Projects';
 import About from './components/About';
-// import Skills from './components/Skills';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import FirebaseAuthModal from './components/FirebaseAuthModal';
@@ -29,6 +28,33 @@ function parseRouteFromHash() {
   return decodeURIComponent(raw);
 }
 
+function PageRouter({ currentPage }: { currentPage: string }) {
+  if (currentPage === 'explore') return <FirebaseExplorePage />;
+  if (currentPage === 'blogs') return <FirebaseBlogsPage />;
+  if (currentPage === 'wiki') return <FirebaseWikiPage />;
+  if (currentPage === 'rbg') return <RbgPage />;
+  if (currentPage === 'leaderboard') return <LeaderboardPage />;
+  
+  if (currentPage.startsWith('profile:')) {
+    const username = currentPage.split(':')[1];
+    return <FirebaseUserProfile username={username} />;
+  }
+  
+  if (currentPage.startsWith('messages')) {
+    return <FirebaseMessagesPage />;
+  }
+  
+  return (
+    <>
+      <Hero />
+      <Projects />
+      <About />
+      <Contact />
+      <Footer />
+    </>
+  );
+}
+
 function AppContent() {
   const { loading } = useFirebaseAuth();
   const [currentPage, setCurrentPage] = useState(parseRouteFromHash());
@@ -39,11 +65,7 @@ function AppContent() {
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
-    // BETA splash ekranı: ilk açılışta göster, 2.2 saniye sonra kapat
-    const timer = window.setTimeout(() => {
-      setShowSplash(false);
-    }, 2200);
-
+    const timer = window.setTimeout(() => { setShowSplash(false); }, 2200);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -61,7 +83,6 @@ function AppContent() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-
   const navigate = (page: string) => {
     const nextHash = `#${encodeURIComponent(page)}`;
     if (window.location.hash !== nextHash) {
@@ -76,26 +97,6 @@ function AppContent() {
     setAuthTab(tab);
     setShowAuth(true);
   };
-
-  const renderOverlayModals = (withAuth = true) => (
-    <>
-      {withAuth && showAuth && (
-        <FirebaseAuthModal onClose={() => setShowAuth(false)} defaultTab={authTab} />
-      )}
-      {withAuth && showAdminAuth && (
-        <AdminLoginModal
-          onClose={() => setShowAdminAuth(false)}
-          onSuccess={() => {
-            setShowAdminAuth(false);
-            navigate('admin');
-          }}
-        />
-      )}
-      {showBetaNotice && (
-        <BetaNoticeModal onClose={() => setShowBetaNotice(false)} isOpen={showBetaNotice} />
-      )}
-    </>
-  );
 
   if (showSplash) {
     return (
@@ -117,11 +118,7 @@ function AppContent() {
       <div className="fixed inset-0 bg-gray-950 flex items-center justify-center z-[998]">
         <div className="text-center">
           <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-3 mx-auto animate-pulse">
-            <img
-              src="https://cdn-icons-png.flaticon.com/128/1197/1197460.png"
-              alt="loading icon"
-              className="h-6 w-6"
-            />
+            <div className="h-6 w-6 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
           </div>
           <p className="text-white/40 text-sm">Yükleniyor...</p>
         </div>
@@ -132,165 +129,34 @@ function AppContent() {
   if (currentPage === 'admin') {
     return (
       <div key="admin" className="min-h-screen bg-slate-950/80">
-        {/* Admin sayfası: sade koyu arka plan, animasyonsuz */}
         <AdminPanel onBack={() => navigate('home')} />
-        {renderOverlayModals(false)}
-        <CookieConsent />
-      </div>
-    );
-  }
-
-  if (currentPage === 'rbg') {
-    return (
-      <div key="rbg" className="min-h-screen bg-transparent">
-        <Navbar
-          onOpenAuth={() => openAuth('login')}
-          onOpenAdminLogin={() => setShowAdminAuth(true)}
-          onNavigate={navigate}
-          currentPage={currentPage}
-        />
-        <div className="relative z-10">
-          <RbgPage />
-        </div>
-        {renderOverlayModals()}
-        <CookieConsent />
-      </div>
-    );
-  }
-
-  if (currentPage === 'leaderboard') {
-    return (
-      <div key="leaderboard" className="min-h-screen bg-transparent">
-        <MouseTrailBackground />
-        <Navbar
-          onOpenAuth={() => openAuth('login')}
-          onOpenAdminLogin={() => setShowAdminAuth(true)}
-          onNavigate={navigate}
-          currentPage={currentPage}
-        />
-        <div className="relative z-10">
-          <LeaderboardPage />
-        </div>
-        {renderOverlayModals()}
-        <CookieConsent />
-      </div>
-    );
-  }
-
-  if (currentPage.startsWith('profile:')) {
-    const username = currentPage.split(':')[1];
-    return (
-      <div key={`profile-${username}`} className="min-h-screen bg-transparent">
-        <MouseTrailBackground />
-        <Navbar
-          onOpenAuth={() => openAuth('login')}
-          onOpenAdminLogin={() => setShowAdminAuth(true)}
-          onNavigate={navigate}
-          currentPage={currentPage}
-        />
-        <div className="relative z-10">
-          <FirebaseUserProfile username={username} />
-        </div>
-        {renderOverlayModals()}
-        <CookieConsent />
-      </div>
-    );
-  }
-
-  if (currentPage.startsWith('messages')) {
-    return (
-      <div key="messages" className="min-h-screen bg-transparent">
-        <Navbar
-          onOpenAuth={() => openAuth('login')}
-          onOpenAdminLogin={() => setShowAdminAuth(true)}
-          onNavigate={navigate}
-          currentPage={currentPage}
-        />
-        <div className="relative z-10">
-          <FirebaseMessagesPage />
-        </div>
-        {renderOverlayModals()}
-        <CookieConsent />
-      </div>
-    );
-  }
-
-  if (currentPage === 'explore') {
-    return (
-      <div key="explore" className="min-h-screen bg-transparent">
-        {/* MouseTrailBackground kaldırıldı: keşfet sayfası için performans optimizasyonu */}
-        <Navbar
-          onOpenAuth={() => openAuth('login')}
-          onOpenAdminLogin={() => setShowAdminAuth(true)}
-          onNavigate={navigate}
-          currentPage={currentPage}
-        />
-        <div className="relative z-10">
-          <FirebaseExplorePage />
-        </div>
-        {renderOverlayModals()}
-        <CookieConsent />
-      </div>
-    );
-  }
-
-  if (currentPage === 'blogs') {
-    return (
-      <div key="blogs" className="min-h-screen bg-transparent">
-        <MouseTrailBackground />
-        <Navbar
-          onOpenAuth={() => openAuth('login')}
-          onOpenAdminLogin={() => setShowAdminAuth(true)}
-          onNavigate={navigate}
-          currentPage={currentPage}
-        />
-        <div className="relative z-10">
-          <FirebaseBlogsPage />
-        </div>
-        {renderOverlayModals()}
-        <CookieConsent />
-      </div>
-    );
-  }
-
-  if (currentPage === 'wiki') {
-    return (
-      <div key="wiki" className="min-h-screen bg-transparent">
-        <MouseTrailBackground />
-        <Navbar
-          onOpenAuth={() => openAuth('login')}
-          onOpenAdminLogin={() => setShowAdminAuth(true)}
-          onNavigate={navigate}
-          currentPage={currentPage}
-        />
-        <div className="relative z-10">
-          <FirebaseWikiPage />
-        </div>
-        {renderOverlayModals()}
         <CookieConsent />
       </div>
     );
   }
 
   return (
-    <div key="home" className="min-h-screen bg-transparent">
-      <MouseTrailBackground />
-      <Navbar
+    <>
+      {currentPage !== 'explore' && <MouseTrailBackground />}
+      <Layout 
+        currentPage={currentPage}
+        onNavigate={navigate}
         onOpenAuth={() => openAuth('login')}
         onOpenAdminLogin={() => setShowAdminAuth(true)}
-        onNavigate={navigate}
-        currentPage="home"
-      />
-      <div className="relative z-10">
-        <Hero />
-        <Projects />
-        <About />
-        <Contact />
-        <Footer />
-      </div>
-      {renderOverlayModals()}
+      >
+        <PageRouter currentPage={currentPage} />
+      </Layout>
+      
+      {showAuth && <FirebaseAuthModal onClose={() => setShowAuth(false)} defaultTab={authTab} />}
+      {showAdminAuth && (
+        <AdminLoginModal
+          onClose={() => setShowAdminAuth(false)}
+          onSuccess={() => { setShowAdminAuth(false); navigate('admin'); }}
+        />
+      )}
+      {showBetaNotice && <BetaNoticeModal onClose={() => setShowBetaNotice(false)} isOpen={showBetaNotice} />}
       <CookieConsent />
-    </div>
+    </>
   );
 }
 
