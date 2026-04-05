@@ -1,8 +1,17 @@
-import { useEffect, useState } from 'react';
-import { Trophy, Star, TrendingUp, Medal, Award, Flame } from 'lucide-react';
+import { Trophy, Star, TrendingUp, Zap, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getAllUsers, getProjects, getBlogs } from '../firebase/firestoreService';
 import type { FirestoreUser } from '../firebase/firestoreService';
+
+interface RankedUser extends FirestoreUser {
+  score: number;
+  rank: number;
+  activeProjects: number;
+  activeBlogs: number;
+  totalLikes: number;
+}
+
+import { useEffect, useState } from 'react';
 
 interface RankedUser extends FirestoreUser {
   score: number;
@@ -33,8 +42,8 @@ export default function LeaderboardPage() {
           userProjects.forEach(p => { totalLikes += (p.likes || []).length; });
           userBlogs.forEach(b => { totalLikes += (b.likes || []).length; });
 
-          // Formül: (Projeler * 50) + (Bloglar * 30) + (Beğeniler * 10)
-          const score = (userProjects.length * 50) + (userBlogs.length * 30) + (totalLikes * 10);
+          // Score artık Firestore'dan geliyor (xp alanı)
+          const score = user.xp || 0;
           
           return {
             ...user,
@@ -44,11 +53,11 @@ export default function LeaderboardPage() {
             totalLikes
           };
         })
-        .filter(u => u.score > 0) // Sadece 0 puandan yüksek olanları göster
+        .filter(u => u.score > 0)
         .sort((a, b) => b.score - a.score);
 
         // Rank ekle
-        const ranked = scoredUsers.map((u, i) => ({ ...u, rank: i + 1 })).slice(0, 50); // İlk 50
+        const ranked = scoredUsers.map((u, i) => ({ ...u, rank: i + 1 })).slice(0, 50);
         setLeaders(ranked);
       } catch (err) {
         console.error('Error loading leaderboard', err);
@@ -60,15 +69,15 @@ export default function LeaderboardPage() {
   }, []);
 
   const getRankIndicator = (rank: number) => {
-    if (rank === 1) return <div className="flex flex-col items-center"><Trophy className="w-8 h-8 text-yellow-400 mb-1" drop-shadow-md /><span className="text-yellow-400 font-bold">1</span></div>;
-    if (rank === 2) return <div className="flex flex-col items-center"><Medal className="w-7 h-7 text-gray-300 mb-1" /><span className="text-gray-300 font-bold">2</span></div>;
-    if (rank === 3) return <div className="flex flex-col items-center"><Award className="w-7 h-7 text-amber-600 mb-1" /><span className="text-amber-600 font-bold">3</span></div>;
+    if (rank === 1) return <div className="flex flex-col items-center"><Trophy className="w-8 h-8 text-yellow-400 mb-1" /><span className="text-yellow-400 font-bold">1</span></div>;
+    if (rank === 2) return <div className="flex flex-col items-center"><Award className="w-7 h-7 text-gray-300 mb-1" /><span className="text-gray-300 font-bold">2</span></div>;
+    if (rank === 3) return <div className="flex flex-col items-center"><Star className="w-7 h-7 text-amber-600 mb-1" /><span className="text-amber-600 font-bold">3</span></div>;
     return <span className="text-lg font-bold text-white/40 px-2">{rank}</span>;
   };
 
   const getBadges = (user: RankedUser) => {
     const badges = [];
-    if (user.activeProjects >= 5) badges.push({ id: 'top-creator', icon: <Flame className="w-4 h-4 text-orange-400" />, label: 'Proje Ateşi' });
+    if (user.activeProjects >= 5) badges.push({ id: 'top-creator', icon: <Zap className="w-4 h-4 text-orange-400" />, label: 'Proje Ateşi' });
     if (user.totalLikes >= 50) badges.push({ id: 'loved', icon: <Star className="w-4 h-4 text-pink-400" />, label: 'Sevilen Yazar' });
     if (user.rank === 1) badges.push({ id: 'champion', icon: <Trophy className="w-4 h-4 text-yellow-400" />, label: 'Şampiyon' });
     return badges;

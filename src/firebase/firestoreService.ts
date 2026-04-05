@@ -344,6 +344,10 @@ export async function addProject(project: Omit<FirestoreProject, 'id'>): Promise
   const id = `proj_${Date.now()}_${Math.random().toString(36).slice(2)}`;
   projects.unshift({ ...project, id });
   setLS(PROJECTS_KEY, projects);
+  
+  // XP Ödülü
+  void grantXp(project.uid, 50, 'Yeni bir proje paylaştığın için');
+  
   return id;
 }
 
@@ -379,19 +383,45 @@ export async function getUserProjects(uid: string): Promise<FirestoreProject[]> 
 }
 
 export async function setProjectStatus(id: string, status: FirestoreProject['status']): Promise<void> {
+  // Notification logic for removal needs to check current author
   if (status === 'removed') {
+    const projects = getLS<FirestoreProject[]>(PROJECTS_KEY, []);
+    const p = projects.find(i => i.id === id);
+    if (p) {
+      void addNotification({
+         uid: p.uid,
+         type: 'reject',
+         refType: 'project',
+         refId: id,
+         message: `"${p.title}" başlıklı projeniz kurallara aykırı olduğu için kaldırıldı.`,
+      });
+    }
+    // Hard delete
     await deleteProject(id);
     return;
   }
+
   if (canUseRemote && db) {
     await updateDoc(doc(db, 'projects', id), { status });
     return;
   }
+
   const projects: FirestoreProject[] = getLS(PROJECTS_KEY, []);
   const idx = projects.findIndex((p) => p.id === id);
   if (idx !== -1) {
+    const oldStatus = projects[idx].status;
     projects[idx].status = status;
     setLS(PROJECTS_KEY, projects);
+
+    if (oldStatus === 'pending' && status === 'active') {
+      void addNotification({
+        uid: projects[idx].uid,
+        type: 'approve',
+        refType: 'project',
+        refId: id,
+        message: `Tebrikler! "${projects[idx].title}" başlıklı projeniz onaylandı ve yayına alındı.`,
+      });
+    }
   }
 }
 
@@ -429,14 +459,39 @@ export async function toggleProjectLike(id: string, uid: string): Promise<void> 
     const likes = data.likes || [];
     const nextLikes = likes.includes(uid) ? likes.filter((l) => l !== uid) : [...likes, uid];
     await updateDoc(ref, { likes: nextLikes });
+    
+    // Bildirim ve XP
+    if (!likes.includes(uid)) {
+      void addNotification({
+         uid: data.uid,
+         type: 'like',
+         refType: 'project',
+         refId: id,
+         message: `${uid === data.uid ? 'Kendi projenizi' : 'Birisi projenizi'} beğendi!`,
+      });
+      if (uid !== data.uid) void grantXp(data.uid, 10, 'Projeniz beğenildiği için');
+    }
+    
     return;
   }
   const projects: FirestoreProject[] = getLS(PROJECTS_KEY, []);
   const idx = projects.findIndex((p) => p.id === id);
   if (idx !== -1) {
     const likes = projects[idx].likes || [];
-    projects[idx].likes = likes.includes(uid) ? likes.filter((l) => l !== uid) : [...likes, uid];
+    const isLiking = !likes.includes(uid);
+    projects[idx].likes = isLiking ? [...likes, uid] : likes.filter((l) => l !== uid);
     setLS(PROJECTS_KEY, projects);
+    
+    if (isLiking) {
+       void addNotification({
+          uid: projects[idx].uid,
+          type: 'like',
+          refType: 'project',
+          refId: id,
+          message: `${uid === projects[idx].uid ? 'Kendi projenizi' : 'Birisi projenizi'} beğendi!`,
+       });
+       if (uid !== projects[idx].uid) void grantXp(projects[idx].uid, 10, 'Projeniz beğenildiği için');
+    }
   }
 }
 
@@ -451,6 +506,10 @@ export async function addBlog(blog: Omit<FirestoreBlog, 'id'>): Promise<string> 
   const id = `blog_${Date.now()}_${Math.random().toString(36).slice(2)}`;
   blogs.unshift({ ...blog, id });
   setLS(BLOGS_KEY, blogs);
+  
+  // XP Ödülü
+  void grantXp(blog.uid, 30, 'Yeni bir blog yazısı paylaştığın için');
+  
   return id;
 }
 
@@ -506,8 +565,19 @@ export async function setBlogStatus(id: string, status: FirestoreBlog['status'])
   const blogs: FirestoreBlog[] = getLS(BLOGS_KEY, []);
   const idx = blogs.findIndex((b) => b.id === id);
   if (idx !== -1) {
+    const oldStatus = blogs[idx].status;
     blogs[idx].status = status;
     setLS(BLOGS_KEY, blogs);
+
+    if (oldStatus === 'pending' && status === 'active') {
+      void addNotification({
+         uid: blogs[idx].uid,
+         type: 'approve',
+         refType: 'blog',
+         refId: id,
+         message: `Tebrikler! "${blogs[idx].title}" başlıklı blog yazınız onaylandı.`,
+      });
+    }
   }
 }
 
@@ -537,14 +607,39 @@ export async function toggleBlogLike(id: string, uid: string): Promise<void> {
     const likes = data.likes || [];
     const nextLikes = likes.includes(uid) ? likes.filter((l) => l !== uid) : [...likes, uid];
     await updateDoc(ref, { likes: nextLikes });
+    
+    // Bildirim ve XP
+    if (!likes.includes(uid)) {
+      void addNotification({
+         uid: data.uid,
+         type: 'like',
+         refType: 'blog',
+         refId: id,
+         message: `${uid === data.uid ? 'Kendi blogunuzu' : 'Birisi blogunuzu'} beğendi!`,
+      });
+      if (uid !== data.uid) void grantXp(data.uid, 10, 'Blog yazınız beğenildiği için');
+    }
+    
     return;
   }
   const blogs: FirestoreBlog[] = getLS(BLOGS_KEY, []);
   const idx = blogs.findIndex((b) => b.id === id);
   if (idx !== -1) {
     const likes = blogs[idx].likes || [];
-    blogs[idx].likes = likes.includes(uid) ? likes.filter((l) => l !== uid) : [...likes, uid];
+    const isLiking = !likes.includes(uid);
+    blogs[idx].likes = isLiking ? [...likes, uid] : likes.filter((l) => l !== uid);
     setLS(BLOGS_KEY, blogs);
+    
+    if (isLiking) {
+       void addNotification({
+          uid: blogs[idx].uid,
+          type: 'like',
+          refType: 'blog',
+          refId: id,
+          message: `${uid === blogs[idx].uid ? 'Kendi blogunuzu' : 'Birisi blogunuzu'} beğendi!`,
+       });
+       if (uid !== blogs[idx].uid) void grantXp(blogs[idx].uid, 10, 'Blog yazınız beğenildiği için');
+    }
   }
 }
 
@@ -577,6 +672,10 @@ export async function addArticle(article: Omit<FirestoreArticle, 'id'>): Promise
   const id = `article_${Date.now()}_${Math.random().toString(36).slice(2)}`;
   articles.unshift({ ...article, id });
   setLS(ARTICLES_KEY, articles);
+  
+  // XP Ödülü
+  void grantXp(article.uid, 30, 'Yeni bir wiki/rehber makalesi paylaştığın için');
+  
   return id;
 }
 
@@ -830,6 +929,44 @@ export async function addComment(
   const comments = getLS<Comment[]>('pa_comments', []);
   comments.unshift(entry);
   setLS('pa_comments', comments);
+  
+  // XP Ödülü (Yorum yapana)
+  void grantXp(payload.uid, 5, 'Yorum yaptığın için');
+
+  // Bildirim Ödülü (İçerik sahibine)
+  void (async () => {
+    try {
+      let authorId = '';
+      let title = '';
+      if (payload.refType === 'project') {
+        const items = getLS<FirestoreProject[]>(PROJECTS_KEY, []);
+        const item = items.find(i => i.id === payload.refId);
+        authorId = item?.uid || '';
+        title = item?.title || '';
+      } else if (payload.refType === 'blog') {
+        const items = getLS<FirestoreBlog[]>(BLOGS_KEY, []);
+        const item = items.find(i => i.id === payload.refId);
+        authorId = item?.uid || '';
+        title = item?.title || '';
+      } else if (payload.refType === 'article') {
+        const items = getLS<FirestoreArticle[]>(ARTICLES_KEY, []);
+        const item = items.find(i => i.id === payload.refId);
+        authorId = item?.uid || '';
+        title = item?.title || '';
+      }
+
+      if (authorId && authorId !== payload.uid) {
+        await addNotification({
+          uid: authorId,
+          type: 'comment',
+          refType: payload.refType,
+          refId: payload.refId,
+          message: `@${payload.username} "${title}" konulu içeriğinize yorum yaptı.`,
+        });
+      }
+    } catch (e) { console.error("Comment notification error:", e); }
+  })();
+  
   return entry.id;
 }
 
@@ -1087,6 +1224,7 @@ export async function reviewAdminApplication(
     a.id === id ? { ...a, status, reviewedAt: now, reviewedBy, reviewNote: reviewNote || '' } : a
   );
   setLS(APPLICATIONS_KEY, next);
+
   // localStorage modunda da rolü güncelle
   if (status === 'approved') {
     const app = list.find((a) => a.id === id);
@@ -1094,6 +1232,26 @@ export async function reviewAdminApplication(
       const users = getLS<FirestoreUser[]>(USERS_KEY, []);
       const u = users.findIndex((u) => u.uid === app.uid);
       if (u !== -1) { users[u] = { ...users[u], role: 'admin' }; setLS(USERS_KEY, users); }
+      
+      // Bildirim Gönder
+      void addNotification({
+        uid: app.uid,
+        type: 'approve',
+        refType: 'project',
+        refId: 'system',
+        message: 'Tebrikler! Adminlik başvurunuz onaylandı. Artık panel erişiminiz var.',
+      });
+    }
+  } else {
+    const app = list.find((a) => a.id === id);
+    if (app) {
+      void addNotification({
+        uid: app.uid,
+        type: 'reject',
+        refType: 'project',
+        refId: 'system',
+        message: `Maalesef adminlik başvurunuz reddedildi. Not: ${reviewNote || 'Belirtilmedi'}`,
+      });
     }
   }
 }
@@ -1310,7 +1468,7 @@ export async function toggleBookmark(uid: string, refType: Bookmark['refType'], 
   await updateUserProfile(uid, { bookmarks: nextBookmarks });
 }
 
-export async function updateXpAndLevel(uid: string, xpToAdd: number): Promise<void> {
+export async function updateXpAndLevel(uid: string, xpToAdd: number, reason?: string): Promise<void> {
   const user = await getUserProfile(uid);
   if (!user) return;
   
@@ -1321,8 +1479,34 @@ export async function updateXpAndLevel(uid: string, xpToAdd: number): Promise<vo
   if (newXp >= 100) newLevel = 'Geliştirici';
   if (newXp >= 500) newLevel = 'Kıdemli';
   if (newXp >= 1000) newLevel = 'Usta';
+  if (newXp >= 5000) newLevel = 'Efsane';
+
+  // Rozet Kontrolü (Level bazlı)
+  const currentBadges = user.badges || [];
+  const nextBadges = [...currentBadges];
+  if (newLevel !== 'Çaylak' && !nextBadges.includes(newLevel)) {
+    nextBadges.push(newLevel);
+  }
   
-  await updateUserProfile(uid, { xp: newXp, level: newLevel });
+  await updateUserProfile(uid, { xp: newXp, level: newLevel, badges: nextBadges });
+  
+  if (reason) {
+    await addNotification({
+      uid,
+      type: 'approve',
+      refType: 'project',
+      refId: 'system',
+      message: `Tebrikler! ${reason} nedeniyle ${xpToAdd} XP kazandınız. Yeni XP: ${newXp}`,
+    });
+  }
+}
+
+/** 
+ * XP sisteminin ana girişi. 
+ * Hem XP verir hem de gerekirse bildirim gönderir.
+ */
+export async function grantXp(uid: string, amount: number, reason: string): Promise<void> {
+  await updateXpAndLevel(uid, amount, reason);
 }
 
 export async function addDevlog(projectId: string, version: string, content: string): Promise<void> {
